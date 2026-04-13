@@ -14,11 +14,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "MediHost AI — AI Marketing Platform for Healthcare",
-  description: "Website, bookings, billing, WhatsApp, and AI marketing for clinics",
+  description:
+    "Google reviews, Instagram reels, WhatsApp reminders, appointments, billing, SEO — one AI platform does it all for clinics, dentists, hospitals & labs.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#059669",
+  themeColor: "#0F1117",
 };
 
 export default function RootLayout({
