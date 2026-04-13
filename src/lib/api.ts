@@ -1,4 +1,5 @@
-const API_BASE = "https://smartgumastha-backend-production.up.railway.app";
+// API calls go through Next.js rewrites (/api/* → Railway backend)
+// This avoids CORS — browser sees same-origin requests.
 
 // ── Token management ──
 export function getToken(): string | null {
@@ -17,27 +18,32 @@ async function api<T = any>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
-  var headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
-  };
-  var token = getToken();
-  if (token) headers["Authorization"] = "Bearer " + token;
-
-  var res = await fetch(API_BASE + path, { ...options, headers });
-  var data: any;
   try {
-    data = await res.json();
-  } catch {
-    data = { success: false, error: "Invalid response" };
-  }
+    var headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(options.headers as Record<string, string>),
+    };
+    var token = getToken();
+    if (token) headers["Authorization"] = "Bearer " + token;
 
-  if (res.status === 401 && typeof window !== "undefined") {
-    clearToken();
-    window.location.href = "/login";
-  }
+    var res = await fetch(path, { ...options, headers });
+    var data: any;
+    try {
+      data = await res.json();
+    } catch {
+      data = { success: false, error: "Invalid response" };
+    }
 
-  return data as T;
+    if (res.status === 401 && typeof window !== "undefined") {
+      clearToken();
+      window.location.href = "/login";
+    }
+
+    return data as T;
+  } catch (error: any) {
+    console.error("[API]", path, error?.message);
+    return { success: false, message: "Network error. Please try again." } as T;
+  }
 }
 
 // ── Auth endpoints ──
