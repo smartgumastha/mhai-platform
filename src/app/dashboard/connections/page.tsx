@@ -10,7 +10,7 @@ var connectedCards = [
     statusColor: "bg-emerald-500",
     account: "as Kamakya Physiotherapy Clinic",
     btnLabel: "Manage connection",
-    btnClass: "bg-gray-100 text-gray-600",
+    btnClass: "bg-gray-100 text-gray-600 hover:bg-gray-200",
     detail:
       "Last synced: 2 min ago | 12 reviews | 4.8 rating | 347 profile views this month",
     tags: ["Review replies", "Local SEO", "Business updates", "Q&A answers"],
@@ -24,10 +24,16 @@ var connectedCards = [
     statusColor: "bg-emerald-500",
     account: "+91 95530 53446",
     btnLabel: "Manage connection",
-    btnClass: "bg-gray-100 text-gray-600",
+    btnClass: "bg-gray-100 text-gray-600 hover:bg-gray-200",
     detail:
       "156 messages sent this month | 94% delivery rate | 67% read rate",
-    tags: ["Reminders", "Follow-ups", "Broadcasts", "Chatbot", "Report delivery"],
+    tags: [
+      "Reminders",
+      "Follow-ups",
+      "Broadcasts",
+      "Chatbot",
+      "Report delivery",
+    ],
   },
 ];
 
@@ -100,11 +106,11 @@ var optionalCards = [
 
 export default function ConnectionsPage() {
   return (
-    <div className="p-6">
+    <div className="px-8 py-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-medium text-gray-900">
+          <h1 className="text-xl font-medium tracking-tight text-gray-900">
             Connections hub
           </h1>
           <p className="mt-0.5 text-sm text-gray-500">
@@ -113,14 +119,14 @@ export default function ConnectionsPage() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">2 of 8 connected</span>
-          <div className="h-1.5 w-20 rounded bg-gray-200">
-            <div className="h-full w-1/4 rounded bg-emerald-500" />
+          <div className="h-2 w-20 rounded-full bg-gray-200">
+            <div className="h-full w-1/4 rounded-full bg-emerald-500" />
           </div>
         </div>
       </div>
 
       {/* Info banner */}
-      <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+      <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800 shadow-sm">
         Each connection unlocks AI superpowers: Google lets AI reply to reviews.
         Instagram lets AI post content. WhatsApp lets AI send reminders. The
         more you connect, the smarter your AI engine gets.
@@ -132,11 +138,11 @@ export default function ConnectionsPage() {
         {connectedCards.map((c) => (
           <div
             key={c.name}
-            className="rounded-xl border border-emerald-200 bg-white p-4"
+            className="rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md"
           >
             <div className="flex items-start gap-3">
               <div
-                className={`flex h-11 w-11 items-center justify-center rounded-[10px] font-medium text-white ${c.iconBg}`}
+                className={`flex h-11 w-11 items-center justify-center rounded-[10px] font-medium text-white shadow-sm ${c.iconBg}`}
               >
                 {c.icon}
               </div>
@@ -155,20 +161,22 @@ export default function ConnectionsPage() {
               <span className="text-[11px] text-gray-500">{c.account}</span>
             </div>
             <button
-              className={`mt-3 w-full rounded-md py-2 text-xs font-medium ${c.btnClass}`}
+              className={`mt-3 w-full cursor-pointer rounded-md py-2.5 text-xs font-medium transition-all duration-200 ${c.btnClass}`}
             >
               {c.btnLabel}
             </button>
             <div className="mt-2 text-[11px] text-gray-500">{c.detail}</div>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {c.tags.map((t) => (
-                <span
-                  key={t}
-                  className="rounded bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
-                >
-                  {t}
-                </span>
-              ))}
+            <div className="mt-2 border-t border-gray-100 pt-2">
+              <div className="flex flex-wrap gap-1">
+                {c.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded border border-gray-100 bg-gray-50 px-2 py-0.5 text-[10px] text-gray-600"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         ))}
@@ -177,11 +185,11 @@ export default function ConnectionsPage() {
         {disconnectedCards.map((c) => (
           <div
             key={c.name}
-            className="rounded-xl border border-gray-200 bg-white p-4"
+            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md"
           >
             <div className="flex items-start gap-3">
               <div
-                className={`flex h-11 w-11 items-center justify-center rounded-[10px] font-medium text-white ${c.iconBg}`}
+                className={`flex h-11 w-11 items-center justify-center rounded-[10px] font-medium text-white shadow-sm ${c.iconBg}`}
               >
                 {c.icon}
               </div>
@@ -198,24 +206,26 @@ export default function ConnectionsPage() {
                 Not connected
               </span>
             </div>
-            <button className="mt-3 w-full rounded-md bg-emerald-500 py-2 text-xs font-medium text-white hover:bg-emerald-600">
+            <button className="mt-3 w-full cursor-pointer rounded-md bg-emerald-500 py-2.5 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md">
               {c.btnLabel}
             </button>
             {c.below && (
               <div className="mt-2 text-[11px] text-gray-500">{c.below}</div>
             )}
-            <div className="mt-2 flex flex-wrap gap-1">
-              <span className="mr-0.5 text-[10px] text-gray-400">
-                AI will unlock:
-              </span>
-              {c.tags.map((t) => (
-                <span
-                  key={t}
-                  className="rounded bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
-                >
-                  {t}
+            <div className="mt-2 border-t border-gray-100 pt-2">
+              <div className="flex flex-wrap gap-1">
+                <span className="mr-0.5 text-[10px] text-gray-400">
+                  AI will unlock:
                 </span>
-              ))}
+                {c.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded border border-gray-100 bg-gray-50 px-2 py-0.5 text-[10px] text-gray-600"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         ))}
@@ -224,11 +234,11 @@ export default function ConnectionsPage() {
         {optionalCards.map((c) => (
           <div
             key={c.name}
-            className="rounded-xl border border-gray-200 bg-white p-4"
+            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md"
           >
             <div className="flex items-start gap-3">
               <div
-                className={`flex h-11 w-11 items-center justify-center rounded-[10px] font-medium text-white ${c.iconBg}`}
+                className={`flex h-11 w-11 items-center justify-center rounded-[10px] font-medium text-white shadow-sm ${c.iconBg}`}
               >
                 {c.icon}
               </div>
@@ -248,35 +258,37 @@ export default function ConnectionsPage() {
                 — {c.optionalLabel}
               </span>
             </div>
-            <button className="mt-3 w-full rounded-md bg-blue-500 py-2 text-xs font-medium text-white hover:bg-blue-600">
+            <button className="mt-3 w-full cursor-pointer rounded-md bg-blue-500 py-2.5 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-600 hover:shadow-md">
               {c.btnLabel}
             </button>
             <div className="mt-2 text-[11px] text-gray-500">{c.below}</div>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {c.tags.map((t) => (
-                <span
-                  key={t}
-                  className="rounded bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
-                >
-                  {t}
-                </span>
-              ))}
+            <div className="mt-2 border-t border-gray-100 pt-2">
+              <div className="flex flex-wrap gap-1">
+                {c.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded border border-gray-100 bg-gray-50 px-2 py-0.5 text-[10px] text-gray-600"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Bottom coming soon */}
-      <div className="mt-4 flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
+      <div className="mt-4 flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
         <div>
-          <div className="text-sm font-medium text-gray-900">
+          <div className="text-sm font-medium tracking-tight text-gray-900">
             Coming soon: EMR integration
           </div>
           <div className="text-[11px] text-gray-500">
             Sync with Epic, Athena, or your HMS for appointment data
           </div>
         </div>
-        <button className="rounded border border-gray-300 px-3 py-1 text-[11px] text-gray-700 hover:bg-gray-50">
+        <button className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-[11px] text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:shadow-sm">
           Notify me
         </button>
       </div>

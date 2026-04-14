@@ -21,7 +21,7 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50/80">
         <span className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
       </div>
     );
@@ -29,7 +29,6 @@ export default function DashboardLayout({
 
   if (!isAuthenticated) return null;
 
-  // Debug: log user object to see available fields for business name
   console.log("[DashboardLayout] user object:", user);
 
   return (
@@ -37,7 +36,7 @@ export default function DashboardLayout({
       <DashboardSidebar
         businessName={user?.business_name || user?.owner_name || "My Clinic"}
       />
-      <main className="overflow-y-auto bg-gray-50">{children}</main>
+      <main className="overflow-y-auto bg-gray-50/80">{children}</main>
     </div>
   );
 }

@@ -61,23 +61,26 @@ export default function DashboardSidebar({
   var { logout } = useAuth();
 
   return (
-    <aside className="flex h-screen w-[220px] min-w-[220px] flex-col bg-[#0a1a14] overflow-y-auto">
+    <aside className="flex h-screen w-[220px] min-w-[220px] flex-col overflow-y-auto bg-[#0a1a14]">
       {/* Logo + business info */}
-      <div className="flex items-center gap-2.5 px-4 pt-5 pb-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-500">
+      <div className="flex items-center gap-2.5 border-b border-white/5 px-4 pb-4 pt-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-500 shadow-sm">
           <span className="text-[11px] font-medium text-white">MHAI</span>
         </div>
         <div>
           <div className="text-sm font-medium text-white">{businessName}</div>
-          <div className="text-[11px] text-emerald-300">AI engine active</div>
+          <div className="flex items-center text-[11px] text-emerald-300">
+            <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+            AI engine active
+          </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1">
+      <nav className="mb-2 flex-1 pt-1">
         {navGroups.map((group) => (
           <div key={group.label}>
-            <div className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-wider text-gray-500">
+            <div className="mb-1 mt-4 px-4 text-[10px] uppercase tracking-wider text-gray-500">
               {group.label}
             </div>
             {group.items.map((item) => {
@@ -86,10 +89,10 @@ export default function DashboardSidebar({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`block py-2 px-4 text-[13px] ${
+                  className={`mx-2 block rounded-md px-3 py-2 text-[13px] transition-all duration-150 ${
                     isActive
-                      ? "border-l-2 border-emerald-500 bg-emerald-500/15 text-white"
-                      : "text-gray-400 hover:text-gray-200"
+                      ? "border-l-[3px] border-emerald-500 bg-emerald-500/20 pl-2.5 font-medium text-white"
+                      : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
                   }`}
                 >
                   {item.name}
@@ -101,14 +104,14 @@ export default function DashboardSidebar({
       </nav>
 
       {/* Bottom section */}
-      <div className="mt-auto border-t border-white/10 p-3">
+      <div className="mt-auto border-t border-white/5 p-3">
         <div className="text-[11px] text-gray-500">Plan: Free trial</div>
-        <div className="mt-1 cursor-pointer text-[11px] text-emerald-500">
+        <div className="mt-1.5 inline-block cursor-pointer rounded-md bg-emerald-500/10 px-3 py-1 text-[11px] text-emerald-400 transition-all duration-200 hover:bg-emerald-500/20">
           Upgrade →
         </div>
         <button
           onClick={logout}
-          className="mt-3 w-full rounded-md border border-white/10 py-1.5 text-[11px] text-gray-400 hover:text-white"
+          className="mt-2 w-full cursor-pointer rounded-md py-2 text-xs text-gray-500 transition-all duration-200 hover:bg-white/5 hover:text-gray-300"
         >
           Log out
         </button>

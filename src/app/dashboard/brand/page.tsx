@@ -172,8 +172,10 @@ function PillSelector({
           <button
             key={item}
             onClick={() => onToggle(item)}
-            className={`cursor-pointer rounded-md px-3 py-1.5 text-xs ${
-              on ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-700"
+            className={`cursor-pointer rounded-md px-3 py-1.5 text-xs transition-all duration-200 ${
+              on
+                ? "bg-emerald-500 text-white shadow-sm"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
           >
             {item}
@@ -181,7 +183,7 @@ function PillSelector({
         );
       })}
       {addLabel && (
-        <button className="rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-500">
+        <button className="cursor-pointer rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-500 transition-all duration-200 hover:border-gray-400 hover:text-gray-600">
           {addLabel}
         </button>
       )}
@@ -230,14 +232,16 @@ export default function BrandDNAPage() {
   if (!loaded) return null;
 
   var inputClass =
-    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none";
+    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
 
   return (
-    <div className="p-6">
+    <div className="px-8 py-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-medium text-gray-900">Brand DNA</h1>
+          <h1 className="text-xl font-medium tracking-tight text-gray-900">
+            Brand DNA
+          </h1>
           <p className="mt-0.5 text-sm text-gray-500">
             Teach your AI engine who you are — it uses this for every piece of
             content it creates
@@ -245,14 +249,14 @@ export default function BrandDNAPage() {
         </div>
         <button
           onClick={save}
-          className="rounded-md bg-emerald-500 px-4 py-2 text-sm text-white hover:bg-emerald-600"
+          className="cursor-pointer rounded-md bg-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md"
         >
           Save changes
         </button>
       </div>
 
       {/* Completeness banner */}
-      <div className="mt-4 flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+      <div className="mt-4 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-3 shadow-sm">
         <div>
           <div className="text-xs font-medium text-emerald-800">
             Brand DNA completeness: 65%
@@ -261,8 +265,8 @@ export default function BrandDNAPage() {
             Complete all sections to unlock full AI personalization
           </div>
         </div>
-        <div className="h-1.5 w-28 rounded bg-emerald-100">
-          <div className="h-full w-[65%] rounded bg-emerald-500" />
+        <div className="h-2 w-28 rounded-full bg-emerald-100">
+          <div className="h-full w-[65%] animate-pulse rounded-full bg-emerald-500" />
         </div>
       </div>
 
@@ -271,8 +275,8 @@ export default function BrandDNAPage() {
         {/* LEFT COLUMN */}
         <div className="flex flex-col gap-4">
           {/* Card 1: Clinic identity */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="mb-1 text-sm font-medium text-gray-900">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
               Clinic identity
             </div>
             <div className="mb-3 text-[11px] text-gray-500">
@@ -336,14 +340,14 @@ export default function BrandDNAPage() {
             <div>
               <label className="mb-1 block text-xs text-gray-500">Logo</label>
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-100 text-[11px] text-gray-400">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-[11px] text-gray-400">
                   KP
                 </div>
-                <button className="rounded border border-gray-300 px-3 py-1 text-[11px] text-gray-700">
+                <button className="cursor-pointer rounded border border-gray-300 px-3 py-1 text-[11px] text-gray-700 transition-all duration-200 hover:bg-gray-50">
                   Upload logo
                 </button>
                 <span className="text-[11px] text-gray-400">or</span>
-                <button className="rounded border border-emerald-500 bg-emerald-50 px-3 py-1 text-[11px] text-emerald-700">
+                <button className="cursor-pointer rounded border border-emerald-500 bg-emerald-50 px-3 py-1 text-[11px] text-emerald-700 transition-all duration-200 hover:bg-emerald-100">
                   AI generate logo
                 </button>
               </div>
@@ -351,8 +355,8 @@ export default function BrandDNAPage() {
           </div>
 
           {/* Card 2: Brand colors */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="mb-1 text-sm font-medium text-gray-900">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
               Brand colors
             </div>
             <div className="mb-3 text-[11px] text-gray-500">
@@ -367,7 +371,7 @@ export default function BrandDNAPage() {
                 <button
                   key={c.hex}
                   onClick={() => update("primaryColor", c.hex)}
-                  className={`h-7 w-7 cursor-pointer rounded-md ${
+                  className={`h-8 w-8 cursor-pointer rounded-lg transition-transform duration-200 hover:scale-110 ${
                     data.primaryColor === c.hex
                       ? "ring-2 ring-gray-900 ring-offset-2"
                       : ""
@@ -375,25 +379,25 @@ export default function BrandDNAPage() {
                   style={{ background: c.hex }}
                 />
               ))}
-              <button className="flex h-7 w-7 items-center justify-center rounded-md border border-dashed border-gray-300 text-sm text-gray-400">
+              <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-dashed border-gray-300 text-sm text-gray-400 transition-all duration-200 hover:border-gray-400">
                 +
               </button>
             </div>
             <div className="mt-3 flex gap-2">
               <div
-                className="flex h-9 flex-1 items-center justify-center rounded text-[11px] text-white"
+                className="flex h-9 flex-1 items-center justify-center rounded-lg text-[11px] font-medium text-white"
                 style={{ background: data.primaryColor }}
               >
                 Primary
               </div>
               <div
-                className="flex h-9 flex-1 items-center justify-center rounded text-[11px] text-white"
+                className="flex h-9 flex-1 items-center justify-center rounded-lg text-[11px] font-medium text-white"
                 style={{ background: darken(data.primaryColor) }}
               >
                 Dark
               </div>
               <div
-                className="flex h-9 flex-1 items-center justify-center rounded text-[11px]"
+                className="flex h-9 flex-1 items-center justify-center rounded-lg text-[11px] font-medium"
                 style={{
                   background: lighten(data.primaryColor),
                   color: darken(data.primaryColor),
@@ -405,8 +409,8 @@ export default function BrandDNAPage() {
           </div>
 
           {/* Card 3: Tone of voice */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="mb-1 text-sm font-medium text-gray-900">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
               Tone of voice
             </div>
             <div className="mb-3 text-[11px] text-gray-500">
@@ -418,10 +422,10 @@ export default function BrandDNAPage() {
                 <button
                   key={t}
                   onClick={() => update("tone", t)}
-                  className={`cursor-pointer rounded-md px-3 py-1.5 text-xs ${
+                  className={`cursor-pointer rounded-md px-3 py-1.5 text-xs transition-all duration-200 ${
                     data.tone === t
-                      ? "bg-emerald-500 text-white"
-                      : "bg-gray-100 text-gray-700"
+                      ? "bg-emerald-500 text-white shadow-sm"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   {t}
@@ -442,7 +446,7 @@ export default function BrandDNAPage() {
               />
             </div>
 
-            <div className="mt-3 rounded-lg bg-gray-50 p-3">
+            <div className="mt-3 rounded-lg border-l-2 border-emerald-500 bg-gray-50 p-3">
               <div className="mb-1 text-[11px] text-gray-500">
                 AI preview — Google review reply in your voice:
               </div>
@@ -459,8 +463,8 @@ export default function BrandDNAPage() {
         {/* RIGHT COLUMN */}
         <div className="flex flex-col gap-4">
           {/* Card 4: Specialties + services */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="mb-1 text-sm font-medium text-gray-900">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
               Specialties + services
             </div>
             <div className="mb-3 text-[11px] text-gray-500">
@@ -507,16 +511,16 @@ export default function BrandDNAPage() {
           </div>
 
           {/* Card 5: Doctor profiles */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="mb-1 text-sm font-medium text-gray-900">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
               Doctor profiles
             </div>
             <div className="mb-3 text-[11px] text-gray-500">
               Featured in website, social posts, and Google profile
             </div>
 
-            <div className="mb-2 flex items-center gap-3 rounded-lg bg-gray-50 p-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-sm font-medium text-white">
+            <div className="mb-2 flex items-center gap-3 rounded-lg bg-gray-50 p-2.5 transition-all duration-200 hover:shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-sm font-medium text-white shadow-sm">
                 SK
               </div>
               <div className="flex-1">
@@ -527,18 +531,18 @@ export default function BrandDNAPage() {
                   BPT, MPT Ortho | 8 years exp.
                 </div>
               </div>
-              <button className="rounded border border-gray-300 px-2.5 py-1 text-[11px] text-gray-700">
+              <button className="cursor-pointer rounded border border-gray-300 px-2.5 py-1 text-[11px] text-gray-700 transition-all duration-200 hover:bg-gray-100">
                 Edit
               </button>
             </div>
-            <button className="w-full rounded-md border border-dashed border-gray-300 py-2 text-xs text-gray-500">
+            <button className="w-full cursor-pointer rounded-md border border-dashed border-gray-300 py-2 text-xs text-gray-500 transition-all duration-200 hover:border-gray-400 hover:text-gray-600">
               ＋ Add doctor profile
             </button>
           </div>
 
           {/* Card 6: Languages */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
-            <div className="mb-1 text-sm font-medium text-gray-900">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
               Languages
             </div>
             <div className="mb-3 text-[11px] text-gray-500">
@@ -552,12 +556,12 @@ export default function BrandDNAPage() {
           </div>
 
           {/* Card 7: Compliance + accreditations */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
             <div className="mb-1 flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-medium tracking-tight text-gray-900">
                 Compliance + accreditations
               </span>
-              <span className="rounded bg-purple-600 px-1.5 py-0.5 text-[9px] text-white">
+              <span className="rounded bg-purple-600 px-2 py-0.5 text-[9px] font-medium text-white">
                 Intelligence
               </span>
             </div>
@@ -575,10 +579,10 @@ export default function BrandDNAPage() {
                   <button
                     key={a}
                     onClick={() => toggleList("accreditations", a)}
-                    className={`cursor-pointer rounded-md border px-3 py-1.5 text-xs ${
+                    className={`cursor-pointer rounded-md border px-3 py-1.5 text-xs transition-all duration-200 ${
                       on
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-                        : "border-gray-200 bg-gray-100 text-gray-700"
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
+                        : "border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
                     {a}
@@ -606,12 +610,12 @@ export default function BrandDNAPage() {
           </div>
 
           {/* Card 8: Insurance panels */}
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
             <div className="mb-1 flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-medium tracking-tight text-gray-900">
                 Insurance panels
               </span>
-              <span className="rounded bg-blue-600 px-1.5 py-0.5 text-[9px] text-white">
+              <span className="rounded bg-blue-600 px-2 py-0.5 text-[9px] font-medium text-white">
                 HMS
               </span>
             </div>
