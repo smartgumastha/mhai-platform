@@ -228,14 +228,6 @@ export default function PricingPage() {
           Start free. Upgrade when you&apos;re ready. Cancel anytime.
         </p>
 
-        {/* Country indicator */}
-        <div className="mt-4 flex items-center justify-center gap-2">
-          <span className="text-[12px] text-gray-400">Showing prices for {p.country}</span>
-          <button onClick={cycleCountry} className="cursor-pointer text-[12px] text-emerald-500 underline transition-colors hover:text-emerald-700">
-            Change
-          </button>
-        </div>
-
         {/* Toggle */}
         <div className="mt-6 flex items-center justify-center gap-3">
           <span className={`text-sm font-medium ${!isYearly ? "text-gray-900" : "text-gray-400"}`}>Monthly</span>
