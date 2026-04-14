@@ -1,167 +1,135 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-/* ── plan data ── */
-type Feature = { text: string; included: boolean; addon?: boolean };
-type Section = { title: string; features: Feature[] };
-type Plan = {
-  name: string;
-  tagline: string;
-  monthly: string;
-  yearlyMo: string;
-  yearlyTotal: string;
-  isFree?: boolean;
-  isEnterprise?: boolean;
-  popular?: boolean;
-  cta: string;
-  ctaClass: string;
-  sections: Section[];
+/* ── currency system ── */
+type PricingTier = {
+  symbol: string;
+  locale: string;
+  country: string;
+  pro: number;
+  business: number;
+  proYearly: number;
+  businessYearly: number;
+  payFree: string;
+  payPro: string;
+  payBusiness: string;
+  payEnterprise: string;
 };
 
-var plans: Plan[] = [
-  {
-    name: "Free",
-    tagline: "Get started, no credit card",
-    monthly: "Free",
-    yearlyMo: "Free",
-    yearlyTotal: "",
-    isFree: true,
-    cta: "Start free",
-    ctaClass: "bg-gray-100 text-gray-700 hover:bg-gray-200",
-    sections: [
-      {
-        title: "Marketing",
-        features: [
-          { text: "AI website (MHAI branded)", included: true },
-          { text: "Google Business Profile", included: true },
-          { text: "3 AI review replies/mo", included: true },
-          { text: "Basic booking page", included: true },
-        ],
-      },
-      { title: "MHAI Pay", features: [{ text: "Payment links (2% fee)", included: true }] },
-      { title: "Receptionist", features: [{ text: "Website chatbot (50 chats/mo)", included: true }] },
-      { title: "Caller", features: [{ text: "Not included", included: false }] },
-      { title: "HMS", features: [{ text: "Not included", included: false }] },
-    ],
+var pricing: Record<string, PricingTier> = {
+  IN: {
+    symbol: "₹", locale: "en-IN", country: "India",
+    pro: 2999, business: 7999, proYearly: 2499, businessYearly: 6666,
+    payFree: "2%", payPro: "1.5%", payBusiness: "1%", payEnterprise: "0.5%",
   },
-  {
-    name: "Pro",
-    tagline: "For growing clinics",
-    monthly: "$29",
-    yearlyMo: "$24",
-    yearlyTotal: "$290/year",
-    cta: "Start 14-day trial",
-    ctaClass: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-sm",
-    sections: [
-      {
-        title: "Marketing",
-        features: [
-          { text: "Custom domain + AI website", included: true },
-          { text: "Unlimited reviews + AI replies", included: true },
-          { text: "Social posts (all platforms)", included: true },
-          { text: "WhatsApp + SMS (100/mo)", included: true },
-          { text: "SEO + AEO + AI blog", included: true },
-          { text: "Patient CRM", included: true },
-        ],
-      },
-      {
-        title: "MHAI Pay",
-        features: [
-          { text: "Payment links (1.5% fee)", included: true },
-          { text: "Deposits + auto-invoice", included: true },
-        ],
-      },
-      {
-        title: "Receptionist",
-        features: [
-          { text: "Website + WhatsApp bot", included: true },
-          { text: "Booking + FAQ", included: true },
-        ],
-      },
-      { title: "Caller", features: [{ text: "$19/mo", included: true, addon: true }] },
-      { title: "HMS", features: [{ text: "$19/mo", included: true, addon: true }] },
-    ],
+  US: {
+    symbol: "$", locale: "en-US", country: "United States",
+    pro: 29, business: 99, proYearly: 24, businessYearly: 82,
+    payFree: "2%", payPro: "1.5%", payBusiness: "1%", payEnterprise: "0.5%",
   },
-  {
-    name: "Business",
-    tagline: "Full autopilot marketing",
-    monthly: "$99",
-    yearlyMo: "$82",
-    yearlyTotal: "$990/year",
-    popular: true,
-    cta: "Start 14-day trial",
-    ctaClass: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-md",
-    sections: [
-      {
-        title: "Marketing",
-        features: [
-          { text: "Everything in Pro + autopilot", included: true },
-          { text: "Google + Meta Ads", included: true },
-          { text: "Print studio + field marketing", included: true },
-          { text: "Team hub (5 seats)", included: true },
-          { text: "Referral network", included: true },
-        ],
-      },
-      {
-        title: "MHAI Pay",
-        features: [
-          { text: "All payments (1% fee)", included: true },
-          { text: "EMI + Collections AI", included: true },
-          { text: "Revenue dashboard", included: true },
-        ],
-      },
-      {
-        title: "Receptionist",
-        features: [
-          { text: "All channels + triage", included: true },
-          { text: "In-chat payments + voice", included: true },
-          { text: "Multilingual", included: true },
-        ],
-      },
-      { title: "Caller", features: [{ text: "3 seats + AI scripts + campaigns", included: true }] },
-      { title: "HMS", features: [{ text: "OPD + billing + Rx + lab", included: true }] },
-    ],
+  GB: {
+    symbol: "£", locale: "en-GB", country: "United Kingdom",
+    pro: 25, business: 79, proYearly: 21, businessYearly: 66,
+    payFree: "2%", payPro: "1.5%", payBusiness: "1%", payEnterprise: "0.5%",
   },
-  {
-    name: "Enterprise",
-    tagline: "Hospital chains & groups",
-    monthly: "Custom",
-    yearlyMo: "Custom",
-    yearlyTotal: "",
-    isEnterprise: true,
-    cta: "Contact sales",
-    ctaClass: "bg-gray-900 text-white hover:bg-gray-800",
-    sections: [
-      {
-        title: "Marketing",
-        features: [
-          { text: "Unlimited branches + command center", included: true },
-          { text: "White-label option", included: true },
-        ],
-      },
-      { title: "MHAI Pay", features: [{ text: "0.5% fee + multi-branch settlements", included: true }] },
-      { title: "Receptionist", features: [{ text: "Unlimited + custom AI training", included: true }] },
-      { title: "Caller", features: [{ text: "Unlimited seats + AI auto-caller", included: true }] },
-      { title: "HMS", features: [{ text: "Full suite + NHCX + ABDM + dedicated manager", included: true }] },
-    ],
+  AE: {
+    symbol: "AED ", locale: "en-AE", country: "UAE",
+    pro: 109, business: 369, proYearly: 91, businessYearly: 308,
+    payFree: "2%", payPro: "1.5%", payBusiness: "1%", payEnterprise: "0.5%",
   },
-];
+  KE: {
+    symbol: "KSh ", locale: "en-KE", country: "Kenya",
+    pro: 2999, business: 9999, proYearly: 2499, businessYearly: 8333,
+    payFree: "2%", payPro: "1.5%", payBusiness: "1%", payEnterprise: "0.5%",
+  },
+};
 
-var addons = [
-  { name: "HMS", desc: "OPD, billing, Rx, lab — full hospital management", price: "$19/mo" },
-  { name: "Caller", desc: "AI-powered telecalling with scripts and campaigns", price: "$19/mo" },
-  { name: "Extra seats", desc: "Additional team member seats for your plan", price: "$5/seat" },
-  { name: "SMS pack", desc: "500 SMS credits for reminders and campaigns", price: "$9" },
-  { name: "Intelligence", desc: "Advanced analytics, competitor watch, AI insights", price: "$29/mo" },
-  { name: "Extra chats", desc: "500 additional chatbot conversations per month", price: "$9/500" },
-];
+type AddonPrices = { hms: number; caller: number; seat: number; sms: number; intel: number; chats: number };
+var addonPricing: Record<string, AddonPrices> = {
+  IN: { hms: 1499, caller: 1499, seat: 399, sms: 699, intel: 2299, chats: 699 },
+  US: { hms: 19, caller: 19, seat: 5, sms: 9, intel: 29, chats: 9 },
+  GB: { hms: 15, caller: 15, seat: 4, sms: 7, intel: 25, chats: 7 },
+  AE: { hms: 69, caller: 69, seat: 19, sms: 35, intel: 109, chats: 35 },
+  KE: { hms: 1999, caller: 1999, seat: 499, sms: 899, intel: 2999, chats: 899 },
+};
 
-var localPricing = [
-  { country: "India", flag: "🇮🇳", plans: ["₹999", "₹2,999", "₹7,999"] },
-  { country: "UK", flag: "🇬🇧", plans: ["£25", "£79", "£199"] },
-  { country: "Kenya", flag: "🇰🇪", plans: ["KSh 2,999", "KSh 9,999", "KSh 29,999"] },
-];
+function fmt(amount: number, locale: string) {
+  return amount.toLocaleString(locale);
+}
+
+var countryKeys = Object.keys(pricing);
+
+/* ── feature data builder ── */
+type Feat = { text: string; included: boolean; addon?: boolean };
+type Sec = { title: string; dot: string; features: Feat[] };
+
+function buildSections(p: PricingTier, plan: "free" | "pro" | "business" | "enterprise"): Sec[] {
+  var ap = addonPricing[countryKeys.find((k) => pricing[k] === p) || "IN"] || addonPricing.IN;
+  if (plan === "free") return [
+    { title: "Marketing", dot: "bg-emerald-500", features: [
+      { text: "AI website (MHAI branded)", included: true },
+      { text: "Google Business Profile", included: true },
+      { text: "3 AI review replies/mo", included: true },
+      { text: "Basic booking page", included: true },
+    ]},
+    { title: "MHAI Pay", dot: "bg-blue-500", features: [{ text: `Payment links (${p.payFree} fee)`, included: true }] },
+    { title: "Receptionist", dot: "bg-purple-500", features: [{ text: "Website chatbot (50 chats/mo)", included: true }] },
+    { title: "Caller", dot: "bg-amber-500", features: [{ text: "Not included", included: false }] },
+    { title: "HMS", dot: "bg-red-500", features: [{ text: "Not included", included: false }] },
+  ];
+  if (plan === "pro") return [
+    { title: "Marketing", dot: "bg-emerald-500", features: [
+      { text: "Custom domain + AI website", included: true },
+      { text: "Unlimited reviews + AI replies", included: true },
+      { text: "Social posts (all platforms)", included: true },
+      { text: "WhatsApp + SMS (100/mo)", included: true },
+      { text: "SEO + AEO + AI blog", included: true },
+      { text: "Patient CRM", included: true },
+    ]},
+    { title: "MHAI Pay", dot: "bg-blue-500", features: [
+      { text: `Payment links (${p.payPro} fee)`, included: true },
+      { text: "Deposits + auto-invoice", included: true },
+    ]},
+    { title: "Receptionist", dot: "bg-purple-500", features: [
+      { text: "Website + WhatsApp bot", included: true },
+      { text: "Booking + FAQ", included: true },
+    ]},
+    { title: "Caller", dot: "bg-amber-500", features: [{ text: `${p.symbol}${fmt(ap.caller, p.locale)}/mo`, included: true, addon: true }] },
+    { title: "HMS", dot: "bg-red-500", features: [{ text: `${p.symbol}${fmt(ap.hms, p.locale)}/mo`, included: true, addon: true }] },
+  ];
+  if (plan === "business") return [
+    { title: "Marketing", dot: "bg-emerald-500", features: [
+      { text: "Everything in Pro + autopilot", included: true },
+      { text: "Google + Meta Ads", included: true },
+      { text: "Print studio + field marketing", included: true },
+      { text: "Team hub (5 seats)", included: true },
+      { text: "Referral network", included: true },
+    ]},
+    { title: "MHAI Pay", dot: "bg-blue-500", features: [
+      { text: `All payments (${p.payBusiness} fee)`, included: true },
+      { text: "EMI + Collections AI", included: true },
+      { text: "Revenue dashboard", included: true },
+    ]},
+    { title: "Receptionist", dot: "bg-purple-500", features: [
+      { text: "All channels + triage", included: true },
+      { text: "In-chat payments + voice", included: true },
+      { text: "Multilingual", included: true },
+    ]},
+    { title: "Caller", dot: "bg-amber-500", features: [{ text: "3 seats + AI scripts + campaigns", included: true }] },
+    { title: "HMS", dot: "bg-red-500", features: [{ text: "OPD + billing + Rx + lab", included: true }] },
+  ];
+  return [
+    { title: "Marketing", dot: "bg-emerald-500", features: [
+      { text: "Unlimited branches + command center", included: true },
+      { text: "White-label option", included: true },
+    ]},
+    { title: "MHAI Pay", dot: "bg-blue-500", features: [{ text: `${p.payEnterprise} fee + multi-branch`, included: true }] },
+    { title: "Receptionist", dot: "bg-purple-500", features: [{ text: "Unlimited + custom AI training", included: true }] },
+    { title: "Caller", dot: "bg-amber-500", features: [{ text: "Unlimited seats + AI auto-caller", included: true }] },
+    { title: "HMS", dot: "bg-red-500", features: [{ text: "Full suite + NHCX + ABDM + dedicated manager", included: true }] },
+  ];
+}
 
 var faqs = [
   { q: "Can I start free?", a: "Yes, no credit card required. Start with our Free plan and upgrade anytime as your clinic grows." },
@@ -173,139 +141,222 @@ var faqs = [
 ];
 
 export default function PricingPage() {
+  var [country, setCountry] = useState("IN");
   var [isYearly, setIsYearly] = useState(false);
   var [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/detect-country")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.country && pricing[data.country]) {
+          setCountry(data.country);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  var p = pricing[country] || pricing.IN;
+  var ap = addonPricing[country] || addonPricing.IN;
+  var proPrice = isYearly ? p.proYearly : p.pro;
+  var bizPrice = isYearly ? p.businessYearly : p.business;
+
+  function cycleCountry() {
+    var idx = countryKeys.indexOf(country);
+    setCountry(countryKeys[(idx + 1) % countryKeys.length]);
+  }
+
+  var cards = [
+    {
+      name: "Free", tagline: "Get online in 5 minutes", plan: "free" as const,
+      price: "Free", sub: "forever", accent: "border-t-gray-300",
+      cta: "Start free", ctaClass: "bg-gray-100 text-gray-700 hover:bg-gray-200", ctaHref: "/signup",
+    },
+    {
+      name: "Pro", tagline: "Full AI marketing on autopilot", plan: "pro" as const,
+      price: `${p.symbol}${fmt(proPrice, p.locale)}`, sub: "/mo", accent: "border-t-emerald-500",
+      yearly: isYearly ? `Billed ${p.symbol}${fmt(p.pro * 10, p.locale)}/year` : "",
+      cta: "Start 14-day trial", ctaClass: "bg-emerald-500 text-white shadow-sm hover:bg-emerald-600 hover:shadow-md", ctaHref: "/signup",
+    },
+    {
+      name: "Business", tagline: "Complete engine + intelligence", plan: "business" as const,
+      price: `${p.symbol}${fmt(bizPrice, p.locale)}`, sub: "/mo", accent: "border-t-emerald-500",
+      yearly: isYearly ? `Billed ${p.symbol}${fmt(p.business * 10, p.locale)}/year` : "",
+      popular: true,
+      cta: "Start 14-day trial", ctaClass: "bg-emerald-500 text-white shadow-md hover:bg-emerald-600 hover:shadow-lg", ctaHref: "/signup",
+    },
+    {
+      name: "Enterprise", tagline: "Multi-branch healthcare empire", plan: "enterprise" as const,
+      price: "Custom", sub: "per branch", accent: "border-t-gray-900",
+      cta: "Talk to sales", ctaClass: "bg-gray-900 text-white shadow-sm hover:bg-gray-800", ctaHref: "mailto:saicharankumarpakala@gmail.com",
+    },
+  ];
+
+  var addonCards = [
+    { name: "HMS module", desc: "OPD, billing, prescriptions, lab", price: `${p.symbol}${fmt(ap.hms, p.locale)}/mo`, border: "border-l-red-500" },
+    { name: "MHAI Caller", desc: "3 telecaller seats + AI scripts", price: `${p.symbol}${fmt(ap.caller, p.locale)}/mo`, border: "border-l-amber-500" },
+    { name: "Extra seats", desc: "Beyond included seats", price: `${p.symbol}${fmt(ap.seat, p.locale)}/seat`, border: "border-l-blue-500" },
+    { name: "SMS packs", desc: "For review requests + reminders", price: `500 = ${p.symbol}${fmt(ap.sms, p.locale)}`, border: "border-l-green-500" },
+    { name: "Intelligence", desc: "Cross-clinic benchmarks", price: `${p.symbol}${fmt(ap.intel, p.locale)}/mo`, border: "border-l-purple-500" },
+    { name: "Extra chats", desc: "Beyond plan chatbot limit", price: `${p.symbol}${fmt(ap.chats, p.locale)}/500`, border: "border-l-pink-500" },
+  ];
 
   return (
     <div className="min-h-screen bg-white">
       {/* NAV */}
-      <nav className="flex items-center justify-between border-b border-gray-100 px-8 py-4">
+      <nav className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white/80 px-8 py-4 backdrop-blur-sm">
         <a href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-[9px] font-bold text-white">MHAI</div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-[10px] font-bold text-white shadow-sm">MHAI</div>
           <span className="text-lg font-semibold text-gray-900">MediHost AI</span>
         </a>
         <div className="flex items-center gap-3">
           <a href="/login" className="text-sm text-gray-500 transition-colors hover:text-gray-900">Login</a>
-          <a href="/signup" className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md">Start free →</a>
+          <a href="/signup" className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md">Start free →</a>
         </div>
       </nav>
 
       {/* HERO */}
-      <section className="px-8 py-16 text-center">
-        <h1 className="text-4xl font-bold text-gray-900">
-          Every tool your clinic needs.<br />
-          <span className="text-emerald-500">One price.</span>
+      <section className="bg-gradient-to-b from-emerald-50/40 via-white to-white px-8 pb-10 pt-20 text-center">
+        <h1 className="text-5xl font-bold leading-tight tracking-tight text-gray-900">
+          Every tool your clinic needs.
         </h1>
-        <p className="mx-auto mt-4 max-w-lg text-lg text-gray-500">
-          AI marketing + payments + chatbot + telecaller + HMS.
+        <div className="mt-1 text-5xl font-bold text-emerald-500">One price.</div>
+        <p className="mx-auto mt-6 max-w-2xl text-xl text-gray-500">
+          AI marketing + payments + chatbot + telecaller + HMS
+        </p>
+        <p className="mt-2 text-sm text-gray-400">
+          Start free. Upgrade when you&apos;re ready. Cancel anytime.
         </p>
 
+        {/* Country indicator */}
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <span className="text-[12px] text-gray-400">Showing prices for {p.country}</span>
+          <button onClick={cycleCountry} className="cursor-pointer text-[12px] text-emerald-500 underline transition-colors hover:text-emerald-700">
+            Change
+          </button>
+        </div>
+
         {/* Toggle */}
-        <div className="mt-8 flex items-center justify-center gap-3">
+        <div className="mt-6 flex items-center justify-center gap-3">
           <span className={`text-sm font-medium ${!isYearly ? "text-gray-900" : "text-gray-400"}`}>Monthly</span>
           <div
             onClick={() => setIsYearly(!isYearly)}
-            className={`flex h-6 w-11 cursor-pointer items-center rounded-full px-0.5 transition-colors duration-200 ${isYearly ? "bg-emerald-500" : "bg-gray-300"}`}
+            className={`flex h-6 w-12 cursor-pointer items-center rounded-full transition-colors duration-300 ${isYearly ? "bg-emerald-500" : "bg-gray-300"}`}
           >
-            <div className={`h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${isYearly ? "translate-x-5" : "translate-x-0.5"}`} />
+            <div
+              className="h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-300"
+              style={{ transform: isYearly ? "translateX(24px)" : "translateX(2px)" }}
+            />
           </div>
           <span className={`text-sm font-medium ${isYearly ? "text-gray-900" : "text-gray-400"}`}>Yearly</span>
-          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600">Save 20%</span>
+          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-medium text-emerald-700">Save 20%</span>
         </div>
-      </section>
 
-      {/* PRICING GRID */}
-      <section className="mx-auto mt-2 max-w-6xl px-8">
-        <div className="grid grid-cols-4 gap-4">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative flex flex-col rounded-2xl bg-white transition-all duration-200 hover:shadow-lg ${
-                plan.popular
-                  ? "border-2 border-emerald-500 shadow-md"
-                  : "border border-gray-100 shadow-sm"
-              }`}
-            >
-              {plan.popular && (
-                <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500 px-4 py-1 text-[10px] font-medium text-white">
-                  Most popular
-                </span>
-              )}
-
-              {/* Header */}
-              <div className="p-6">
-                <div className="text-lg font-semibold text-gray-900">{plan.name}</div>
-                <div className="mt-1 text-[13px] text-gray-500">{plan.tagline}</div>
-                <div className="mt-4">
-                  {plan.isFree ? (
-                    <>
-                      <span className="text-4xl font-bold text-gray-900">Free</span>
-                      <span className="block text-sm text-gray-400">forever</span>
-                    </>
-                  ) : plan.isEnterprise ? (
-                    <span className="text-3xl font-bold text-gray-900">Custom</span>
-                  ) : (
-                    <>
-                      <span className="text-4xl font-bold text-gray-900">
-                        {isYearly ? plan.yearlyMo : plan.monthly}
-                      </span>
-                      <span className="text-sm text-gray-400">/mo</span>
-                      {isYearly && plan.yearlyTotal && (
-                        <span className="mt-1 block text-[11px] text-gray-400">
-                          Billed {plan.yearlyTotal}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-                <a
-                  href="/signup"
-                  className={`mt-4 block w-full rounded-xl py-3 text-center text-sm font-medium transition-all duration-200 ${plan.ctaClass}`}
-                >
-                  {plan.cta}
-                </a>
-              </div>
-
-              {/* Feature sections */}
-              <div className="flex-1">
-                {plan.sections.map((sec) => (
-                  <div key={sec.title}>
-                    <div className="bg-gray-50 px-5 py-2 text-[10px] font-medium uppercase tracking-wider text-gray-500">
-                      {sec.title}
-                    </div>
-                    {sec.features.map((f, fi) => (
-                      <div
-                        key={fi}
-                        className={`flex items-start gap-2 border-b border-gray-50 px-5 py-2 text-[12px] last:border-0`}
-                      >
-                        <span className={f.included ? "text-emerald-500" : "text-gray-300"}>
-                          {f.included ? "✓" : "—"}
-                        </span>
-                        <span className={f.included ? "text-gray-700" : "text-gray-400"}>
-                          {f.text}
-                          {f.addon && (
-                            <span className="ml-1 rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-medium text-blue-600">
-                              add-on
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* Trust strip */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
+          {["Patent filed", "HIPAA compliant", "GDPR ready", "10 languages", "Cancel anytime"].map((t) => (
+            <span key={t} className="flex items-center gap-1.5 text-[11px] text-gray-400">
+              <span className="text-emerald-500">✓</span> {t}
+            </span>
           ))}
         </div>
       </section>
 
+      {/* PRICING CARDS */}
+      <section className="mx-auto mt-10 max-w-6xl px-8">
+        <div className="grid grid-cols-4 gap-5">
+          {cards.map((card) => {
+            var sections = buildSections(p, card.plan);
+            return (
+              <div
+                key={card.name}
+                className={`relative flex flex-col overflow-hidden rounded-2xl bg-white transition-all duration-300 hover:shadow-xl ${
+                  card.popular
+                    ? "border-2 border-emerald-500 shadow-lg"
+                    : `border border-gray-100 shadow-sm border-t-[3px] ${card.accent}`
+                }`}
+              >
+                {card.popular && (
+                  <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500 px-5 py-1.5 text-[11px] font-medium text-white shadow-sm">
+                    Most popular
+                  </span>
+                )}
+
+                {/* Header */}
+                <div className="p-7">
+                  <div className="text-xl font-bold text-gray-900">{card.name}</div>
+                  <div className="mt-1 text-[13px] leading-relaxed text-gray-500">{card.tagline}</div>
+                  <div className="mt-5">
+                    {card.name === "Free" ? (
+                      <>
+                        <span className="text-4xl font-bold text-gray-900">Free</span>
+                        <span className="ml-1 text-sm text-gray-400">forever</span>
+                      </>
+                    ) : card.name === "Enterprise" ? (
+                      <>
+                        <span className="text-3xl font-bold text-gray-900">Custom</span>
+                        <span className="ml-1 text-sm text-gray-400">per branch</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-4xl font-bold text-gray-900">{card.price}</span>
+                        <span className="text-sm text-gray-400">{card.sub}</span>
+                        {card.yearly && (
+                          <span className="mt-1 block text-[11px] text-gray-400">{card.yearly}</span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <a
+                    href={card.ctaHref}
+                    className={`mt-5 block w-full rounded-xl py-3.5 text-center text-sm font-semibold transition-all duration-200 ${card.ctaClass}`}
+                  >
+                    {card.cta}
+                  </a>
+                </div>
+
+                {/* Features */}
+                <div className="flex-1">
+                  {sections.map((sec) => (
+                    <div key={sec.title}>
+                      <div className="flex items-center gap-2 bg-gray-50 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                        <span className={`h-1.5 w-1.5 rounded-full ${sec.dot}`} />
+                        {sec.title}
+                      </div>
+                      {sec.features.map((f, fi) => (
+                        <div key={fi} className="flex items-start gap-2 px-5 py-2.5 text-[12px]">
+                          <span className={`text-sm font-bold ${f.included ? (f.addon ? "text-blue-500" : "text-emerald-500") : "text-gray-200"}`}>
+                            {f.included ? "✓" : "—"}
+                          </span>
+                          <span className={`flex-1 ${f.included ? (f.addon ? "text-gray-600" : "text-gray-700") : "text-gray-300"}`}>
+                            {f.text}
+                          </span>
+                          {f.addon && (
+                            <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-medium text-blue-600">
+                              add-on
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       {/* ADD-ONS */}
-      <section className="mx-auto mt-16 max-w-4xl px-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-900">Add-ons</h2>
-        <p className="mt-1 text-gray-500">Expand any plan</p>
-        <div className="mt-8 grid grid-cols-3 gap-4">
-          {addons.map((a) => (
-            <div key={a.name} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+      <section className="mx-auto mt-20 max-w-5xl px-8">
+        <h2 className="text-center text-3xl font-bold text-gray-900">Add-ons</h2>
+        <p className="mt-2 text-center text-sm text-gray-500">Expand any plan with what you need</p>
+        <div className="mt-10 grid grid-cols-3 gap-4">
+          {addonCards.map((a) => (
+            <div
+              key={a.name}
+              className={`rounded-2xl border border-gray-100 border-l-[3px] bg-white p-6 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md ${a.border}`}
+            >
               <div className="text-sm font-semibold text-gray-900">{a.name}</div>
               <div className="mt-1 text-[12px] text-gray-500">{a.desc}</div>
               <div className="mt-3 text-xl font-bold text-gray-900">{a.price}</div>
@@ -314,57 +365,26 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* LOCAL PRICING */}
-      <section className="mx-auto mt-12 max-w-3xl text-center">
-        <h2 className="text-lg font-semibold text-gray-900">Local pricing</h2>
-        <div className="mt-6 grid grid-cols-3 gap-4 px-8">
-          {localPricing.map((lp) => (
-            <div key={lp.country} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <div className="text-sm font-semibold text-gray-900">
-                {lp.flag} {lp.country}
-              </div>
-              <div className="mt-2 space-y-1">
-                {["Pro", "Business", "Enterprise"].map((label, i) => (
-                  <div key={label} className="flex justify-between text-[12px]">
-                    <span className="text-gray-500">{label}</span>
-                    <span className="font-medium text-gray-900">{lp.plans[i]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* TRUST LINE */}
-      <div className="mt-10 text-center text-[13px] text-gray-500">
-        HIPAA/GDPR compliant · 10 languages · Cancel anytime · Free migration
+      {/* TRUST */}
+      <div className="mt-16 text-center text-[13px] text-gray-400">
+        HIPAA/GDPR compliant · 10 languages · Cancel anytime · Free migration · 24/7 AI support
       </div>
 
       {/* FAQ */}
       <section className="mx-auto mt-16 max-w-3xl px-8 pb-16">
-        <h2 className="mb-8 text-center text-2xl font-bold text-gray-900">
-          Frequently asked questions
-        </h2>
+        <h2 className="mb-10 text-center text-3xl font-bold text-gray-900">Frequently asked questions</h2>
         <div className="space-y-3">
           {faqs.map((faq, i) => (
-            <div
-              key={i}
-              className="rounded-xl border border-gray-100 bg-white shadow-sm transition-all duration-200 hover:shadow-md"
-            >
+            <div key={i} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
               <button
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="flex w-full cursor-pointer items-center justify-between px-5 py-4 text-left"
+                className="flex w-full cursor-pointer items-center justify-between px-6 py-5 text-left transition-colors hover:bg-gray-50"
               >
-                <span className="text-sm font-medium text-gray-900">{faq.q}</span>
-                <span className={`text-gray-400 transition-transform duration-200 ${openFaq === i ? "rotate-45" : ""}`}>
-                  +
-                </span>
+                <span className="text-[14px] font-medium text-gray-900">{faq.q}</span>
+                <span className={`text-xl text-gray-400 transition-transform duration-200 ${openFaq === i ? "rotate-45" : ""}`}>+</span>
               </button>
               {openFaq === i && (
-                <div className="border-t border-gray-50 px-5 pb-4 pt-2 text-[13px] leading-relaxed text-gray-600">
-                  {faq.a}
-                </div>
+                <div className="px-6 pb-5 text-[13px] leading-relaxed text-gray-600">{faq.a}</div>
               )}
             </div>
           ))}
@@ -372,8 +392,9 @@ export default function PricingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="flex items-center justify-between bg-gray-900 px-8 py-6 text-sm text-gray-400">
+      <footer className="flex items-center justify-between bg-gray-900 px-8 py-8 text-sm text-gray-500">
         <span>© 2026 SmartGumastha Technologies Pvt Ltd</span>
+        <span className="text-gray-400">MHAI — where AI is not a feature, it&apos;s the DNA</span>
         <div className="flex gap-4">
           <a href="/privacy" className="transition-colors hover:text-gray-200">Privacy</a>
           <a href="/terms" className="transition-colors hover:text-gray-200">Terms</a>
