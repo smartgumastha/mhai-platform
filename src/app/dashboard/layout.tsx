@@ -29,10 +29,13 @@ export default function DashboardLayout({
 
   if (!isAuthenticated) return null;
 
+  // Debug: log user object to see available fields for business name
+  console.log("[DashboardLayout] user object:", user);
+
   return (
-    <div className="grid min-h-screen grid-cols-[220px_1fr]">
+    <div className="grid h-screen grid-cols-[220px_1fr] overflow-hidden">
       <DashboardSidebar
-        businessName={user?.business_name || "My Clinic"}
+        businessName={user?.business_name || user?.owner_name || "My Clinic"}
       />
       <main className="overflow-y-auto bg-gray-50">{children}</main>
     </div>
