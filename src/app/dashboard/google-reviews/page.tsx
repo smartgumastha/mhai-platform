@@ -127,8 +127,8 @@ export default function GoogleReviewsPage() {
         review_text: review.review_text,
         rating: review.rating,
       });
-      if (res.success && (res.reply || res.content)) {
-        setAiReplies((prev) => ({ ...prev, [review.id]: res.reply || res.content }));
+      if (res.success && res.reply_text) {
+        setAiReplies((prev) => ({ ...prev, [review.id]: res.reply_text }));
       } else {
         alert(res.error || res.message || "AI generation failed");
       }

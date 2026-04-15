@@ -148,9 +148,13 @@ export default function SocialPostsPage() {
         platform: newPlatforms[0] || "ig",
       });
       if (res.success) {
-        if (res.content) setNewContent(res.content);
-        if (res.hashtags) setNewHashtags(res.hashtags);
-        if (res.caption) setNewContent(res.caption);
+        // Backend returns post_text (string) and hashtags (array)
+        if (res.post_text) setNewContent(res.post_text);
+        if (res.hashtags) {
+          setNewHashtags(
+            Array.isArray(res.hashtags) ? res.hashtags.join(" ") : res.hashtags
+          );
+        }
       } else {
         alert(res.error || res.message || "AI generation failed");
       }
