@@ -303,6 +303,12 @@ export function updateReviewResponse(
 }
 
 // ── Appointments ──
+export function getAppointments(filter?: string) {
+  var url = "/api/mhai/appointments";
+  if (filter) url += "?filter=" + encodeURIComponent(filter);
+  return api<{ success: boolean; appointments?: any[]; error?: string }>(url);
+}
+
 export function createAppointment(data: {
   patient_name: string;
   patient_phone: string;
@@ -310,10 +316,28 @@ export function createAppointment(data: {
   slot_time: string;
   status?: string;
   source?: string;
+  notes?: string;
 }) {
   return api<{ success: boolean; appointment?: any; error?: string; message?: string }>(
     "/api/mhai/appointments",
     { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function updateAppointment(
+  appointmentId: string,
+  data: { status?: string; notes?: string }
+) {
+  return api<{ success: boolean; appointment?: any; error?: string; message?: string }>(
+    "/api/mhai/appointments/" + encodeURIComponent(appointmentId),
+    { method: "PUT", body: JSON.stringify(data) }
+  );
+}
+
+// ── Patients ──
+export function getPatients() {
+  return api<{ success: boolean; patients?: any[]; error?: string }>(
+    "/api/mhai/patients"
   );
 }
 
