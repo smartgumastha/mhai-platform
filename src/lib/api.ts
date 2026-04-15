@@ -241,7 +241,7 @@ export function getSocialPosts() {
 export function createSocialPost(data: {
   post_type: string;
   content: string;
-  platforms: string[];
+  platform: string;
   hashtags: string;
 }) {
   return api<{ success: boolean; post?: any; error?: string; message?: string }>(

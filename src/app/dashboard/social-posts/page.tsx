@@ -183,7 +183,7 @@ export default function SocialPostsPage() {
       var res = await createSocialPost({
         post_type: newType,
         content: newContent,
-        platforms: newPlatforms,
+        platform: newPlatforms[0] || "ig",
         hashtags: newHashtags,
       });
       if (res.success) {
