@@ -40,6 +40,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="MHAI" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async />
       </head>
       <body className="min-h-full flex flex-col">
         <Providers>

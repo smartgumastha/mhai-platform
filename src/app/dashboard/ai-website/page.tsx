@@ -8,6 +8,7 @@ import {
   getWebsitePages,
   generateBlogPost,
 } from "@/lib/api";
+import { useNotification } from "@/app/providers/NotificationProvider";
 
 var PAGE_TYPE_STYLES: Record<string, { icon: string; dot: string }> = {
   home: { icon: "\u2302", dot: "bg-emerald-500" },
@@ -39,6 +40,7 @@ var GEN_STEPS = [
 ];
 
 export default function AiWebsitePage() {
+  var notify = useNotification();
   var [website, setWebsite] = useState<any>(null);
   var [pages, setPages] = useState<any[]>([]);
   var [loading, setLoading] = useState(true);
@@ -80,7 +82,7 @@ export default function AiWebsitePage() {
       setGenStep(1);
       var createRes = await createWebsite({ status: "generating" });
       if (!createRes.success || !createRes.website) {
-        alert(createRes.error || createRes.message || "Failed to create website.");
+        notify.error("Failed", createRes.error || createRes.message || "Failed to create website.");
         setGenerating(false);
         return;
       }
@@ -111,7 +113,7 @@ export default function AiWebsitePage() {
       // Refresh
       await fetchData();
     } catch {
-      alert("Something went wrong. Please try again.");
+      notify.error("Error", "Something went wrong. Please try again.");
     } finally {
       setGenerating(false);
     }
@@ -123,7 +125,7 @@ export default function AiWebsitePage() {
 
   /* ── generate blog ── */
   async function handleBlogGenerate() {
-    if (!blogTopic.trim()) { alert("Enter a blog topic."); return; }
+    if (!blogTopic.trim()) { notify.warning("Missing topic", "Enter a blog topic."); return; }
     setBlogGenerating(true);
     try {
       var res = await generateBlogPost(blogTopic.trim());
@@ -139,10 +141,10 @@ export default function AiWebsitePage() {
           } catch {}
         }
       } else {
-        alert(res.error || res.message || "Failed to generate blog post.");
+        notify.error("Failed", res.error || res.message || "Failed to generate blog post.");
       }
     } catch {
-      alert("Network error. Please try again.");
+      notify.error("Network error", "Please try again.");
     } finally {
       setBlogGenerating(false);
     }

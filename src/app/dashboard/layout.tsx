@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/app/providers/auth-context";
+import { DashboardProvider } from "@/app/dashboard/contexts/DashboardContext";
+import { NotificationProvider } from "@/app/providers/NotificationProvider";
 import DashboardSidebar from "@/app/components/DashboardSidebar";
 
 export default function DashboardLayout({
@@ -32,11 +34,15 @@ export default function DashboardLayout({
   console.log("[DashboardLayout] user object:", user);
 
   return (
-    <div className="grid h-screen grid-cols-[220px_1fr] overflow-hidden">
-      <DashboardSidebar
-        businessName={user?.business_name || user?.owner_name || "My Clinic"}
-      />
-      <main className="overflow-y-auto bg-gray-50/80">{children}</main>
-    </div>
+    <DashboardProvider>
+      <NotificationProvider>
+        <div className="grid h-screen grid-cols-[220px_1fr] overflow-hidden">
+          <DashboardSidebar
+            businessName={user?.business_name || user?.owner_name || "My Clinic"}
+          />
+          <main className="overflow-y-auto bg-gray-50/80">{children}</main>
+        </div>
+      </NotificationProvider>
+    </DashboardProvider>
   );
 }

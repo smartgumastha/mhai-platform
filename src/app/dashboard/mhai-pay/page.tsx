@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPaymentLink, getPayments } from "@/lib/api";
+import { useCurrency } from "@/app/hooks/useCurrency";
+import { useNotification } from "@/app/providers/NotificationProvider";
 
 var purposeOptions = [
   "Consultation fee",
@@ -100,6 +102,9 @@ function formatDate(ts: number) {
 }
 
 export default function MhaiPayPage() {
+  var currency = useCurrency();
+  var notify = useNotification();
+
   /* ── form state ── */
   var [name, setName] = useState("");
   var [phone, setPhone] = useState("");
@@ -136,9 +141,9 @@ export default function MhaiPayPage() {
 
   /* ── create link ── */
   async function handleCreate() {
-    if (!name.trim()) { alert("Patient name is required."); return; }
-    if (!phone.trim()) { alert("Phone number is required."); return; }
-    if (!amount || Number(amount) <= 0) { alert("Enter a valid amount."); return; }
+    if (!name.trim()) { notify.warning("Missing field", "Patient name is required."); return; }
+    if (!phone.trim()) { notify.warning("Missing field", "Phone number is required."); return; }
+    if (!amount || Number(amount) <= 0) { notify.warning("Invalid amount", "Enter a valid amount."); return; }
     setCreating(true);
     try {
       var res = await createPaymentLink({
@@ -151,10 +156,10 @@ export default function MhaiPayPage() {
         setCreated({ ...res.payment, created_at: Date.now() } as Payment);
         fetchPayments();
       } else {
-        alert(res.error || res.message || "Failed to create payment link.");
+        notify.error("Failed", res.error || res.message || "Failed to create payment link.");
       }
     } catch {
-      alert("Network error. Please try again.");
+      notify.error("Network error", "Please try again.");
     } finally {
       setCreating(false);
     }
@@ -180,18 +185,18 @@ export default function MhaiPayPage() {
   var whatsappMsg = created
     ? encodeURIComponent(
         "Hi " + created.patient_name + ", here is your payment link for " + created.purpose +
-        " (₹" + created.amount + "): " + created.short_url
+        " (" + currency.format(created.amount) + "): " + created.short_url
       )
     : "";
   var smsBody = created
     ? encodeURIComponent(
-        "Payment link for " + created.purpose + " ₹" + created.amount + ": " + created.short_url
+        "Payment link for " + created.purpose + " " + currency.format(created.amount) + ": " + created.short_url
       )
     : "";
   var emailSubject = created ? encodeURIComponent("Payment link - " + created.purpose) : "";
   var emailBody = created
     ? encodeURIComponent(
-        "Hi " + created.patient_name + ",\n\nPlease complete your payment of ₹" + created.amount +
+        "Hi " + created.patient_name + ",\n\nPlease complete your payment of " + currency.format(created.amount) +
         " for " + created.purpose + ".\n\nPayment link: " + created.short_url + "\n\nThank you!"
       )
     : "";
@@ -218,7 +223,7 @@ export default function MhaiPayPage() {
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
             </div>
             <div className="mb-1 text-2xl font-semibold text-gray-900">
-              ₹{Number(created.amount).toLocaleString("en-IN")}
+              {currency.format(Number(created.amount))}
             </div>
             <div className="text-sm text-gray-700">{created.patient_name}</div>
             <div className="text-xs text-gray-500">{created.purpose}</div>
@@ -286,7 +291,7 @@ export default function MhaiPayPage() {
             {[
               { label: "Patient", value: created.patient_name },
               { label: "Phone", value: created.patient_phone },
-              { label: "Amount", value: "\u20B9" + Number(created.amount).toLocaleString("en-IN") },
+              { label: "Amount", value: currency.format(Number(created.amount)) },
               { label: "Purpose", value: created.purpose },
               { label: "Status", value: "Pending" },
               { label: "Link ID", value: created.razorpay_link_id },
@@ -328,7 +333,7 @@ export default function MhaiPayPage() {
         <div className="rounded-2xl border border-gray-100 border-t-2 border-t-emerald-500 bg-white p-4 shadow-sm">
           <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">Collected MTD</div>
           <div className="mt-1 text-2xl font-semibold text-gray-900">
-            {collectedMtd > 0 ? "\u20B9" + collectedMtd.toLocaleString("en-IN") : "\u20B90"}
+            {currency.formatCompact(collectedMtd)}
           </div>
           <span className="mt-1 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
             {paidCount} paid
@@ -414,7 +419,7 @@ export default function MhaiPayPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm font-semibold text-gray-900">
-                      {"\u20B9"}{Number(p.amount).toLocaleString("en-IN")}
+                      {currency.format(Number(p.amount))}
                     </div>
                     <span
                       className={
@@ -460,7 +465,7 @@ export default function MhaiPayPage() {
             <div className="mb-3">
               <label className="mb-1 block text-xs text-gray-500">Amount</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">{"\u20B9"}</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">{currency.symbol}</span>
                 <input
                   className={inputClass + " pl-7"}
                   type="number"

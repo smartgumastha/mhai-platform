@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/app/providers/auth-context";
+import { useCurrency } from "@/app/hooks/useCurrency";
+import { useNotification } from "@/app/providers/NotificationProvider";
 import { getAiActivity, getDashboardStats, createAppointment } from "@/lib/api";
 
 var channels = [
@@ -61,6 +63,8 @@ type Activity = { color: string; text: string; time: string };
 
 export default function DashboardPage() {
   var { user } = useAuth();
+  var currency = useCurrency();
+  var notify = useNotification();
   var [activities, setActivities] = useState<Activity[]>([]);
   var [todayAppts, setTodayAppts] = useState(0);
   var [totalReviews, setTotalReviews] = useState(0);
@@ -110,7 +114,7 @@ export default function DashboardPage() {
   /* ── Patient Done submit ── */
   async function handlePatientDone() {
     if (!pdName.trim() || !pdPhone.trim()) {
-      alert("Please fill in both name and phone number.");
+      notify.warning("Missing fields", "Please fill in both name and phone number.");
       return;
     }
     setPdSubmitting(true);
@@ -140,20 +144,13 @@ export default function DashboardPage() {
           }
         }).catch(() => {});
       } else {
-        alert(res.error || res.message || "Failed to log patient.");
+        notify.error("Failed", res.error || res.message || "Failed to log patient.");
       }
     } catch {
-      alert("Network error. Please try again.");
+      notify.error("Network error", "Please try again.");
     } finally {
       setPdSubmitting(false);
     }
-  }
-
-  function formatRevenue(v: number) {
-    if (v >= 100000) return "\u20B9" + (v / 100000).toFixed(1) + "L";
-    if (v >= 1000) return "\u20B9" + (v / 1000).toFixed(1) + "K";
-    if (v > 0) return "\u20B9" + v;
-    return "\u20B90";
   }
 
   var metrics = [
@@ -181,7 +178,7 @@ export default function DashboardPage() {
     },
     {
       label: "Revenue (MTD)",
-      value: formatRevenue(revenueMtd),
+      value: currency.formatCompact(revenueMtd),
       change: revenueMtd > 0 ? "collected this month" : "No payments yet",
       accent: "border-t-amber-500",
     },

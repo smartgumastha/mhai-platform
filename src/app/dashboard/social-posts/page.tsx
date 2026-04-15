@@ -6,6 +6,7 @@ import {
   createSocialPost,
   generateSocialPost,
 } from "@/lib/api";
+import { useNotification } from "@/app/providers/NotificationProvider";
 
 /* ── platform definitions ── */
 var platformDefs = [
@@ -101,6 +102,7 @@ type Post = {
 };
 
 export default function SocialPostsPage() {
+  var notify = useNotification();
   var [activeTab, setActiveTab] = useState("posts");
   var [posts, setPosts] = useState<Post[]>([]);
   var [loading, setLoading] = useState(true);
@@ -163,10 +165,10 @@ export default function SocialPostsPage() {
           );
         }
       } else {
-        alert(res.error || res.message || "AI generation failed");
+        notify.error("AI generation failed", res.error || res.message || "Please try again.");
       }
     } catch {
-      alert("Network error. Please try again.");
+      notify.error("Network error", "Please try again.");
     } finally {
       setAiGenerating(false);
     }
@@ -175,7 +177,7 @@ export default function SocialPostsPage() {
   /* ── create post ── */
   async function handleCreatePost() {
     if (!newContent.trim()) {
-      alert("Please add some content first.");
+      notify.warning("No content", "Please add some content first.");
       return;
     }
     setPosting(true);
@@ -187,7 +189,7 @@ export default function SocialPostsPage() {
         hashtags: newHashtags,
       });
       if (res.success) {
-        alert("Post created!");
+        notify.success("Post created", "Your post has been saved.");
         setShowCreate(false);
         setNewContent("");
         setNewHashtags("");
@@ -202,10 +204,10 @@ export default function SocialPostsPage() {
           }));
         }
       } else {
-        alert(res.error || res.message || "Failed to create post.");
+        notify.error("Failed", res.error || res.message || "Failed to create post.");
       }
     } catch {
-      alert("Network error. Please try again.");
+      notify.error("Network error", "Please try again.");
     } finally {
       setPosting(false);
     }
@@ -230,7 +232,7 @@ export default function SocialPostsPage() {
         <div className="flex items-center gap-6">
           <div><div className="text-[10px] text-gray-400">Yesterday</div><div className="text-sm font-semibold text-gray-900">342 reach</div></div>
           <div className="text-sm font-semibold text-gray-900">18 likes</div>
-          <div className="flex items-center gap-1"><span className="text-sm font-semibold text-emerald-600">1 booking</span><span className="text-[11px] text-gray-400">(Rs 600)</span></div>
+          <div className="flex items-center gap-1"><span className="text-sm font-semibold text-emerald-600">1 booking</span><span className="text-[11px] text-gray-400">(from bookings)</span></div>
           <div className="h-6 w-px bg-gray-200" />
           <span className="rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-[11px] font-medium text-amber-700">5-day posting streak</span>
         </div>
@@ -419,7 +421,7 @@ export default function SocialPostsPage() {
                       )}
                       <div className="flex items-center justify-between">
                         <div className="flex gap-2">
-                          <button onClick={() => alert(`Posted to ${getActiveNames(post.id)}! Booking tracking enabled.`)} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-[11px] font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600">Post now</button>
+                          <button onClick={() => notify.success("Posted", `Posted to ${getActiveNames(post.id)}! Booking tracking enabled.`)} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-[11px] font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600">Post now</button>
                           <button className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] text-gray-700 transition-all duration-200 hover:border-emerald-500">Schedule</button>
                           <button className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] text-gray-700 transition-all duration-200 hover:border-emerald-500">Edit</button>
                         </div>

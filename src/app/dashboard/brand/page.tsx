@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getBrandSettings, saveBrandSettings } from "@/lib/api";
+import { useNotification } from "@/app/providers/NotificationProvider";
 
 var colorOptions = [
   { hex: "#10b981", name: "emerald" },
@@ -193,6 +194,7 @@ function PillSelector({
 }
 
 export default function BrandDNAPage() {
+  var notify = useNotification();
   var [data, setData] = useState<BrandDNA>(defaults);
   var [loaded, setLoaded] = useState(false);
   var [saving, setSaving] = useState(false);
@@ -249,14 +251,14 @@ export default function BrandDNAPage() {
       if (res.success) {
         localStorage.setItem("mhai_brand_dna", JSON.stringify(data));
         if (res.completeness != null) setCompleteness(res.completeness);
-        alert("Brand DNA saved!");
+        notify.success("Saved", "Brand DNA saved!");
       } else {
-        alert(res.error || res.message || "Failed to save. Please try again.");
+        notify.error("Save failed", res.error || res.message || "Please try again.");
       }
     } catch {
       // Network failed — save to localStorage so data isn't lost
       localStorage.setItem("mhai_brand_dna", JSON.stringify(data));
-      alert("Saved locally — will sync when connection is restored.");
+      notify.info("Saved locally", "Will sync when connection is restored.");
     } finally {
       setSaving(false);
     }

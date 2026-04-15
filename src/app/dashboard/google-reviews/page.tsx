@@ -6,6 +6,7 @@ import {
   generateReviewReply,
   updateReviewResponse,
 } from "@/lib/api";
+import { useNotification } from "@/app/providers/NotificationProvider";
 
 /* ── filter tabs ── */
 var filterTabs = [
@@ -45,6 +46,7 @@ type Review = {
 };
 
 export default function GoogleReviewsPage() {
+  var notify = useNotification();
   var [filter, setFilter] = useState("pending");
   var [reviews, setReviews] = useState<Review[]>([]);
   var [loading, setLoading] = useState(true);
@@ -130,10 +132,10 @@ export default function GoogleReviewsPage() {
       if (res.success && res.reply_text) {
         setAiReplies((prev) => ({ ...prev, [review.id]: res.reply_text }));
       } else {
-        alert(res.error || res.message || "AI generation failed");
+        notify.error("AI generation failed", res.error || res.message || "Please try again.");
       }
     } catch {
-      alert("Network error. Please try again.");
+      notify.error("Network error", "Please try again.");
     } finally {
       setRegenerating((prev) => ({ ...prev, [review.id]: false }));
     }
@@ -143,7 +145,7 @@ export default function GoogleReviewsPage() {
   async function handleApprove(review: Review) {
     var replyText = aiReplies[review.id];
     if (!replyText) {
-      alert("No AI reply to approve. Tap Regenerate first.");
+      notify.warning("No reply", "No AI reply to approve. Tap Regenerate first.");
       return;
     }
     setApproving((prev) => ({ ...prev, [review.id]: true }));
@@ -158,12 +160,12 @@ export default function GoogleReviewsPage() {
             r.id === review.id ? { ...r, ai_response_status: "approved", ai_reply: replyText } : r
           )
         );
-        alert("Reply posted to Google!");
+        notify.success("Reply posted", "Reply posted to Google!");
       } else {
-        alert(res.error || res.message || "Failed to approve reply.");
+        notify.error("Failed", res.error || res.message || "Failed to approve reply.");
       }
     } catch {
-      alert("Network error. Please try again.");
+      notify.error("Network error", "Please try again.");
     } finally {
       setApproving((prev) => ({ ...prev, [review.id]: false }));
     }
