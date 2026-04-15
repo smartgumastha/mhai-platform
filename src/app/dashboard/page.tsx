@@ -124,7 +124,7 @@ export default function DashboardPage() {
         slot_date: date,
         slot_time: time,
         status: "completed",
-        source: "walk-in",
+        source: "walk_in",
       });
       if (res.success) {
         setShowPatientDone(false);
