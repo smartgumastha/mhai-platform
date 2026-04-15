@@ -265,6 +265,20 @@ export function saveBrandSettings(data: Record<string, any>) {
 }
 
 // ── Dashboard ──
+export function getDashboardStats() {
+  return api<{
+    success: boolean;
+    today_appointments?: number;
+    total_reviews?: number;
+    avg_rating?: number;
+    pending_replies?: number;
+    total_posts?: number;
+    revenue_mtd?: number;
+    appointments_list?: any[];
+    error?: string;
+  }>("/api/mhai/dashboard-stats");
+}
+
 export function getAiActivity() {
   return api<{ success: boolean; activities?: any[]; error?: string }>(
     "/api/mhai/ai-activity"

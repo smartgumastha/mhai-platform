@@ -2,29 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/app/providers/auth-context";
-import { getAiActivity, getReviews, createAppointment } from "@/lib/api";
-
-var staticMetrics = [
-  {
-    label: "Appointments today",
-    value: "8",
-    change: "↑ 3 from yesterday",
-    accent: "border-t-emerald-500",
-  },
-  // Google rating card is built dynamically inside the component
-  {
-    label: "Website visits",
-    value: "347",
-    change: "↑ 18% this week",
-    accent: "border-t-purple-500",
-  },
-  {
-    label: "Revenue (MTD)",
-    value: "₹1.2L",
-    change: "₹84K collected online",
-    accent: "border-t-amber-500",
-  },
-];
+import { getAiActivity, getDashboardStats, createAppointment } from "@/lib/api";
 
 var channels = [
   {
@@ -72,27 +50,6 @@ var STATUS_COLORS: Record<string, string> = {
   warning: "bg-amber-500",
 };
 
-var appointments = [
-  {
-    name: "Rajesh Kumar",
-    detail: "10:30 AM · Knee pain",
-    badge: "Confirmed",
-    badgeClass: "bg-green-100 text-green-800",
-  },
-  {
-    name: "Sunita Devi",
-    detail: "11:00 AM · Back rehab",
-    badge: "Pending",
-    badgeClass: "bg-amber-100 text-amber-800",
-  },
-  {
-    name: "Arun Sharma",
-    detail: "2:00 PM · Shoulder",
-    badge: "Confirmed",
-    badgeClass: "bg-green-100 text-green-800",
-  },
-];
-
 function getGreeting() {
   var h = new Date().getHours();
   if (h < 12) return "Good morning";
@@ -105,9 +62,13 @@ type Activity = { color: string; text: string; time: string };
 export default function DashboardPage() {
   var { user } = useAuth();
   var [activities, setActivities] = useState<Activity[]>([]);
-  var [pendingReviews, setPendingReviews] = useState(0);
+  var [todayAppts, setTodayAppts] = useState(0);
   var [totalReviews, setTotalReviews] = useState(0);
-  var [avgRating, setAvgRating] = useState<string | null>(null);
+  var [avgRating, setAvgRating] = useState(0);
+  var [pendingReviews, setPendingReviews] = useState(0);
+  var [totalPosts, setTotalPosts] = useState(0);
+  var [revenueMtd, setRevenueMtd] = useState(0);
+  var [apptList, setApptList] = useState<any[]>([]);
 
   /* ── Patient Done state ── */
   var [showPatientDone, setShowPatientDone] = useState(false);
@@ -117,6 +78,20 @@ export default function DashboardPage() {
   var [pdToast, setPdToast] = useState("");
 
   useEffect(() => {
+    getDashboardStats()
+      .then((res) => {
+        if (res.success) {
+          setTodayAppts(res.today_appointments || 0);
+          setTotalReviews(res.total_reviews || 0);
+          setAvgRating(res.avg_rating || 0);
+          setPendingReviews(res.pending_replies || 0);
+          setTotalPosts(res.total_posts || 0);
+          setRevenueMtd(res.revenue_mtd || 0);
+          if (res.appointments_list) setApptList(res.appointments_list);
+        }
+      })
+      .catch(() => {});
+
     getAiActivity()
       .then((res) => {
         if (res.success && res.activities && res.activities.length > 0) {
@@ -127,26 +102,6 @@ export default function DashboardPage() {
               time: a.time || a.created_at || "",
             }))
           );
-        }
-      })
-      .catch(() => {});
-
-    getReviews()
-      .then((res) => {
-        if (res.success && res.reviews) {
-          var reviews = res.reviews;
-          setTotalReviews(reviews.length);
-          var pending = reviews.filter(
-            (r: any) => r.ai_response_status === "pending"
-          );
-          setPendingReviews(pending.length);
-          if (reviews.length > 0) {
-            var sum = reviews.reduce(
-              (acc: number, r: any) => acc + (Number(r.rating) || 0),
-              0
-            );
-            setAvgRating((sum / reviews.length).toFixed(1));
-          }
         }
       })
       .catch(() => {});
@@ -177,6 +132,13 @@ export default function DashboardPage() {
         setPdPhone("");
         setPdToast("Patient logged — automation triggered");
         setTimeout(() => setPdToast(""), 3000);
+        // Refresh stats
+        getDashboardStats().then((s) => {
+          if (s.success) {
+            setTodayAppts(s.today_appointments || 0);
+            if (s.appointments_list) setApptList(s.appointments_list);
+          }
+        }).catch(() => {});
       } else {
         alert(res.error || res.message || "Failed to log patient.");
       }
@@ -187,28 +149,49 @@ export default function DashboardPage() {
     }
   }
 
-  var reviewCard = {
-    label: "Google rating",
-    value: avgRating ? avgRating + " ★" : "— ★",
-    change: pendingReviews > 0
-      ? pendingReviews + " AI replies pending"
-      : totalReviews > 0
-        ? totalReviews + " reviews"
-        : "No reviews yet",
-    accent: "border-t-blue-500",
-  };
+  function formatRevenue(v: number) {
+    if (v >= 100000) return "\u20B9" + (v / 100000).toFixed(1) + "L";
+    if (v >= 1000) return "\u20B9" + (v / 1000).toFixed(1) + "K";
+    if (v > 0) return "\u20B9" + v;
+    return "\u20B90";
+  }
 
   var metrics = [
-    staticMetrics[0],
-    reviewCard,
-    staticMetrics[1],
-    staticMetrics[2],
+    {
+      label: "Appointments today",
+      value: String(todayAppts),
+      change: todayAppts > 0 ? todayAppts + " patients seen" : "No appointments yet",
+      accent: "border-t-emerald-500",
+    },
+    {
+      label: "Google rating",
+      value: avgRating > 0 ? avgRating.toFixed(1) + " \u2605" : "\u2014 \u2605",
+      change: pendingReviews > 0
+        ? pendingReviews + " AI replies pending"
+        : totalReviews > 0
+          ? totalReviews + " reviews"
+          : "No reviews yet",
+      accent: "border-t-blue-500",
+    },
+    {
+      label: "Content posted",
+      value: String(totalPosts),
+      change: totalPosts > 0 ? totalPosts + " posts published" : "No posts yet",
+      accent: "border-t-purple-500",
+    },
+    {
+      label: "Revenue (MTD)",
+      value: formatRevenue(revenueMtd),
+      change: revenueMtd > 0 ? "collected this month" : "No payments yet",
+      accent: "border-t-amber-500",
+    },
   ];
 
   var renderedChannels = channels.map((ch) => {
     if (ch.name === "Google") {
-      var stats = avgRating ? avgRating + " avg" : "—";
-      if (pendingReviews > 0) stats += " · " + pendingReviews + " AI replies pending";
+      var stats = avgRating > 0 ? avgRating.toFixed(1) + " avg" : "\u2014";
+      if (pendingReviews > 0) stats += " \u00B7 " + pendingReviews + " AI replies pending";
+      else if (totalReviews > 0) stats += " \u00B7 " + totalReviews + " reviews";
       return { ...ch, stats, status: pendingReviews > 0 ? "amber" : "green" };
     }
     return ch;
@@ -223,7 +206,9 @@ export default function DashboardPage() {
             {getGreeting()}, {user?.business_name || "Partner"}!
           </h1>
           <p className="mt-0.5 text-sm italic text-gray-500">
-            Your AI engine processed 23 tasks while you slept
+            {totalPosts > 0 || totalReviews > 0
+              ? "Your AI engine has created " + totalPosts + " posts and handled " + totalReviews + " reviews"
+              : "Your AI engine is ready \u2014 log your first patient to start"}
           </p>
         </div>
         <div className="flex gap-2">
@@ -389,24 +374,38 @@ export default function DashboardPage() {
             Today&apos;s appointments
           </h2>
           <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
-            {appointments.map((a, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between rounded-md px-1 py-2 transition-all duration-200 hover:bg-gray-50"
-              >
-                <div>
-                  <div className="text-xs font-medium text-gray-900">
-                    {a.name}
-                  </div>
-                  <div className="text-[11px] text-gray-400">{a.detail}</div>
-                </div>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${a.badgeClass}`}
-                >
-                  {a.badge}
-                </span>
+            {apptList.length === 0 ? (
+              <div className="py-4 text-center text-xs text-gray-400">
+                No appointments today — tap Patient Done to log visits
               </div>
-            ))}
+            ) : (
+              apptList.map((a: any) => {
+                var badgeClass = a.status === "completed"
+                  ? "bg-emerald-100 text-emerald-800"
+                  : a.status === "booked"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-amber-100 text-amber-800";
+                var badgeText = a.status === "completed" ? "Done" : a.status === "booked" ? "Confirmed" : a.status || "Pending";
+                return (
+                  <div
+                    key={a.id}
+                    className="flex items-center justify-between rounded-md px-1 py-2 transition-all duration-200 hover:bg-gray-50"
+                  >
+                    <div>
+                      <div className="text-xs font-medium text-gray-900">
+                        {a.patient_name || "Patient"}
+                      </div>
+                      <div className="text-[11px] text-gray-400">
+                        {a.slot_time || ""}{a.reason ? " \u00B7 " + a.reason : ""}
+                      </div>
+                    </div>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${badgeClass}`}>
+                      {badgeText}
+                    </span>
+                  </div>
+                );
+              })
+            )}
             <div className="mt-2 border-t border-gray-100 pt-2 text-center">
               <span className="cursor-pointer text-[11px] text-emerald-600 transition-all duration-200 hover:text-emerald-700">
                 View calendar →
