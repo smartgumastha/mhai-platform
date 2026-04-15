@@ -317,6 +317,40 @@ export function createAppointment(data: {
   );
 }
 
+// ── Payments ──
+export function createPaymentLink(data: {
+  patient_name: string;
+  patient_phone: string;
+  amount: number;
+  purpose: string;
+}) {
+  return api<{
+    success: boolean;
+    payment?: {
+      id: string;
+      hospital_id: string;
+      patient_name: string;
+      patient_phone: string;
+      amount: number;
+      purpose: string;
+      status: string;
+      razorpay_link_id: string;
+      short_url: string;
+    };
+    error?: string;
+    message?: string;
+  }>("/api/mhai/payments/create-link", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function getPayments(status?: string) {
+  var url = "/api/mhai/payments";
+  if (status) url += "?status=" + encodeURIComponent(status);
+  return api<{ success: boolean; payments?: any[]; error?: string }>(url);
+}
+
 // ── Locale ──
 export function getLocale(countryCode: string) {
   return api("/api/locale/" + encodeURIComponent(countryCode));
