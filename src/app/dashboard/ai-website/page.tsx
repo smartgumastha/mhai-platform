@@ -9,6 +9,8 @@ import {
   generateBlogPost,
 } from "@/lib/api";
 import { useNotification } from "@/app/providers/NotificationProvider";
+import { useDashboard } from "@/app/dashboard/contexts/DashboardContext";
+import BookingWidget from "@/app/components/BookingWidget";
 
 var PAGE_TYPE_STYLES: Record<string, { icon: string; dot: string }> = {
   home: { icon: "\u2302", dot: "bg-emerald-500" },
@@ -41,6 +43,7 @@ var GEN_STEPS = [
 
 export default function AiWebsitePage() {
   var notify = useNotification();
+  var { brand, hospital } = useDashboard();
   var [website, setWebsite] = useState<any>(null);
   var [pages, setPages] = useState<any[]>([]);
   var [loading, setLoading] = useState(true);
@@ -377,6 +380,23 @@ export default function AiWebsitePage() {
                 {blogGenerating ? "Writing..." : "Generate"}
               </button>
             </div>
+          </div>
+
+          {/* Booking widget preview */}
+          <div className="mt-5">
+            <div className="mb-2 text-sm font-medium text-gray-900">Booking widget preview</div>
+            <div className="text-[11px] text-gray-500 mb-3">This widget is live on your website and at <span className="font-medium text-emerald-600">/book/{hospital.hospital_id || "your-id"}</span></div>
+            {hospital.hospital_id ? (
+              <BookingWidget
+                hospitalId={hospital.hospital_id}
+                clinicName={brand?.clinicName || brand?.clinic_name || hospital.business_name || undefined}
+                clinicAddress={brand?.address || brand?.city || undefined}
+              />
+            ) : (
+              <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-xs text-gray-500">
+                Hospital ID not found. Complete onboarding to enable booking.
+              </div>
+            )}
           </div>
         </div>
 
