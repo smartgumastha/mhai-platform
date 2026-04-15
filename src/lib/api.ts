@@ -174,6 +174,52 @@ export function generateReviewReply(data: {
   });
 }
 
+// ── Social Posts ──
+export function getSocialPosts() {
+  return api<{ success: boolean; posts?: any[]; error?: string }>(
+    "/api/mhai/social-posts"
+  );
+}
+
+export function createSocialPost(data: {
+  post_type: string;
+  content: string;
+  platforms: string[];
+  hashtags: string;
+}) {
+  return api<{ success: boolean; post?: any; error?: string; message?: string }>(
+    "/api/mhai/social-posts",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+// ── Brand ──
+export function getBrandSettings() {
+  return api<{ success: boolean; data?: any; completeness?: number; error?: string }>(
+    "/api/presence/brand-settings"
+  );
+}
+
+export function saveBrandSettings(data: Record<string, any>) {
+  return api<{ success: boolean; completeness?: number; error?: string; message?: string }>(
+    "/api/presence/brand-settings",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+// ── Dashboard ──
+export function getAiActivity() {
+  return api<{ success: boolean; activities?: any[]; error?: string }>(
+    "/api/mhai/ai-activity"
+  );
+}
+
+export function getReviews() {
+  return api<{ success: boolean; reviews?: any[]; error?: string }>(
+    "/api/mhai/reviews"
+  );
+}
+
 // ── Locale ──
 export function getLocale(countryCode: string) {
   return api("/api/locale/" + encodeURIComponent(countryCode));

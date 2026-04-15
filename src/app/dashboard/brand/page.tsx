@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getBrandSettings, saveBrandSettings } from "@/lib/api";
 
 var colorOptions = [
   { hex: "#10b981", name: "emerald" },
@@ -194,15 +195,32 @@ function PillSelector({
 export default function BrandDNAPage() {
   var [data, setData] = useState<BrandDNA>(defaults);
   var [loaded, setLoaded] = useState(false);
+  var [saving, setSaving] = useState(false);
+  var [completeness, setCompleteness] = useState(0);
 
   useEffect(() => {
-    try {
-      var stored = localStorage.getItem("mhai_brand_dna");
-      if (stored) {
-        setData({ ...defaults, ...JSON.parse(stored) });
-      }
-    } catch {}
-    setLoaded(true);
+    getBrandSettings()
+      .then((res) => {
+        if (res.success && res.data) {
+          setData({ ...defaults, ...res.data });
+          if (res.completeness != null) setCompleteness(res.completeness);
+          localStorage.setItem("mhai_brand_dna", JSON.stringify(res.data));
+        } else {
+          // API returned no data — fall back to localStorage cache
+          try {
+            var stored = localStorage.getItem("mhai_brand_dna");
+            if (stored) setData({ ...defaults, ...JSON.parse(stored) });
+          } catch {}
+        }
+      })
+      .catch(() => {
+        // Network error — fall back to localStorage cache
+        try {
+          var stored = localStorage.getItem("mhai_brand_dna");
+          if (stored) setData({ ...defaults, ...JSON.parse(stored) });
+        } catch {}
+      })
+      .finally(() => setLoaded(true));
   }, []);
 
   function update<K extends keyof BrandDNA>(key: K, value: BrandDNA[K]) {
@@ -224,9 +242,24 @@ export default function BrandDNAPage() {
     });
   }
 
-  function save() {
-    localStorage.setItem("mhai_brand_dna", JSON.stringify(data));
-    alert("Brand DNA saved!");
+  async function save() {
+    setSaving(true);
+    try {
+      var res = await saveBrandSettings(data);
+      if (res.success) {
+        localStorage.setItem("mhai_brand_dna", JSON.stringify(data));
+        if (res.completeness != null) setCompleteness(res.completeness);
+        alert("Brand DNA saved!");
+      } else {
+        alert(res.error || res.message || "Failed to save. Please try again.");
+      }
+    } catch {
+      // Network failed — save to localStorage so data isn't lost
+      localStorage.setItem("mhai_brand_dna", JSON.stringify(data));
+      alert("Saved locally — will sync when connection is restored.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!loaded) return null;
@@ -249,9 +282,10 @@ export default function BrandDNAPage() {
         </div>
         <button
           onClick={save}
-          className="cursor-pointer rounded-md bg-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md"
+          disabled={saving}
+          className="cursor-pointer rounded-md bg-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Save changes
+          {saving ? "Saving…" : "Save changes"}
         </button>
       </div>
 
@@ -259,14 +293,14 @@ export default function BrandDNAPage() {
       <div className="mt-4 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-3 shadow-sm">
         <div>
           <div className="text-xs font-medium text-emerald-800">
-            Brand DNA completeness: 65%
+            Brand DNA completeness: {completeness}%
           </div>
           <div className="text-[11px] text-emerald-700">
             Complete all sections to unlock full AI personalization
           </div>
         </div>
         <div className="h-2 w-28 rounded-full bg-emerald-100">
-          <div className="h-full w-[65%] animate-pulse rounded-full bg-emerald-500" />
+          <div className="h-full rounded-full bg-emerald-500" style={{ width: completeness + "%" }} />
         </div>
       </div>
 

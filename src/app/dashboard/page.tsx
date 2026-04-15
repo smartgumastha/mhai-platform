@@ -1,20 +1,17 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useAuth } from "@/app/providers/auth-context";
+import { getAiActivity, getReviews } from "@/lib/api";
 
-var metrics = [
+var staticMetrics = [
   {
     label: "Appointments today",
     value: "8",
     change: "↑ 3 from yesterday",
     accent: "border-t-emerald-500",
   },
-  {
-    label: "Google rating",
-    value: "4.8 ★",
-    change: "12 new reviews",
-    accent: "border-t-blue-500",
-  },
+  // Google rating card is built dynamically inside the component
   {
     label: "Website visits",
     value: "347",
@@ -48,8 +45,8 @@ var channels = [
     name: "Google",
     icon: "G",
     bg: "#4285F4",
-    stats: "4.8 avg · 3 AI replies pending",
-    status: "amber",
+    stats: "",
+    status: "green",
   },
   {
     name: "WhatsApp",
@@ -69,38 +66,11 @@ var channels = [
   },
 ];
 
-var activities = [
-  {
-    color: "bg-emerald-500",
-    text: "AI replied to Google review from Priya R.",
-    time: "2 min ago",
-  },
-  {
-    color: "bg-emerald-500",
-    text: "Instagram post created: 'World Diabetes Day'",
-    time: "15 min ago",
-  },
-  {
-    color: "bg-blue-500",
-    text: "WhatsApp: 8 appointment reminders sent",
-    time: "1 hour ago",
-  },
-  {
-    color: "bg-amber-500",
-    text: "SEO: meta tags updated for 3 pages",
-    time: "3 hours ago",
-  },
-  {
-    color: "bg-emerald-500",
-    text: "Website: booking widget updated",
-    time: "5 hours ago",
-  },
-  {
-    color: "bg-emerald-500",
-    text: "MHAI Pay: ₹2,400 collected via UPI",
-    time: "Yesterday",
-  },
-];
+var STATUS_COLORS: Record<string, string> = {
+  success: "bg-emerald-500",
+  info: "bg-blue-500",
+  warning: "bg-amber-500",
+};
 
 var appointments = [
   {
@@ -130,8 +100,77 @@ function getGreeting() {
   return "Good evening";
 }
 
+type Activity = { color: string; text: string; time: string };
+
 export default function DashboardPage() {
   var { user } = useAuth();
+  var [activities, setActivities] = useState<Activity[]>([]);
+  var [pendingReviews, setPendingReviews] = useState(0);
+  var [totalReviews, setTotalReviews] = useState(0);
+  var [avgRating, setAvgRating] = useState<string | null>(null);
+
+  useEffect(() => {
+    getAiActivity()
+      .then((res) => {
+        if (res.success && res.activities && res.activities.length > 0) {
+          setActivities(
+            res.activities.map((a: any) => ({
+              color: STATUS_COLORS[a.status] || "bg-emerald-500",
+              text: a.text || a.message || "",
+              time: a.time || a.created_at || "",
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+
+    getReviews()
+      .then((res) => {
+        if (res.success && res.reviews) {
+          var reviews = res.reviews;
+          setTotalReviews(reviews.length);
+          var pending = reviews.filter(
+            (r: any) => r.ai_response_status === "pending"
+          );
+          setPendingReviews(pending.length);
+          if (reviews.length > 0) {
+            var sum = reviews.reduce(
+              (acc: number, r: any) => acc + (Number(r.rating) || 0),
+              0
+            );
+            setAvgRating((sum / reviews.length).toFixed(1));
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  var reviewCard = {
+    label: "Google rating",
+    value: avgRating ? avgRating + " ★" : "— ★",
+    change: pendingReviews > 0
+      ? pendingReviews + " AI replies pending"
+      : totalReviews > 0
+        ? totalReviews + " reviews"
+        : "No reviews yet",
+    accent: "border-t-blue-500",
+  };
+
+  var metrics = [
+    staticMetrics[0],
+    reviewCard,
+    staticMetrics[1],
+    staticMetrics[2],
+  ];
+
+  var renderedChannels = channels.map((ch) => {
+    if (ch.name === "Google") {
+      var stats = avgRating ? avgRating + " avg" : "—";
+      if (pendingReviews > 0) stats += " · " + pendingReviews + " AI replies pending";
+      return { ...ch, stats, status: pendingReviews > 0 ? "amber" : "green" };
+    }
+    return ch;
+  });
 
   return (
     <div className="px-8 py-6">
@@ -184,7 +223,7 @@ export default function DashboardPage() {
           <h2 className="mb-3 text-sm font-medium tracking-tight text-gray-900">
             Channel performance
           </h2>
-          {channels.map((ch) => (
+          {renderedChannels.map((ch) => (
             <div
               key={ch.name}
               className="mb-2 flex items-center gap-3 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md"
@@ -221,20 +260,26 @@ export default function DashboardPage() {
             AI activity feed
           </h2>
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            {activities.map((a, i) => (
-              <div
-                key={i}
-                className="flex gap-2.5 rounded-md px-2 py-2 transition-all duration-200 hover:bg-gray-50"
-              >
-                <div
-                  className={`mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${a.color}`}
-                />
-                <div>
-                  <div className="text-xs text-gray-900">{a.text}</div>
-                  <div className="text-[11px] text-gray-300">{a.time}</div>
-                </div>
+            {activities.length === 0 ? (
+              <div className="py-4 text-center text-xs text-gray-400">
+                AI activity will appear here as you use the platform
               </div>
-            ))}
+            ) : (
+              activities.map((a, i) => (
+                <div
+                  key={i}
+                  className="flex gap-2.5 rounded-md px-2 py-2 transition-all duration-200 hover:bg-gray-50"
+                >
+                  <div
+                    className={`mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${a.color}`}
+                  />
+                  <div>
+                    <div className="text-xs text-gray-900">{a.text}</div>
+                    <div className="text-[11px] text-gray-300">{a.time}</div>
+                  </div>
+                </div>
+              ))
+            )}
             <div className="mt-2 border-t border-gray-100 pt-2 text-center">
               <span className="cursor-pointer text-[11px] text-emerald-600 transition-all duration-200 hover:text-emerald-700">
                 View all →
