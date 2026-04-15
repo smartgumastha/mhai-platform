@@ -7,6 +7,7 @@ import {
   generateSocialPost,
   publishPost,
   schedulePost,
+  getConnections,
 } from "@/lib/api";
 import { useNotification } from "@/app/providers/NotificationProvider";
 
@@ -68,22 +69,30 @@ var languageOptions = [
   "Marathi", "Gujarati", "Urdu", "German", "French", "Spanish", "Arabic",
 ];
 
-function PlatformToggles({ active, onToggle }: { active: string[]; onToggle: (plat: string) => void }) {
+function PlatformToggles({ active, onToggle, connectedIds }: { active: string[]; onToggle: (plat: string) => void; connectedIds?: string[] }) {
   var count = active.length;
   return (
-    <div className="mb-3 flex items-center gap-2">
+    <div className="mb-3 flex flex-wrap items-center gap-2">
       {platformDefs.map((p) => {
         var on = active.includes(p.id);
+        var connected = !connectedIds || connectedIds.includes(p.id);
         return (
-          <button
-            key={p.id}
-            onClick={() => onToggle(p.id)}
-            className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-[9px] font-medium transition-all duration-200 ${
-              on ? `${p.bg} text-white shadow-sm ring-2 ring-offset-1 ring-gray-300` : "bg-gray-100 text-gray-400"
-            }`}
-          >
-            {p.label}
-          </button>
+          <div key={p.id} className="flex flex-col items-center gap-0.5">
+            <button
+              onClick={() => connected && onToggle(p.id)}
+              disabled={!connected}
+              className={`flex h-8 w-8 items-center justify-center rounded-lg text-[9px] font-medium transition-all duration-200 ${
+                !connected
+                  ? "cursor-not-allowed bg-gray-50 text-gray-300 opacity-60"
+                  : on
+                    ? `${p.bg} cursor-pointer text-white shadow-sm ring-2 ring-offset-1 ring-gray-300`
+                    : "cursor-pointer bg-gray-100 text-gray-400"
+              }`}
+            >
+              {p.label}
+            </button>
+            {!connected && <span className="text-[7px] text-red-400">not linked</span>}
+          </div>
         );
       })}
       <span className="ml-1 text-[9px] text-gray-400">{count === platformDefs.length ? "All platforms" : `${count} platform${count !== 1 ? "s" : ""}`}</span>
@@ -130,11 +139,17 @@ export default function SocialPostsPage() {
 
   /* ── publish / schedule state ── */
   var [publishingId, setPublishingId] = useState<string | null>(null);
+  var [publishModal, setPublishModal] = useState<string | null>(null);
+  var [publishPlatforms, setPublishPlatforms] = useState<string[]>([]);
   var [scheduleModal, setScheduleModal] = useState<string | null>(null);
   var [scheduleDate, setScheduleDate] = useState("");
   var [scheduleTime, setScheduleTime] = useState("09:00");
+  var [schedulePlatforms, setSchedulePlatforms] = useState<string[]>([]);
 
-  /* ── fetch posts ── */
+  /* ── connected platforms ── */
+  var [connectedIds, setConnectedIds] = useState<string[]>([]);
+
+  /* ── fetch posts + connections ── */
   useEffect(() => {
     getSocialPosts()
       .then((res) => {
@@ -149,6 +164,18 @@ export default function SocialPostsPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+
+    getConnections()
+      .then((res) => {
+        if (res.success && res.connections) {
+          setConnectedIds(
+            res.connections
+              .filter((c: any) => c.status === "connected")
+              .map((c: any) => c.platform)
+          );
+        }
+      })
+      .catch(() => {});
   }, []);
 
   function togglePostPlatform(postId: string, plat: string) {
@@ -229,19 +256,28 @@ export default function SocialPostsPage() {
     }
   }
 
-  /* ── publish now ── */
-  async function handlePublishNow(postId: string) {
-    var platforms = postPlatforms[postId] || [];
-    if (platforms.length === 0) {
-      notify.warning("No platforms", "Select at least one platform to post to.");
+  /* ── open publish modal ── */
+  function openPublishModal(postId: string) {
+    var existing = postPlatforms[postId] || [];
+    // Pre-select only connected platforms from the post's platforms
+    setPublishPlatforms(connectedIds.length > 0 ? existing.filter((id) => connectedIds.includes(id)) : existing);
+    setPublishModal(postId);
+  }
+
+  /* ── confirm publish ── */
+  async function handlePublishConfirm() {
+    if (!publishModal) return;
+    if (publishPlatforms.length === 0) {
+      notify.warning("No platforms", "Select at least one connected platform to post to.");
       return;
     }
-    setPublishingId(postId);
+    setPublishingId(publishModal);
     try {
-      var res = await publishPost(postId, platforms);
+      var res = await publishPost(publishModal, publishPlatforms);
       if (res.success) {
-        notify.success("Published!", "Posted to " + platforms.map((id) => platformDefs.find((p) => p.id === id)?.label).filter(Boolean).join(", ") + ". Booking tracking enabled.");
-        setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, status: "published" } : p));
+        notify.success("Published!", "Posted to " + publishPlatforms.map((id) => platformDefs.find((p) => p.id === id)?.label).filter(Boolean).join(", ") + ". Booking tracking enabled.");
+        setPosts((prev) => prev.map((p) => p.id === publishModal ? { ...p, status: "published" } : p));
+        setPublishModal(null);
       } else {
         notify.error("Publish failed", res.error || res.message || "Please try again.");
       }
@@ -252,12 +288,20 @@ export default function SocialPostsPage() {
     }
   }
 
-  /* ── schedule post ── */
+  /* ── open schedule modal ── */
+  function openScheduleModal(postId: string) {
+    var existing = postPlatforms[postId] || [];
+    setSchedulePlatforms(connectedIds.length > 0 ? existing.filter((id) => connectedIds.includes(id)) : existing);
+    setScheduleModal(postId);
+    setScheduleDate("");
+    setScheduleTime("09:00");
+  }
+
+  /* ── confirm schedule ── */
   async function handleScheduleSubmit() {
     if (!scheduleModal) return;
-    var platforms = postPlatforms[scheduleModal] || [];
-    if (platforms.length === 0) {
-      notify.warning("No platforms", "Select at least one platform.");
+    if (schedulePlatforms.length === 0) {
+      notify.warning("No platforms", "Select at least one connected platform.");
       return;
     }
     if (!scheduleDate) {
@@ -267,13 +311,11 @@ export default function SocialPostsPage() {
     var scheduledAt = scheduleDate + "T" + scheduleTime + ":00";
     setPublishingId(scheduleModal);
     try {
-      var res = await schedulePost(scheduleModal, { platforms, scheduled_at: scheduledAt });
+      var res = await schedulePost(scheduleModal, { platforms: schedulePlatforms, scheduled_at: scheduledAt });
       if (res.success) {
         notify.success("Scheduled!", "Post will go live on " + scheduleDate + " at " + scheduleTime + ".");
         setPosts((prev) => prev.map((p) => p.id === scheduleModal ? { ...p, status: "scheduled", scheduled_at: scheduledAt } : p));
         setScheduleModal(null);
-        setScheduleDate("");
-        setScheduleTime("09:00");
       } else {
         notify.error("Schedule failed", res.error || res.message || "Please try again.");
       }
@@ -370,7 +412,7 @@ export default function SocialPostsPage() {
 
             <div className="mb-3">
               <label className="mb-1 block text-xs text-gray-500">Platforms</label>
-              <PlatformToggles active={newPlatforms} onToggle={(plat) => setNewPlatforms((prev) => prev.includes(plat) ? prev.filter((x) => x !== plat) : [...prev, plat])} />
+              <PlatformToggles active={newPlatforms} onToggle={(plat) => setNewPlatforms((prev) => prev.includes(plat) ? prev.filter((x) => x !== plat) : [...prev, plat])} connectedIds={connectedIds.length > 0 ? connectedIds : undefined} />
             </div>
 
             <div className="mb-3">
@@ -409,6 +451,38 @@ export default function SocialPostsPage() {
         </div>
       )}
 
+      {/* ── Publish Now modal ── */}
+      {publishModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-medium text-gray-900">Post now</h2>
+              <button onClick={() => setPublishModal(null)} className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600">&times;</button>
+            </div>
+
+            <div className="mb-1 text-xs text-gray-500">Select platforms to publish to:</div>
+            <div className="mb-4">
+              <PlatformToggles
+                active={publishPlatforms}
+                onToggle={(plat) => setPublishPlatforms((prev) => prev.includes(plat) ? prev.filter((x) => x !== plat) : [...prev, plat])}
+                connectedIds={connectedIds.length > 0 ? connectedIds : undefined}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setPublishModal(null)} className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs text-gray-700 transition-all duration-200 hover:border-gray-400">Cancel</button>
+              <button
+                onClick={handlePublishConfirm}
+                disabled={publishingId === publishModal}
+                className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {publishingId === publishModal ? "Publishing..." : "Publish"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Schedule modal ── */}
       {scheduleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -421,8 +495,9 @@ export default function SocialPostsPage() {
             <div className="mb-3">
               <label className="mb-1 block text-xs text-gray-500">Platforms</label>
               <PlatformToggles
-                active={postPlatforms[scheduleModal] || []}
-                onToggle={(plat) => togglePostPlatform(scheduleModal!, plat)}
+                active={schedulePlatforms}
+                onToggle={(plat) => setSchedulePlatforms((prev) => prev.includes(plat) ? prev.filter((x) => x !== plat) : [...prev, plat])}
+                connectedIds={connectedIds.length > 0 ? connectedIds : undefined}
               />
             </div>
 
@@ -557,16 +632,15 @@ export default function SocialPostsPage() {
                         <div className="flex gap-2">
                           {post.status !== "published" && (
                             <button
-                              onClick={() => handlePublishNow(post.id)}
-                              disabled={publishingId === post.id}
-                              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-[11px] font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                              onClick={() => openPublishModal(post.id)}
+                              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-[11px] font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600"
                             >
-                              {publishingId === post.id ? "Publishing..." : "Post now"}
+                              Post now
                             </button>
                           )}
                           {post.status !== "published" && post.status !== "scheduled" && (
                             <button
-                              onClick={() => { setScheduleModal(post.id); setScheduleDate(""); setScheduleTime("09:00"); }}
+                              onClick={() => openScheduleModal(post.id)}
                               className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] text-gray-700 transition-all duration-200 hover:border-emerald-500"
                             >
                               Schedule
