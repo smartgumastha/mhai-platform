@@ -466,6 +466,45 @@ export function disconnectPlatform(platform: string) {
   );
 }
 
+// ── Chatbot ──
+export function sendChatbotMessage(
+  hospitalId: string,
+  sessionId: string | null,
+  message: string,
+  language?: string
+) {
+  // Public endpoint — no auth needed, uses fetch directly
+  return fetch("/api/mhai/chatbot/message", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      hospital_id: hospitalId,
+      session_id: sessionId || undefined,
+      message,
+      language: language || undefined,
+    }),
+  }).then((r) => r.json()) as Promise<{ success: boolean; reply?: string; session_id?: string; error?: string }>;
+}
+
+export function getChatbotSessions() {
+  return api<{ success: boolean; sessions?: any[]; error?: string }>(
+    "/api/mhai/chatbot/sessions"
+  );
+}
+
+export function getChatbotSession(sessionId: string) {
+  return api<{ success: boolean; session?: any; error?: string }>(
+    "/api/mhai/chatbot/sessions/" + encodeURIComponent(sessionId)
+  );
+}
+
+export function handoffSession(sessionId: string) {
+  return api<{ success: boolean; message?: string; error?: string }>(
+    "/api/mhai/chatbot/handoff/" + encodeURIComponent(sessionId),
+    { method: "POST" }
+  );
+}
+
 // ── Locale ──
 export function getLocale(countryCode: string) {
   return api("/api/locale/" + encodeURIComponent(countryCode));

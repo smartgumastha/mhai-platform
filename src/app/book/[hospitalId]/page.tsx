@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { DashboardProvider } from "@/app/dashboard/contexts/DashboardContext";
 import { NotificationProvider } from "@/app/providers/NotificationProvider";
 import BookingWidget from "@/app/components/BookingWidget";
+import ChatbotWidget from "@/app/components/ChatbotWidget";
 
 var BACKEND = "https://smartgumastha-backend-production.up.railway.app";
 
@@ -101,6 +102,9 @@ function BookingPageInner({ hospitalId }: { hospitalId: string }) {
       <div className="border-t border-gray-100 bg-white px-6 py-3 text-center">
         <span className="text-[10px] text-gray-400">Powered by MediHost AI</span>
       </div>
+
+      {/* Chatbot */}
+      <ChatbotWidget hospitalId={hospitalId} clinicName={clinicName} />
     </div>
   );
 }
