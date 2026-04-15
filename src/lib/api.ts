@@ -223,6 +223,7 @@ export function generateReviewReply(data: {
   rating?: number;
   clinic_name?: string;
   doctor_name?: string;
+  language?: string;
 }) {
   return aiApi("/api/ai/review-reply", {
     method: "POST",

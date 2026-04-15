@@ -60,6 +60,11 @@ var postTypeOptions = [
   { value: "general", label: "General" },
 ];
 
+var languageOptions = [
+  "English", "Hindi", "Telugu", "Tamil", "Kannada", "Bengali",
+  "Marathi", "Gujarati", "Urdu", "German", "French", "Spanish", "Arabic",
+];
+
 function PlatformToggles({ active, onToggle }: { active: string[]; onToggle: (plat: string) => void }) {
   var count = active.length;
   return (
@@ -107,6 +112,7 @@ export default function SocialPostsPage() {
   var [newContent, setNewContent] = useState("");
   var [newHashtags, setNewHashtags] = useState("");
   var [newPlatforms, setNewPlatforms] = useState<string[]>(["ig", "fb"]);
+  var [newLanguage, setNewLanguage] = useState("English");
   var [aiGenerating, setAiGenerating] = useState(false);
   var [posting, setPosting] = useState(false);
 
@@ -146,6 +152,7 @@ export default function SocialPostsPage() {
         specialty: "Physiotherapy",
         topic: newType,
         platform: newPlatforms[0] || "ig",
+        language: newLanguage,
       });
       if (res.success) {
         // Backend returns post_text (string) and hashtags (array)
@@ -186,6 +193,7 @@ export default function SocialPostsPage() {
         setNewHashtags("");
         setNewType("general");
         setNewPlatforms(["ig", "fb"]);
+        setNewLanguage("English");
         if (res.post) {
           setPosts((prev) => [res.post!, ...prev]);
           setPostPlatforms((prev) => ({
@@ -209,6 +217,7 @@ export default function SocialPostsPage() {
     setNewHashtags("");
     setNewType("general");
     setNewPlatforms(["ig", "fb"]);
+    setNewLanguage("English");
   }
 
   var inputClass =
@@ -289,6 +298,13 @@ export default function SocialPostsPage() {
             <div className="mb-3">
               <label className="mb-1 block text-xs text-gray-500">Platforms</label>
               <PlatformToggles active={newPlatforms} onToggle={(plat) => setNewPlatforms((prev) => prev.includes(plat) ? prev.filter((x) => x !== plat) : [...prev, plat])} />
+            </div>
+
+            <div className="mb-3">
+              <label className="mb-1 block text-xs text-gray-500">Language</label>
+              <select className={inputClass} value={newLanguage} onChange={(e) => setNewLanguage(e.target.value)}>
+                {languageOptions.map((l) => <option key={l} value={l}>{l}</option>)}
+              </select>
             </div>
 
             <div className="mb-3">
