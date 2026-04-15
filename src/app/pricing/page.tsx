@@ -146,11 +146,11 @@ export default function PricingPage() {
   var [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("/api/detect-country")
+    fetch("https://smartgumastha-backend-production.up.railway.app/api/mhai/locale/detect")
       .then((r) => r.json())
       .then((data) => {
-        if (data.country && pricing[data.country]) {
-          setCountry(data.country);
+        if (data.success && data.detected && data.detected.country_code && pricing[data.detected.country_code]) {
+          setCountry(data.detected.country_code);
         }
       })
       .catch(() => {});

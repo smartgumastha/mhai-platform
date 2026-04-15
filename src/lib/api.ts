@@ -509,3 +509,23 @@ export function handoffSession(sessionId: string) {
 export function getLocale(countryCode: string) {
   return api("/api/locale/" + encodeURIComponent(countryCode));
 }
+
+var BACKEND_URL = "https://smartgumastha-backend-production.up.railway.app";
+
+export function detectLocale() {
+  return fetch(BACKEND_URL + "/api/mhai/locale/detect")
+    .then((r) => r.json()) as Promise<{
+      success: boolean;
+      detected?: { country_code: string; country_name?: string; city?: string; timezone?: string; source?: string };
+      locale?: { currency: string; symbol: string; payment: string; phone_format: string; date_format: string; compliance: string; tld: string; languages: string[]; country_code: string };
+    }>;
+}
+
+export function getLocaleConfig(countryCode: string) {
+  return fetch(BACKEND_URL + "/api/mhai/locale/config/" + encodeURIComponent(countryCode))
+    .then((r) => r.json()) as Promise<{
+      success: boolean;
+      country_code?: string;
+      locale?: { currency: string; symbol: string; payment: string; phone_format: string; date_format: string; compliance: string; tld: string; languages: string[]; country_code: string };
+    }>;
+}

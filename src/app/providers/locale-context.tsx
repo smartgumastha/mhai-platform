@@ -190,7 +190,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   var [didAutoSwitch, setDidAutoSwitch] = useState(false);
 
   useEffect(() => {
-    // Check cookie first
+    // Check cookie first for instant render
     var cookieMatch = document.cookie.match(/mhai_locale_country=([A-Z]{2})/);
     if (cookieMatch) {
       var cached = cookieMatch[1];
@@ -198,11 +198,11 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       setLocale(getLocaleForCountry(cached));
     }
 
-    fetch("/api/detect-country")
+    fetch("https://smartgumastha-backend-production.up.railway.app/api/mhai/locale/detect")
       .then((r) => r.json())
       .then((data) => {
-        if (data.country) {
-          var code = data.country as string;
+        if (data.success && data.detected && data.detected.country_code) {
+          var code = data.detected.country_code as string;
           setCountry(code);
           setLocale(getLocaleForCountry(code));
           document.cookie = "mhai_locale_country=" + code + ";path=/;max-age=2592000";
