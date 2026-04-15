@@ -265,7 +265,7 @@ export default function BrandDNAPage() {
   if (!loaded) return null;
 
   var inputClass =
-    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
+    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
 
   return (
     <div className="px-8 py-6">

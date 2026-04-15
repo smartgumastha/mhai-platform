@@ -11,6 +11,7 @@ export function setToken(token: string) {
 }
 export function clearToken() {
   localStorage.removeItem("mhai_token");
+  localStorage.removeItem("mhai_hms_token");
 }
 
 // ── Fetch wrapper ──
@@ -35,8 +36,15 @@ async function api<T = any>(
     }
 
     if (res.status === 401 && typeof window !== "undefined") {
-      clearToken();
-      window.location.href = "/login";
+      // Only redirect to login for auth endpoints, not feature API calls
+      var isAuthEndpoint =
+        path.includes("/partner-auth/") ||
+        path.includes("/auth/") ||
+        path === "/api/presence/partner-auth/me";
+      if (isAuthEndpoint) {
+        clearToken();
+        window.location.href = "/login";
+      }
     }
 
     return data as T;
@@ -147,6 +155,54 @@ export function checkDomain(domain: string, tld: string = "in") {
   );
 }
 
+// ── HMS token cache (AI routes need HMS-signed JWT, not partner JWT) ──
+function getHmsTokenCached(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("mhai_hms_token");
+}
+
+async function ensureHmsToken(): Promise<string | null> {
+  var cached = getHmsTokenCached();
+  if (cached) return cached;
+  var res = await getHmsToken();
+  if (res.success && res.hms_token) {
+    localStorage.setItem("mhai_hms_token", res.hms_token);
+    return res.hms_token;
+  }
+  return null;
+}
+
+async function aiApi<T = any>(path: string, options: RequestInit = {}): Promise<T> {
+  var hmsToken = await ensureHmsToken();
+  if (!hmsToken) {
+    return { success: false, message: "Could not obtain HMS token." } as T;
+  }
+  var headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: "Bearer " + hmsToken,
+    ...(options.headers as Record<string, string>),
+  };
+  try {
+    var res = await fetch(path, { ...options, headers });
+    var data: any;
+    try { data = await res.json(); } catch { data = { success: false, error: "Invalid response" }; }
+    if (res.status === 401) {
+      // HMS token expired — clear cache and retry once
+      localStorage.removeItem("mhai_hms_token");
+      var freshToken = await ensureHmsToken();
+      if (freshToken) {
+        headers["Authorization"] = "Bearer " + freshToken;
+        var retry = await fetch(path, { ...options, headers });
+        try { data = await retry.json(); } catch { data = { success: false, error: "Invalid response" }; }
+      }
+    }
+    return data as T;
+  } catch (error: any) {
+    console.error("[AI API]", path, error?.message);
+    return { success: false, message: "Network error. Please try again." } as T;
+  }
+}
+
 // ── AI ──
 export function generateSocialPost(data: {
   specialty: string;
@@ -156,7 +212,7 @@ export function generateSocialPost(data: {
   tone?: string;
   language?: string;
 }) {
-  return api("/api/ai/social-posts", {
+  return aiApi("/api/ai/social-posts", {
     method: "POST",
     body: JSON.stringify(data),
   });
@@ -168,7 +224,7 @@ export function generateReviewReply(data: {
   clinic_name?: string;
   doctor_name?: string;
 }) {
-  return api("/api/ai/review-reply", {
+  return aiApi("/api/ai/review-reply", {
     method: "POST",
     body: JSON.stringify(data),
   });
