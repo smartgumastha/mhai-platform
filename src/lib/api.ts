@@ -351,6 +351,55 @@ export function getPayments(status?: string) {
   return api<{ success: boolean; payments?: any[]; error?: string }>(url);
 }
 
+// ── Website ──
+export function getWebsite() {
+  return api<{ success: boolean; website?: any; error?: string }>(
+    "/api/mhai/websites"
+  );
+}
+
+export function createWebsite(data: {
+  subdomain?: string;
+  status?: string;
+}) {
+  return api<{ success: boolean; website?: any; error?: string; message?: string }>(
+    "/api/mhai/websites",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function updateWebsite(id: string, data: Record<string, any>) {
+  return api<{ success: boolean; website?: any; error?: string }>(
+    "/api/mhai/websites/" + encodeURIComponent(id),
+    { method: "PUT", body: JSON.stringify(data) }
+  );
+}
+
+export function getWebsitePages(websiteId: string) {
+  return api<{ success: boolean; pages?: any[]; error?: string }>(
+    "/api/mhai/websites/" + encodeURIComponent(websiteId) + "/pages"
+  );
+}
+
+export function generateBlogPost(topic: string, language?: string) {
+  return aiApi<{
+    success: boolean;
+    page_id?: string;
+    website_id?: string;
+    title?: string;
+    slug?: string;
+    meta_description?: string;
+    body?: string;
+    faq_schema?: any[];
+    tags?: string[];
+    error?: string;
+    message?: string;
+  }>("/api/ai/blog-post", {
+    method: "POST",
+    body: JSON.stringify({ topic, language: language || "English" }),
+  });
+}
+
 // ── Locale ──
 export function getLocale(countryCode: string) {
   return api("/api/locale/" + encodeURIComponent(countryCode));

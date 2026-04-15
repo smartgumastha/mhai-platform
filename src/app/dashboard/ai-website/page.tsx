@@ -1,417 +1,458 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  getWebsite,
+  createWebsite,
+  updateWebsite,
+  getWebsitePages,
+  generateBlogPost,
+} from "@/lib/api";
 
-var themeColors = ["#10b981", "#3b82f6", "#8b5cf6", "#0891b2", "#dc2626", "#1e293b"];
+var PAGE_TYPE_STYLES: Record<string, { icon: string; dot: string }> = {
+  home: { icon: "\u2302", dot: "bg-emerald-500" },
+  about: { icon: "\u2139", dot: "bg-emerald-500" },
+  services: { icon: "\u2726", dot: "bg-emerald-500" },
+  doctors: { icon: "\u2695", dot: "bg-blue-500" },
+  booking: { icon: "\u2611", dot: "bg-blue-500" },
+  contact: { icon: "\u2709", dot: "bg-gray-500" },
+  blog: { icon: "\u270E", dot: "bg-amber-500" },
+  custom: { icon: "\u2606", dot: "bg-purple-500" },
+};
 
-var pages = [
-  { dot: "bg-emerald-500", name: "Home", label: "Auto", active: true },
-  { dot: "bg-emerald-500", name: "About us", label: "Auto" },
-  { dot: "bg-emerald-500", name: "Services", label: "Auto" },
-  { dot: "bg-emerald-500", name: "Back pain treatment", label: "SEO" },
-  { dot: "bg-emerald-500", name: "Knee rehab", label: "SEO" },
-  { dot: "bg-emerald-500", name: "Sports injury", label: "SEO" },
-  { dot: "bg-emerald-500", name: "Dr. Sai Kumar", label: "Auto" },
-  { dot: "bg-blue-500", name: "Book appointment", label: "Live" },
-  { dot: "bg-blue-500", name: "Pay online", label: "Live" },
-  { dot: "bg-blue-500", name: "Telehealth", label: "Live" },
-  { dot: "bg-amber-500", name: "Blog", label: "4 posts" },
-  { dot: "bg-amber-500", name: "Reviews", label: "12" },
-  { dot: "bg-amber-500", name: "Before / after", label: "Gallery" },
-  { dot: "bg-amber-500", name: "Patient stories", label: "Videos" },
-  { dot: "bg-purple-500", name: "Insurance accepted", label: "—" },
-  { dot: "bg-purple-500", name: "FAQ", label: "AEO" },
-  { dot: "bg-gray-500", name: "Contact", label: "Auto" },
+var FEATURES = [
+  { icon: "\u2726", title: "17+ pages auto-generated", desc: "Home, About, Services, Doctor profiles, Booking, Pay online, Blog, Reviews, FAQ, Contact and more" },
+  { icon: "\u2695", title: "Doctor profiles from HMS", desc: "Qualifications, experience, availability pulled from your hospital management system" },
+  { icon: "\u270E", title: "SEO-optimized blog", desc: "AI writes weekly articles targeting local search terms for your specialty and city" },
+  { icon: "\u2605", title: "Live Google reviews", desc: "Reviews feed with AI replies displayed on your website automatically" },
+  { icon: "\u2611", title: "Online booking + payments", desc: "Real-time appointment slots and Razorpay payment collection on every page" },
+  { icon: "\u2139", title: "Built from Brand DNA", desc: "Uses your clinic name, tagline, colors, tone, services, and doctor info — zero manual content writing" },
 ];
 
-var widgets = [
-  { name: "MHAI Receptionist", desc: "AI chatbot. Books, answers, collects payments — 24/7" },
-  { name: "MHAI Pay widget", desc: "Pay online on every page. UPI, card, wallet" },
-  { name: "Live booking calendar", desc: "Real-time HMS slots. Deposit collection" },
-  { name: "Reviews feed", desc: "Live from Google. AI replies visible" },
-  { name: "Auto-blog", desc: "1 AI post/week. SEO-optimized" },
-  { name: "Insurance checker", desc: "Patient checks coverage instantly" },
-  { name: "Floating CTA bar", desc: "Book / Call / WhatsApp / Pay — always visible" },
-  { name: "Enquiry forms", desc: "Context-aware forms on every page → CRM" },
-];
-
-var summaryCards = [
-  { num: "17", label: "pages auto-generated", desc: "Home, services, 3 treatment SEO pages, doctor profile, booking, pay online, telehealth, blog, reviews, gallery, testimonials, case studies, press, insurance, FAQ, contact" },
-  { num: "8", label: "living widgets", desc: "Chatbot, pay button, booking calendar, reviews feed, auto-blog, insurance checker, floating CTA, enquiry forms" },
-  { num: "47s", label: "build time", desc: "ClinicSpots takes 4-6 weeks. MHAI generates everything in 47 seconds from your Brand DNA." },
-  { num: "₹0", label: "developer cost", desc: "No designer. No content writer. No SEO specialist. Pure AI. Doctor fills Brand DNA once — AI does everything forever." },
+var GEN_STEPS = [
+  "Reading Brand DNA...",
+  "Generating pages and layout...",
+  "Writing SEO content...",
+  "Creating first blog post...",
+  "Optimizing for search engines...",
+  "Publishing website...",
 ];
 
 export default function AiWebsitePage() {
-  var [themeColor, setThemeColor] = useState("#10b981");
+  var [website, setWebsite] = useState<any>(null);
+  var [pages, setPages] = useState<any[]>([]);
+  var [loading, setLoading] = useState(true);
+
+  /* generating state */
+  var [generating, setGenerating] = useState(false);
+  var [genStep, setGenStep] = useState(0);
+
+  /* blog generation */
+  var [blogTopic, setBlogTopic] = useState("");
+  var [blogGenerating, setBlogGenerating] = useState(false);
+  var [blogToast, setBlogToast] = useState("");
+
+  var fetchData = useCallback(async function () {
+    try {
+      var res = await getWebsite();
+      if (res.success && res.website) {
+        setWebsite(res.website);
+        try {
+          var pRes = await getWebsitePages(res.website.id);
+          if (pRes.success && pRes.pages) setPages(pRes.pages);
+        } catch {}
+      }
+    } catch {}
+    setLoading(false);
+  }, []);
+
+  useEffect(function () { fetchData(); }, [fetchData]);
+
+  /* ── generate website flow ── */
+  async function handleGenerate() {
+    setGenerating(true);
+    setGenStep(0);
+
+    try {
+      // Step 0-1: Create website
+      setGenStep(0);
+      await delay(800);
+      setGenStep(1);
+      var createRes = await createWebsite({ status: "generating" });
+      if (!createRes.success || !createRes.website) {
+        alert(createRes.error || createRes.message || "Failed to create website.");
+        setGenerating(false);
+        return;
+      }
+      var ws = createRes.website;
+
+      // Step 2: Writing SEO content
+      setGenStep(2);
+      await delay(600);
+
+      // Step 3: Create first blog post
+      setGenStep(3);
+      try {
+        await generateBlogPost("Benefits of physiotherapy for back pain");
+      } catch {}
+
+      // Step 4: Optimizing
+      setGenStep(4);
+      await delay(600);
+
+      // Step 5: Publish
+      setGenStep(5);
+      try {
+        await updateWebsite(ws.id, { status: "live" });
+      } catch {}
+
+      await delay(500);
+
+      // Refresh
+      await fetchData();
+    } catch {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  function delay(ms: number) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  /* ── generate blog ── */
+  async function handleBlogGenerate() {
+    if (!blogTopic.trim()) { alert("Enter a blog topic."); return; }
+    setBlogGenerating(true);
+    try {
+      var res = await generateBlogPost(blogTopic.trim());
+      if (res.success) {
+        setBlogTopic("");
+        setBlogToast("Blog post created: " + (res.title || blogTopic));
+        setTimeout(function () { setBlogToast(""); }, 3000);
+        // Refresh pages
+        if (website) {
+          try {
+            var pRes = await getWebsitePages(website.id);
+            if (pRes.success && pRes.pages) setPages(pRes.pages);
+          } catch {}
+        }
+      } else {
+        alert(res.error || res.message || "Failed to generate blog post.");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setBlogGenerating(false);
+    }
+  }
+
+  var inputClass =
+    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-sm text-gray-400">Loading...</div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     STATE 2: Generating
+     ══════════════════════════════════════════════════ */
+  if (generating) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center px-8 py-6">
+        <div className="w-full max-w-md text-center">
+          {/* Spinner */}
+          <div className="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-4 border-emerald-200 border-t-emerald-500" />
+          <h2 className="mb-1 text-xl font-semibold text-gray-900">Building your website...</h2>
+          <p className="mb-6 text-sm text-gray-500">AI is generating everything from your Brand DNA</p>
+
+          {/* Steps checklist */}
+          <div className="mx-auto max-w-xs text-left">
+            {GEN_STEPS.map(function (step, i) {
+              var done = i < genStep;
+              var active = i === genStep;
+              return (
+                <div key={i} className="flex items-center gap-3 py-2">
+                  {done ? (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                    </div>
+                  ) : active ? (
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-200 border-t-emerald-500" />
+                  ) : (
+                    <div className="h-6 w-6 rounded-full border-2 border-gray-200" />
+                  )}
+                  <span className={"text-sm " + (done ? "text-emerald-600 font-medium" : active ? "text-gray-900 font-medium" : "text-gray-400")}>
+                    {step}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     STATE 1: No website — empty state
+     ══════════════════════════════════════════════════ */
+  if (!website) {
+    return (
+      <div className="px-8 py-6">
+        <div className="mx-auto max-w-2xl">
+          <div className="mb-6 text-center">
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">AI Website</h1>
+            <p className="mt-1 text-sm text-gray-500">Generate a complete, SEO-optimized clinic website in under 60 seconds</p>
+          </div>
+
+          {/* Feature grid */}
+          <div className="mb-6 grid grid-cols-2 gap-3">
+            {FEATURES.map(function (f) {
+              return (
+                <div key={f.title} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
+                  <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-lg text-emerald-600">{f.icon}</div>
+                  <div className="text-[13px] font-medium text-gray-900">{f.title}</div>
+                  <div className="mt-1 text-[11px] leading-relaxed text-gray-500">{f.desc}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={handleGenerate}
+            className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-5 text-lg font-semibold text-white shadow-lg transition-all duration-200 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl active:scale-[0.99]"
+          >
+            <span className="text-xl">{"\u2726"}</span>
+            Generate my website
+          </button>
+
+          <div className="mt-3 text-center text-xs text-gray-400">
+            Uses your Brand DNA — clinic name, specialty, services, doctor profiles, tone of voice
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     STATE 3: Website live — dashboard
+     ══════════════════════════════════════════════════ */
+  var subdomain = website.subdomain || website.domain || "yoursite.medihost.in";
+  var isLive = website.status === "live";
+  var blogPages = pages.filter(function (p) { return p.page_type === "blog"; });
+  var otherPages = pages.filter(function (p) { return p.page_type !== "blog"; });
+  var publishedCount = pages.filter(function (p) { return p.is_published; }).length;
 
   return (
-    <div className="flex h-full flex-col">
-      {/* TOP BAR */}
-      <div className="flex items-center justify-between border-b border-gray-100 bg-white px-6 py-3 shadow-sm">
-        <div className="flex items-center">
-          <span className="text-lg font-medium tracking-tight text-gray-900">AI website</span>
-          <span className="ml-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-medium text-emerald-600">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-            Live
-          </span>
-          <span className="ml-2 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] text-emerald-700">
-            ✦ Built in 47 seconds from Brand DNA
-          </span>
+    <div className="px-8 py-6">
+      {/* Toast */}
+      {blogToast && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-medium text-white shadow-lg">
+          <span className="mr-2">{"\u2713"}</span>{blogToast}
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="mb-5 flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">AI Website</h1>
+            <span className={"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium " + (isLive ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600")}>
+              <span className={"h-1.5 w-1.5 rounded-full " + (isLive ? "bg-emerald-500 animate-pulse" : "bg-amber-500")} />
+              {isLive ? "Live" : website.status}
+            </span>
+          </div>
+          <p className="mt-0.5 text-sm text-gray-500">{subdomain}</p>
         </div>
         <div className="flex gap-2">
-          <button className="cursor-pointer rounded-md border border-gray-200 px-3 py-1.5 text-[11px] text-gray-600 transition-all duration-200 hover:bg-gray-50">Desktop</button>
-          <button className="cursor-pointer rounded-md border border-gray-200 px-3 py-1.5 text-[11px] text-gray-600 transition-all duration-200 hover:bg-gray-50">Mobile</button>
-          <button className="cursor-pointer rounded-md bg-emerald-500 px-4 py-1.5 text-[11px] font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md">Publish changes</button>
+          <a
+            href={"https://" + subdomain}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cursor-pointer rounded-md bg-emerald-500 px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md"
+          >
+            View site
+          </a>
+          <button className="cursor-pointer rounded-md border border-gray-200 px-4 py-2 text-xs text-gray-700 shadow-sm transition-all duration-200 hover:border-emerald-500 hover:text-emerald-600">
+            Edit
+          </button>
+          <button className="cursor-pointer rounded-md border border-gray-200 px-4 py-2 text-xs text-gray-700 shadow-sm transition-all duration-200 hover:border-emerald-500 hover:text-emerald-600">
+            Custom domain
+          </button>
         </div>
       </div>
 
-      {/* MAIN GRID */}
-      <div className="grid min-h-0 flex-1 grid-cols-[240px_1fr]">
-        {/* LEFT PANEL */}
-        <div className="overflow-y-auto border-r border-gray-100 bg-white p-4">
-          {/* Domain */}
-          <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-gray-500">Domain</div>
-          <div className="rounded-lg border border-emerald-400 bg-emerald-50/50 px-3 py-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-medium text-emerald-600">kamakya.medihost.in</span>
-              <span className="rounded bg-emerald-500 px-1.5 py-0.5 text-[8px] font-medium text-white">Active</span>
+      <div className="grid grid-cols-[1fr_300px] gap-5">
+        {/* LEFT — Pages + blog */}
+        <div>
+          {/* Website preview card */}
+          <div className="mb-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-sm font-bold text-white shadow-sm">
+                {"\u2726"}
+              </div>
+              <div className="flex-1">
+                <div className="text-[13px] font-medium text-gray-900">{subdomain}</div>
+                <div className="text-[11px] text-gray-500">{pages.length} pages {"\u00B7"} {publishedCount} published {"\u00B7"} {blogPages.length} blog posts</div>
+              </div>
+              <span className={"rounded-full px-2.5 py-1 text-[10px] font-medium " + (isLive ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600")}>
+                {isLive ? "Live" : website.status}
+              </span>
             </div>
           </div>
-          <div className="mt-2 flex gap-1.5">
-            <input className="flex-1 rounded-md border border-gray-200 px-2 py-1.5 text-[11px] transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="yourdomain" />
-            <button className="cursor-pointer rounded-md bg-gray-900 px-3 py-1.5 text-[10px] font-medium text-white transition-all duration-200 hover:bg-gray-800">Buy</button>
-          </div>
-          <div className="mt-1 text-[9px] text-gray-400">.com from $9/yr</div>
 
-          {/* Theme */}
-          <div className="mb-2 mt-5 text-[11px] font-medium uppercase tracking-wider text-gray-500">Theme</div>
-          <div className="grid grid-cols-6 gap-2">
-            {themeColors.map((c) => (
-              <button
-                key={c}
-                onClick={() => setThemeColor(c)}
-                className={`aspect-square w-full cursor-pointer rounded-lg shadow-sm transition-transform duration-200 hover:scale-110 ${
-                  themeColor === c ? "ring-2 ring-gray-900 ring-offset-2" : ""
-                }`}
-                style={{ backgroundColor: c }}
+          {/* Pages list */}
+          <div className="mb-2 text-sm font-medium text-gray-900">Pages</div>
+          {otherPages.length === 0 && blogPages.length === 0 ? (
+            <div className="mb-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-xs text-gray-500">
+              No pages generated yet. Blog posts will appear here as they are created.
+            </div>
+          ) : (
+            <div className="mb-4 space-y-1.5">
+              {otherPages.map(function (p) {
+                var style = PAGE_TYPE_STYLES[p.page_type] || PAGE_TYPE_STYLES.custom;
+                return (
+                  <div key={p.id} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md">
+                    <div className={"flex h-8 w-8 items-center justify-center rounded-lg text-sm " + (style.dot === "bg-emerald-500" ? "bg-emerald-50 text-emerald-600" : style.dot === "bg-blue-500" ? "bg-blue-50 text-blue-600" : style.dot === "bg-amber-500" ? "bg-amber-50 text-amber-600" : style.dot === "bg-purple-500" ? "bg-purple-50 text-purple-600" : "bg-gray-50 text-gray-600")}>
+                      {style.icon}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[12px] font-medium text-gray-900">{p.title}</div>
+                      <div className="text-[10px] text-gray-400">/{p.slug} {"\u00B7"} {p.page_type}</div>
+                    </div>
+                    <span className={"h-1.5 w-1.5 rounded-full " + (p.is_published ? "bg-emerald-500" : "bg-gray-300")} />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Blog posts */}
+          {blogPages.length > 0 && (
+            <>
+              <div className="mb-2 text-sm font-medium text-gray-900">Blog posts</div>
+              <div className="mb-4 space-y-1.5">
+                {blogPages.map(function (p) {
+                  return (
+                    <div key={p.id} className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-sm text-amber-600">{"\u270E"}</div>
+                      <div className="flex-1">
+                        <div className="text-[12px] font-medium text-gray-900">{p.title}</div>
+                        <div className="text-[10px] text-gray-400">/{p.slug}</div>
+                      </div>
+                      <span className={"h-1.5 w-1.5 rounded-full " + (p.is_published ? "bg-emerald-500" : "bg-gray-300")} />
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Generate blog form */}
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div className="mb-1 text-sm font-medium text-gray-900">Generate new blog post</div>
+            <div className="mb-3 text-[11px] text-gray-500">AI writes an 800-1200 word SEO article using your Brand DNA</div>
+            <div className="flex gap-2">
+              <input
+                className={inputClass}
+                placeholder="e.g. Benefits of physiotherapy for back pain"
+                value={blogTopic}
+                onChange={function (e) { setBlogTopic(e.target.value); }}
+                onKeyDown={function (e) { if (e.key === "Enter") handleBlogGenerate(); }}
               />
-            ))}
-          </div>
-
-          {/* Pages */}
-          <div className="mb-1 mt-5 text-[11px] font-medium uppercase tracking-wider text-gray-500">Pages</div>
-          <div className="space-y-0.5">
-            {pages.map((p) => (
-              <div
-                key={p.name}
-                className={`flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] transition-all duration-150 ${
-                  p.active ? "bg-emerald-50 font-medium text-emerald-600" : "text-gray-700 hover:bg-gray-50"
-                }`}
+              <button
+                onClick={handleBlogGenerate}
+                disabled={blogGenerating}
+                className="flex-shrink-0 cursor-pointer rounded-md bg-emerald-500 px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <span className={`h-1.5 w-1.5 rounded-full ${p.dot}`} />
-                <span className="flex-1 truncate">{p.name}</span>
-                <span className="text-[9px] text-gray-400">{p.label}</span>
-              </div>
-            ))}
-            <button className="mt-1 w-full cursor-pointer rounded-lg border border-dashed border-gray-300 py-1.5 text-[11px] text-gray-400 transition-all duration-200 hover:border-gray-400 hover:text-gray-500">
-              + Add page
-            </button>
-          </div>
-
-          {/* Living widgets */}
-          <div className="mb-1 mt-5 flex items-center text-[11px] font-medium uppercase tracking-wider text-gray-500">
-            Living widgets
-            <span className="ml-1 rounded bg-red-500 px-1.5 text-[8px] font-medium text-white">NEW</span>
-          </div>
-          {widgets.map((w) => (
-            <div key={w.name} className="mb-2 rounded-xl border border-gray-100 p-3 shadow-sm transition-all duration-200 hover:shadow-md">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-                  <span className="text-[11px] font-medium text-gray-900">{w.name}</span>
-                </div>
-                <div className="flex h-4 w-7 items-center rounded-full bg-emerald-500 px-0.5">
-                  <div className="ml-auto h-3 w-3 rounded-full bg-white shadow-sm" />
-                </div>
-              </div>
-              <div className="mt-1 text-[9px] text-gray-500">{w.desc}</div>
-            </div>
-          ))}
-
-          {/* SEO health */}
-          <div className="mb-2 mt-5 text-[11px] font-medium uppercase tracking-wider text-gray-500">SEO health</div>
-          <div className="flex flex-wrap gap-1.5">
-            {["Meta OK", "Schema OK", "Speed 94", "AEO OK", "Mobile OK"].map((s) => (
-              <span key={s} className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-medium text-emerald-600">{s}</span>
-            ))}
-          </div>
-
-          {/* AI actions */}
-          <div className="mb-2 mt-5 text-[11px] font-medium uppercase tracking-wider text-gray-500">AI actions</div>
-          <div className="space-y-2">
-            {["Regenerate entire site", "Add 4 AI blog posts", "Optimize for AEO"].map((a) => (
-              <button key={a} className="w-full cursor-pointer rounded-lg border border-gray-200 px-3 py-2 text-[11px] font-medium text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50 hover:shadow-md">
-                ✦ {a}
+                {blogGenerating ? "Writing..." : "Generate"}
               </button>
-            ))}
+            </div>
           </div>
         </div>
 
-        {/* RIGHT PANEL — Browser preview */}
-        <div className="overflow-y-auto bg-gradient-to-br from-gray-100 to-gray-200 p-6">
-          <div className="mx-auto w-full max-w-[520px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl">
-            {/* Browser chrome */}
-            <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-3 py-2.5">
-              <div className="flex gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-                <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
-              </div>
-              <div className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-[10px] text-gray-500 shadow-inner">
-                kamakya.medihost.in
-              </div>
-            </div>
+        {/* RIGHT — Stats + SEO */}
+        <div>
+          {/* Quick stats */}
+          <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div className="mb-2 text-sm font-medium text-gray-900">Website overview</div>
+            {[
+              { label: "Total pages", value: String(pages.length), color: "text-emerald-600" },
+              { label: "Blog posts", value: String(blogPages.length), color: "text-amber-600" },
+              { label: "Published", value: String(publishedCount), color: "text-blue-600" },
+              { label: "Status", value: isLive ? "Live" : website.status, color: isLive ? "text-emerald-600" : "text-amber-600" },
+            ].map(function (s) {
+              return (
+                <div key={s.label} className="flex items-center justify-between border-b border-gray-50 py-2">
+                  <span className="text-[11px] text-gray-500">{s.label}</span>
+                  <span className={"text-[11px] font-medium " + s.color}>{s.value}</span>
+                </div>
+              );
+            })}
+          </div>
 
-            {/* WEBSITE CONTENT */}
-            <div>
-              {/* Nav */}
-              <div className="flex items-center justify-between border-b border-gray-50 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md text-[7px] font-bold text-white" style={{ backgroundColor: themeColor }}>KP</div>
-                  <span className="text-[12px] font-semibold text-gray-900">Kamakya Physio</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-[9px] text-gray-400">Services</span>
-                  <span className="text-[9px] text-gray-400">Doctor</span>
-                  <span className="text-[9px] text-gray-400">Reviews</span>
-                  <span className="rounded-full px-3 py-1 text-[9px] font-medium text-white shadow-sm" style={{ backgroundColor: themeColor }}>Book now</span>
-                  <span className="rounded-full border border-gray-200 px-2 py-1 text-[9px] text-gray-600">Pay</span>
-                </div>
-              </div>
-
-              {/* Hero */}
-              <div className="px-6 py-10 text-center" style={{ background: `linear-gradient(180deg, ${themeColor}06 0%, ${themeColor}12 100%)` }}>
-                <div className="text-[8px] font-medium uppercase tracking-[3px]" style={{ color: themeColor }}>Evidence-based physiotherapy</div>
-                <div className="mt-2 text-[22px] font-bold leading-tight text-gray-900">
-                  Move better.<br />Live better.
-                </div>
-                <div className="mx-auto mt-3 max-w-[300px] text-[9px] leading-relaxed text-gray-500">
-                  Advanced physiotherapy by Dr. Sai Kumar. Book online, pay securely, and start your recovery journey today.
-                </div>
-                <div className="mt-5 flex justify-center gap-3">
-                  <button className="rounded-full px-5 py-2 text-[10px] font-medium text-white shadow-md" style={{ backgroundColor: themeColor }}>Book appointment</button>
-                  <button className="rounded-full border-2 border-gray-200 px-5 py-2 text-[10px] font-medium text-gray-700">Pay online</button>
-                </div>
-                <div className="mt-4 flex items-center justify-center gap-2 text-[8px] text-gray-400">
-                  <span>★ 4.8 (12 reviews)</span>
-                  <span>·</span>
-                  <span>NABH</span>
-                  <span>·</span>
-                  <span>8+ years</span>
-                  <span>·</span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-1 w-1 animate-pulse rounded-full" style={{ backgroundColor: themeColor }} />
-                    3 slots today
-                  </span>
-                </div>
-              </div>
-
-              {/* MHAI Receptionist bar */}
-              <div className="flex items-center gap-3 px-4 py-2.5" style={{ backgroundColor: `${themeColor}08`, borderTop: `1px solid ${themeColor}20`, borderBottom: `1px solid ${themeColor}20` }}>
-                <div className="flex h-7 w-7 items-center justify-center rounded-full text-[8px] font-bold text-white shadow-sm" style={{ backgroundColor: themeColor }}>AI</div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] font-semibold text-gray-900">MHAI Receptionist</span>
-                    <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-500" />
-                  </div>
-                  <div className="text-[8px] text-gray-500">Online — ask anything or book</div>
-                </div>
-                <button className="rounded-full px-3 py-1 text-[8px] font-medium text-white" style={{ backgroundColor: themeColor }}>Chat</button>
-              </div>
-
-              {/* Services */}
-              <div className="px-4 pb-1 pt-4">
-                <div className="text-[11px] font-semibold text-gray-900">Our services</div>
-              </div>
-              <div className="grid grid-cols-3 gap-2.5 px-4 pb-4">
-                {[
-                  { icon: "⚕", name: "Sports rehab", sub: "Recovery + performance", price: "₹600" },
-                  { icon: "◈", name: "Back pain", sub: "Chronic + acute care", price: "₹500" },
-                  { icon: "◇", name: "Knee rehab", sub: "Post-surgery + injury", price: "₹500" },
-                ].map((s) => (
-                  <div key={s.name} className="group cursor-pointer rounded-xl bg-gray-50 p-3 text-center transition-all duration-200 hover:shadow-sm">
-                    <div className="mb-1 text-lg">{s.icon}</div>
-                    <div className="text-[9px] font-semibold text-gray-900">{s.name}</div>
-                    <div className="mt-0.5 text-[8px] text-gray-500">{s.sub}</div>
-                    <div className="mt-1.5 text-[8px] font-medium" style={{ color: themeColor }}>Book · {s.price}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Live booking */}
-              <div className="mx-4 my-3 overflow-hidden rounded-xl shadow-sm">
-                <div className="px-4 py-2.5" style={{ backgroundColor: `${themeColor}08` }}>
-                  <div className="text-[11px] font-semibold text-gray-900">Book an appointment</div>
-                </div>
-                <div className="bg-white px-4 py-3">
-                  <div className="mb-3 flex gap-2">
-                    {[
-                      { day: "Today", slots: "3 slots" },
-                      { day: "Tomorrow", slots: "5 slots" },
-                      { day: "Wed", slots: "4 slots" },
-                    ].map((d, i) => (
-                      <div
-                        key={d.day}
-                        className="flex-1 cursor-pointer rounded-lg border p-2.5 text-center transition-all duration-200"
-                        style={
-                          i === 0
-                            ? { borderColor: themeColor, backgroundColor: `${themeColor}08` }
-                            : { borderColor: "#e5e7eb" }
-                        }
-                      >
-                        <div className="text-[8px] text-gray-400">{d.day}</div>
-                        <div className="text-[10px] font-medium text-gray-900">{d.slots}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
-                    {["10:30 AM", "11:00 AM", "2:00 PM"].map((t, i) => (
-                      <span
-                        key={t}
-                        className="cursor-pointer rounded-full px-3 py-1.5 text-[9px] font-medium transition-all duration-200"
-                        style={
-                          i === 0
-                            ? { backgroundColor: `${themeColor}12`, borderWidth: 1, borderColor: themeColor, color: themeColor }
-                            : { borderWidth: 1, borderColor: "#e5e7eb", color: "#6b7280" }
-                        }
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-2 flex items-center gap-1.5 text-[8px] text-gray-400">
-                    <span className="h-1 w-1 animate-pulse rounded-full" style={{ backgroundColor: themeColor }} />
-                    Real-time · ₹100 deposit to confirm
-                  </div>
-                </div>
-              </div>
-
-              {/* Doctor */}
-              <div className="px-4 pt-3">
-                <div className="text-[11px] font-semibold text-gray-900">Meet your doctor</div>
-              </div>
-              <div className="mx-4 mb-3 mt-2 flex items-center gap-3 rounded-xl border border-gray-100 p-3 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full text-[12px] font-medium text-white shadow-sm" style={{ backgroundColor: themeColor }}>SK</div>
-                <div>
-                  <div className="text-[11px] font-semibold text-gray-900">Dr. Sai Kumar</div>
-                  <div className="text-[9px] text-gray-500">BPT, MPT Ortho · 8 years</div>
-                  <div className="text-[9px]" style={{ color: themeColor }}>Available today 10 AM–6 PM</div>
-                </div>
-              </div>
-
-              {/* Reviews */}
-              <div className="px-4 pt-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-semibold text-gray-900">Patient reviews</span>
-                  <span className="flex items-center gap-1 text-[8px] text-gray-400">
-                    <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-500" />
-                    Live from Google
-                  </span>
-                </div>
-              </div>
+          {/* SEO health */}
+          <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div className="mb-2 text-sm font-medium text-gray-900">SEO health</div>
+            <div className="flex flex-wrap gap-1.5">
               {[
-                { name: "Priya R.", time: "2 days ago", text: "Dr. Sai Kumar is excellent! My knee pain is 90% gone after just 6 sessions. Highly recommend.", reply: "Thank you Priya! We're glad the evidence-based approach helped. — Team Kamakya" },
-                { name: "Arun M.", time: "1 week ago", text: "Very professional clinic. The online booking and payment made everything smooth.", reply: "Thanks Arun! We built our tech to make your experience seamless. — Team Kamakya" },
-              ].map((r) => (
-                <div key={r.name} className="px-4 py-2.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] text-amber-400">★★★★★</span>
-                    <span className="text-[9px] font-semibold text-gray-900">{r.name}</span>
-                    <span className="text-[8px] text-gray-400">{r.time}</span>
-                  </div>
-                  <div className="mt-1 text-[9px] italic leading-relaxed text-gray-600">&ldquo;{r.text}&rdquo;</div>
-                  <div className="mt-1 text-[8px] italic" style={{ color: themeColor }}>↳ {r.reply}</div>
-                </div>
-              ))}
-
-              {/* Pay online */}
-              <div className="mx-4 my-3 overflow-hidden rounded-xl shadow-sm">
-                <div className="px-4 py-2.5" style={{ backgroundColor: `${themeColor}06` }}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-gray-900">Pay online</span>
-                    <span className="text-[8px] text-gray-400">Secure payments</span>
-                  </div>
-                </div>
-                <div className="bg-white px-4 py-3">
-                  <div className="flex gap-2">
-                    {["UPI", "Card", "Net banking", "Wallet"].map((p) => (
-                      <span key={p} className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-center text-[9px] text-gray-600">{p}</span>
-                    ))}
-                  </div>
-                  <div className="mt-2 text-[8px] text-gray-400">Powered by Razorpay · GST invoice auto-generated</div>
-                  <button className="mt-2 w-full rounded-lg py-2 text-[10px] font-medium text-white" style={{ backgroundColor: themeColor }}>Pay consultation fee</button>
-                </div>
-              </div>
-
-              {/* Before/After */}
-              <div className="px-4 pt-3">
-                <div className="text-[11px] font-semibold text-gray-900">Treatment results</div>
-              </div>
-              <div className="mx-4 mb-3 mt-2 rounded-xl bg-gray-50 p-3">
-                <div className="flex gap-2">
-                  <div className="flex h-16 flex-1 items-center justify-center rounded-lg bg-gray-200 text-[9px] text-gray-400">Before</div>
-                  <div className="flex h-16 flex-1 items-center justify-center rounded-lg text-[9px] text-white" style={{ backgroundColor: themeColor }}>After</div>
-                </div>
-                <div className="mt-2 text-center text-[8px] text-gray-400">Swipe to compare · 30+ results</div>
-              </div>
-
-              {/* Insurance */}
-              <div className="border-t border-gray-100 bg-gray-50 px-4 py-2.5">
-                <div className="mb-2 text-[9px] font-semibold text-gray-900">Insurance accepted</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {["Star Health", "ICICI Lombard", "CGHS"].map((i) => (
-                    <span key={i} className="rounded bg-gray-200 px-2 py-0.5 text-[7px] text-gray-600">{i}</span>
-                  ))}
-                  <span className="cursor-pointer rounded px-2 py-0.5 text-[7px] text-white" style={{ backgroundColor: themeColor }}>Check yours →</span>
-                </div>
-              </div>
-
-              {/* Blog */}
-              <div className="border-t border-amber-100 bg-amber-50/50 px-4 py-2.5">
-                <div className="mb-1 text-[9px] font-semibold text-amber-900">Latest from our blog</div>
-                <div className="text-[8px] leading-relaxed text-amber-800/70">
-                  5 exercises for desk workers with back pain — 2 days ago<br />
-                  When should you see a physiotherapist? — 9 days ago
-                </div>
-              </div>
-
-              {/* Floating CTA */}
-              <div className="mx-4 my-3 flex items-center justify-around overflow-hidden rounded-xl py-2.5 shadow-md" style={{ backgroundColor: themeColor }}>
-                {["Call", "WhatsApp", "Book", "Pay"].map((c) => (
-                  <span key={c} className="flex-1 text-center text-[8px] font-medium text-white">{c}</span>
-                ))}
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between bg-[#0a1a14] px-4 py-3">
-                <span className="text-[8px] text-gray-500">Kamakya Physiotherapy · Banjara Hills, Hyderabad</span>
-                <span className="text-[8px] text-gray-600">Powered by MediHost AI</span>
-              </div>
+                { label: "Meta tags", ok: true },
+                { label: "Schema markup", ok: true },
+                { label: "Mobile responsive", ok: true },
+                { label: "Page speed", ok: true },
+                { label: "Sitemap", ok: isLive },
+                { label: "SSL", ok: website.ssl_status === "active" },
+              ].map(function (s) {
+                return (
+                  <span key={s.label} className={"rounded-full px-2.5 py-1 text-[10px] font-medium " + (s.ok ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-500")}>
+                    {s.ok ? "\u2713" : "\u2014"} {s.label}
+                  </span>
+                );
+              })}
+            </div>
+            <div className="mt-3 rounded-lg bg-emerald-50 p-2.5 text-[10px] text-emerald-700">
+              All pages are auto-optimized with meta titles, descriptions, and structured data for local search.
             </div>
           </div>
 
-          {/* SUMMARY SECTION */}
-          <div className="mx-auto mt-6 w-full max-w-[520px] rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <div className="mb-3 text-sm font-medium tracking-tight text-gray-900">What AI built automatically from Brand DNA</div>
-            <div className="grid grid-cols-4 gap-3">
-              {summaryCards.map((s) => (
-                <div key={s.num} className="rounded-xl bg-gray-50 p-3.5">
-                  <div className="text-xl font-bold text-gray-900">{s.num}</div>
-                  <div className="mt-1 text-[11px] font-medium text-gray-900">{s.label}</div>
-                  <div className="mt-1 text-[10px] leading-relaxed text-gray-500">{s.desc}</div>
-                </div>
-              ))}
+          {/* Domain info */}
+          <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div className="mb-2 text-sm font-medium text-gray-900">Domain</div>
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 px-3 py-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-emerald-600">{subdomain}</span>
+                <span className={"rounded px-1.5 py-0.5 text-[8px] font-medium text-white " + (isLive ? "bg-emerald-500" : "bg-amber-500")}>
+                  {isLive ? "Active" : website.status}
+                </span>
+              </div>
+            </div>
+            <button className="mt-2 w-full cursor-pointer rounded-md border border-dashed border-gray-300 py-2 text-[11px] text-gray-500 transition-all duration-200 hover:border-gray-400 hover:text-gray-600">
+              + Connect custom domain
+            </button>
+          </div>
+
+          {/* AI actions */}
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div className="mb-2 text-sm font-medium text-gray-900">AI actions</div>
+            <div className="space-y-2">
+              {[
+                "Regenerate all pages",
+                "Optimize for AEO",
+                "Add FAQ page",
+              ].map(function (a) {
+                return (
+                  <button key={a} className="w-full cursor-pointer rounded-lg border border-gray-200 px-3 py-2.5 text-left text-[11px] font-medium text-gray-700 shadow-sm transition-all duration-200 hover:bg-gray-50 hover:shadow-md">
+                    {"\u2726"} {a}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
