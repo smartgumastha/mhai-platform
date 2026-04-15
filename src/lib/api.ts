@@ -220,6 +220,17 @@ export function getReviews() {
   );
 }
 
+// ── Review Actions ──
+export function updateReviewResponse(
+  reviewId: string,
+  data: { reply_text: string; status: string }
+) {
+  return api<{ success: boolean; error?: string; message?: string }>(
+    "/api/mhai/reviews/" + encodeURIComponent(reviewId) + "/ai-response",
+    { method: "PUT", body: JSON.stringify(data) }
+  );
+}
+
 // ── Locale ──
 export function getLocale(countryCode: string) {
   return api("/api/locale/" + encodeURIComponent(countryCode));
