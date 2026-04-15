@@ -288,6 +288,21 @@ export function updateReviewResponse(
   );
 }
 
+// ── Appointments ──
+export function createAppointment(data: {
+  patient_name: string;
+  patient_phone: string;
+  slot_date: string;
+  slot_time: string;
+  status?: string;
+  source?: string;
+}) {
+  return api<{ success: boolean; appointment?: any; error?: string; message?: string }>(
+    "/api/mhai/appointments",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
 // ── Locale ──
 export function getLocale(countryCode: string) {
   return api("/api/locale/" + encodeURIComponent(countryCode));

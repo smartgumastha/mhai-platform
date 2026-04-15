@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/app/providers/auth-context";
-import { getAiActivity, getReviews } from "@/lib/api";
+import { getAiActivity, getReviews, createAppointment } from "@/lib/api";
 
 var staticMetrics = [
   {
@@ -109,6 +109,13 @@ export default function DashboardPage() {
   var [totalReviews, setTotalReviews] = useState(0);
   var [avgRating, setAvgRating] = useState<string | null>(null);
 
+  /* ── Patient Done state ── */
+  var [showPatientDone, setShowPatientDone] = useState(false);
+  var [pdName, setPdName] = useState("");
+  var [pdPhone, setPdPhone] = useState("");
+  var [pdSubmitting, setPdSubmitting] = useState(false);
+  var [pdToast, setPdToast] = useState("");
+
   useEffect(() => {
     getAiActivity()
       .then((res) => {
@@ -144,6 +151,41 @@ export default function DashboardPage() {
       })
       .catch(() => {});
   }, []);
+
+  /* ── Patient Done submit ── */
+  async function handlePatientDone() {
+    if (!pdName.trim() || !pdPhone.trim()) {
+      alert("Please fill in both name and phone number.");
+      return;
+    }
+    setPdSubmitting(true);
+    try {
+      var now = new Date();
+      var date = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+      var time = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+      var res = await createAppointment({
+        patient_name: pdName.trim(),
+        patient_phone: pdPhone.trim(),
+        slot_date: date,
+        slot_time: time,
+        status: "completed",
+        source: "walk-in",
+      });
+      if (res.success) {
+        setShowPatientDone(false);
+        setPdName("");
+        setPdPhone("");
+        setPdToast("Patient logged — automation triggered");
+        setTimeout(() => setPdToast(""), 3000);
+      } else {
+        alert(res.error || res.message || "Failed to log patient.");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setPdSubmitting(false);
+    }
+  }
 
   var reviewCard = {
     label: "Google rating",
@@ -193,6 +235,61 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+
+      {/* Patient Done — Layer 1 trigger */}
+      <button
+        onClick={() => setShowPatientDone(true)}
+        className="mb-5 flex w-full cursor-pointer items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-5 text-xl font-semibold text-white shadow-lg transition-all duration-200 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl active:scale-[0.99]"
+      >
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+        Patient done
+      </button>
+
+      {/* Patient Done modal */}
+      {showPatientDone && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-medium text-gray-900">Log patient visit</h2>
+              <button onClick={() => { setShowPatientDone(false); setPdName(""); setPdPhone(""); }} className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600">&times;</button>
+            </div>
+            <div className="mb-3">
+              <label className="mb-1 block text-xs text-gray-500">Patient name</label>
+              <input
+                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. Rajesh Kumar"
+                value={pdName}
+                onChange={(e) => setPdName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="mb-4">
+              <label className="mb-1 block text-xs text-gray-500">Phone number</label>
+              <input
+                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                placeholder="e.g. 9553053446"
+                value={pdPhone}
+                onChange={(e) => setPdPhone(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handlePatientDone(); }}
+              />
+            </div>
+            <button
+              onClick={handlePatientDone}
+              disabled={pdSubmitting}
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {pdSubmitting ? "Logging..." : "Log patient"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {pdToast && (
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-gray-900 px-5 py-3 text-sm font-medium text-white shadow-lg">
+          <span className="mr-2">✓</span>{pdToast}
+        </div>
+      )}
 
       {/* Section B: Metric cards */}
       <div className="grid grid-cols-4 gap-3">
