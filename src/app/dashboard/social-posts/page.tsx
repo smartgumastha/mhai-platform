@@ -5,6 +5,8 @@ import {
   getSocialPosts,
   createSocialPost,
   generateSocialPost,
+  publishPost,
+  schedulePost,
 } from "@/lib/api";
 import { useNotification } from "@/app/providers/NotificationProvider";
 
@@ -89,6 +91,13 @@ function PlatformToggles({ active, onToggle }: { active: string[]; onToggle: (pl
   );
 }
 
+var STATUS_BADGES: Record<string, { label: string; cls: string }> = {
+  draft: { label: "Draft", cls: "bg-gray-100 text-gray-600" },
+  scheduled: { label: "Scheduled", cls: "bg-blue-50 text-blue-600" },
+  published: { label: "Published", cls: "bg-emerald-50 text-emerald-600" },
+  failed: { label: "Failed", cls: "bg-red-50 text-red-600" },
+};
+
 type Post = {
   id: string;
   post_type: string;
@@ -99,6 +108,7 @@ type Post = {
   title?: string;
   subtitle?: string;
   status?: string;
+  scheduled_at?: string;
 };
 
 export default function SocialPostsPage() {
@@ -117,6 +127,12 @@ export default function SocialPostsPage() {
   var [newLanguage, setNewLanguage] = useState("English");
   var [aiGenerating, setAiGenerating] = useState(false);
   var [posting, setPosting] = useState(false);
+
+  /* ── publish / schedule state ── */
+  var [publishingId, setPublishingId] = useState<string | null>(null);
+  var [scheduleModal, setScheduleModal] = useState<string | null>(null);
+  var [scheduleDate, setScheduleDate] = useState("");
+  var [scheduleTime, setScheduleTime] = useState("09:00");
 
   /* ── fetch posts ── */
   useEffect(() => {
@@ -185,7 +201,7 @@ export default function SocialPostsPage() {
       var res = await createSocialPost({
         post_type: newType,
         content: newContent,
-        platform: newPlatforms[0] || "ig",
+        platforms: newPlatforms,
         hashtags: newHashtags,
       });
       if (res.success) {
@@ -210,6 +226,61 @@ export default function SocialPostsPage() {
       notify.error("Network error", "Please try again.");
     } finally {
       setPosting(false);
+    }
+  }
+
+  /* ── publish now ── */
+  async function handlePublishNow(postId: string) {
+    var platforms = postPlatforms[postId] || [];
+    if (platforms.length === 0) {
+      notify.warning("No platforms", "Select at least one platform to post to.");
+      return;
+    }
+    setPublishingId(postId);
+    try {
+      var res = await publishPost(postId, platforms);
+      if (res.success) {
+        notify.success("Published!", "Posted to " + platforms.map((id) => platformDefs.find((p) => p.id === id)?.label).filter(Boolean).join(", ") + ". Booking tracking enabled.");
+        setPosts((prev) => prev.map((p) => p.id === postId ? { ...p, status: "published" } : p));
+      } else {
+        notify.error("Publish failed", res.error || res.message || "Please try again.");
+      }
+    } catch {
+      notify.error("Network error", "Could not publish. Please try again.");
+    } finally {
+      setPublishingId(null);
+    }
+  }
+
+  /* ── schedule post ── */
+  async function handleScheduleSubmit() {
+    if (!scheduleModal) return;
+    var platforms = postPlatforms[scheduleModal] || [];
+    if (platforms.length === 0) {
+      notify.warning("No platforms", "Select at least one platform.");
+      return;
+    }
+    if (!scheduleDate) {
+      notify.warning("No date", "Pick a date to schedule.");
+      return;
+    }
+    var scheduledAt = scheduleDate + "T" + scheduleTime + ":00";
+    setPublishingId(scheduleModal);
+    try {
+      var res = await schedulePost(scheduleModal, { platforms, scheduled_at: scheduledAt });
+      if (res.success) {
+        notify.success("Scheduled!", "Post will go live on " + scheduleDate + " at " + scheduleTime + ".");
+        setPosts((prev) => prev.map((p) => p.id === scheduleModal ? { ...p, status: "scheduled", scheduled_at: scheduledAt } : p));
+        setScheduleModal(null);
+        setScheduleDate("");
+        setScheduleTime("09:00");
+      } else {
+        notify.error("Schedule failed", res.error || res.message || "Please try again.");
+      }
+    } catch {
+      notify.error("Network error", "Could not schedule. Please try again.");
+    } finally {
+      setPublishingId(null);
     }
   }
 
@@ -338,6 +409,57 @@ export default function SocialPostsPage() {
         </div>
       )}
 
+      {/* ── Schedule modal ── */}
+      {scheduleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-medium text-gray-900">Schedule post</h2>
+              <button onClick={() => setScheduleModal(null)} className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600">&times;</button>
+            </div>
+
+            <div className="mb-3">
+              <label className="mb-1 block text-xs text-gray-500">Platforms</label>
+              <PlatformToggles
+                active={postPlatforms[scheduleModal] || []}
+                onToggle={(plat) => togglePostPlatform(scheduleModal!, plat)}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="mb-1 block text-xs text-gray-500">Date</label>
+              <input
+                type="date"
+                className={inputClass}
+                value={scheduleDate}
+                onChange={(e) => setScheduleDate(e.target.value)}
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="mb-1 block text-xs text-gray-500">Time</label>
+              <input
+                type="time"
+                className={inputClass}
+                value={scheduleTime}
+                onChange={(e) => setScheduleTime(e.target.value)}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setScheduleModal(null)} className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs text-gray-700 transition-all duration-200 hover:border-gray-400">Cancel</button>
+              <button
+                onClick={handleScheduleSubmit}
+                disabled={publishingId === scheduleModal}
+                className="cursor-pointer rounded-xl bg-blue-500 px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {publishingId === scheduleModal ? "Scheduling..." : "Schedule"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Coming soon tab content ── */}
       {activeTab !== "posts" && (() => {
         var tab = contentTabs.find((t) => t.id === activeTab);
@@ -398,9 +520,16 @@ export default function SocialPostsPage() {
                           </div>
                         )}
                       </div>
-                      <span className="absolute right-3 top-3 rounded bg-white/20 px-2 py-0.5 text-[8px] text-white backdrop-blur">
-                        {POST_TYPE_LABELS[post.post_type] || "Post"}
-                      </span>
+                      <div className="absolute right-3 top-3 flex items-center gap-1.5">
+                        {post.status && STATUS_BADGES[post.status] && (
+                          <span className={`rounded px-2 py-0.5 text-[8px] font-medium ${STATUS_BADGES[post.status].cls}`}>
+                            {STATUS_BADGES[post.status].label}
+                          </span>
+                        )}
+                        <span className="rounded bg-white/20 px-2 py-0.5 text-[8px] text-white backdrop-blur">
+                          {POST_TYPE_LABELS[post.post_type] || "Post"}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Post body */}
@@ -419,10 +548,30 @@ export default function SocialPostsPage() {
                           <span className="text-[10px] text-gray-500">{post.ai_insight}</span>
                         </div>
                       )}
+                      {post.status === "scheduled" && post.scheduled_at && (
+                        <div className="mb-3 flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-[10px] text-blue-700">
+                          <span>Scheduled for {new Date(post.scheduled_at).toLocaleString()}</span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between">
                         <div className="flex gap-2">
-                          <button onClick={() => notify.success("Posted", `Posted to ${getActiveNames(post.id)}! Booking tracking enabled.`)} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-[11px] font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600">Post now</button>
-                          <button className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] text-gray-700 transition-all duration-200 hover:border-emerald-500">Schedule</button>
+                          {post.status !== "published" && (
+                            <button
+                              onClick={() => handlePublishNow(post.id)}
+                              disabled={publishingId === post.id}
+                              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-[11px] font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {publishingId === post.id ? "Publishing..." : "Post now"}
+                            </button>
+                          )}
+                          {post.status !== "published" && post.status !== "scheduled" && (
+                            <button
+                              onClick={() => { setScheduleModal(post.id); setScheduleDate(""); setScheduleTime("09:00"); }}
+                              className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] text-gray-700 transition-all duration-200 hover:border-emerald-500"
+                            >
+                              Schedule
+                            </button>
+                          )}
                           <button className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] text-gray-700 transition-all duration-200 hover:border-emerald-500">Edit</button>
                         </div>
                         <div className="flex gap-3">

@@ -241,7 +241,7 @@ export function getSocialPosts() {
 export function createSocialPost(data: {
   post_type: string;
   content: string;
-  platform: string;
+  platforms: string[];
   hashtags: string;
 }) {
   return api<{ success: boolean; post?: any; error?: string; message?: string }>(
@@ -398,6 +398,45 @@ export function generateBlogPost(topic: string, language?: string) {
     method: "POST",
     body: JSON.stringify({ topic, language: language || "English" }),
   });
+}
+
+// ── Social Post Actions ──
+export function publishPost(postId: string, platforms: string[]) {
+  return api<{ success: boolean; post?: any; error?: string; message?: string }>(
+    "/api/mhai/social-posts/" + encodeURIComponent(postId) + "/publish",
+    { method: "POST", body: JSON.stringify({ platforms }) }
+  );
+}
+
+export function schedulePost(
+  postId: string,
+  data: { platforms: string[]; scheduled_at: string }
+) {
+  return api<{ success: boolean; post?: any; error?: string; message?: string }>(
+    "/api/mhai/social-posts/" + encodeURIComponent(postId) + "/schedule",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+// ── Connections ──
+export function getConnections() {
+  return api<{ success: boolean; connections?: any[]; error?: string }>(
+    "/api/mhai/connections"
+  );
+}
+
+export function connectPlatform(platform: string) {
+  return api<{ success: boolean; auth_url?: string; connection?: any; error?: string; message?: string }>(
+    "/api/mhai/connections/connect",
+    { method: "POST", body: JSON.stringify({ platform }) }
+  );
+}
+
+export function disconnectPlatform(platform: string) {
+  return api<{ success: boolean; error?: string; message?: string }>(
+    "/api/mhai/connections/disconnect",
+    { method: "POST", body: JSON.stringify({ platform }) }
+  );
 }
 
 // ── Locale ──
