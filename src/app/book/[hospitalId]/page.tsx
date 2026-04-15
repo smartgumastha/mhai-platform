@@ -14,6 +14,8 @@ type ClinicInfo = {
   address: string;
   phone: string;
   doctor: string;
+  clinic_lat?: string;
+  clinic_lng?: string;
 };
 
 function BookingPageInner({ hospitalId }: { hospitalId: string }) {
@@ -73,6 +75,27 @@ function BookingPageInner({ hospitalId }: { hospitalId: string }) {
           clinicAddress={clinicAddress}
         />
       </div>
+
+      {/* Find us — Google Map */}
+      {clinic?.clinic_lat && clinic?.clinic_lng && (
+        <div className="mx-auto max-w-lg px-4 pb-6">
+          <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div className="mb-3 text-sm font-medium text-gray-900">Find us</div>
+            <div className="overflow-hidden rounded-xl">
+              <iframe
+                src={`https://maps.google.com/maps?q=${clinic.clinic_lat},${clinic.clinic_lng}&z=15&output=embed`}
+                className="h-[250px] w-full border-0"
+                loading="lazy"
+                title="Clinic location"
+              />
+            </div>
+            <div className="mt-3">
+              <div className="text-[13px] font-medium text-gray-900">{clinicName}</div>
+              {clinicAddress && <div className="mt-0.5 text-[11px] text-gray-500">{clinicAddress}</div>}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="border-t border-gray-100 bg-white px-6 py-3 text-center">

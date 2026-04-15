@@ -398,6 +398,26 @@ export default function AiWebsitePage() {
               </div>
             )}
           </div>
+
+          {/* Location map */}
+          {brand?.clinic_lat && brand?.clinic_lng && (
+            <div className="mt-5">
+              <div className="mb-2 text-sm font-medium text-gray-900">Location</div>
+              <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                <div className="overflow-hidden rounded-xl">
+                  <iframe
+                    src={`https://maps.google.com/maps?q=${brand.clinic_lat},${brand.clinic_lng}&z=15&output=embed`}
+                    className="h-[250px] w-full border-0"
+                    loading="lazy"
+                    title="Clinic location"
+                  />
+                </div>
+                {brand.clinic_address && (
+                  <div className="mt-3 text-[11px] text-gray-500">{brand.clinic_address}</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* RIGHT — Stats + SEO */}

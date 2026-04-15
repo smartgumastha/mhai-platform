@@ -425,10 +425,13 @@ export function getConnections() {
   );
 }
 
-export function connectPlatform(platform: string) {
+export function connectPlatform(
+  platform: string,
+  credentials?: { access_token?: string; page_id?: string }
+) {
   return api<{ success: boolean; auth_url?: string; connection?: any; error?: string; message?: string }>(
     "/api/mhai/connections/connect",
-    { method: "POST", body: JSON.stringify({ platform }) }
+    { method: "POST", body: JSON.stringify({ platform, ...credentials }) }
   );
 }
 
