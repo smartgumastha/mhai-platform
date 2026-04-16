@@ -11,7 +11,7 @@ const CITY: Record<string, number> = { "Tier 1 Metro": 1.0, "Tier 2": 0.75, "Tie
 function AnimatedNumber({ value }: { value: number }) {
   const mv = useMotionValue(0);
   const spring = useSpring(mv, { stiffness: 50, damping: 20 });
-  const display = useTransform(spring, (v) => "\u20B9" + Math.round(v).toLocaleString("en-IN"));
+  const display = useTransform(spring, (v) => "₹" + Math.round(v).toLocaleString("en-IN"));
 
   useEffect(() => { mv.set(value); }, [value, mv]);
 
@@ -56,12 +56,12 @@ export default function ROICalculator() {
 
       <div className="flex justify-center gap-2 mt-4">
         <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">+{newPatients} patients/mo</span>
-        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">{"\u20B9"}{avgValue.toLocaleString("en-IN")} avg value</span>
+        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">{"₹"}{avgValue.toLocaleString("en-IN")} avg value</span>
         <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">{roi}x ROI</span>
       </div>
 
       <p className="mt-4 text-sm text-purple-600 font-medium">
-        You&apos;d be earning an extra {"\u20B9"}{(yearly / 100000).toFixed(1)} lakh in the first year
+        You&apos;d be earning an extra {"₹"}{(yearly / 100000).toFixed(1)} lakh in the first year
       </p>
     </div>
   );

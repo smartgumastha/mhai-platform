@@ -6,7 +6,7 @@ const scenarios = [
     label: "HINGLISH",
     msgs: [
       { time: "10:47", name: "Ramesh", text: "root canal kitna charge?", isClara: false },
-      { time: "10:47", name: "Clara", text: "Namaste! \u20B94,500 se start, EMI \u20B9750/mo available. Free consult book karein?", isClara: true },
+      { time: "10:47", name: "Clara", text: "Namaste! ₹4,500 se start, EMI ₹750/mo available. Free consult book karein?", isClara: true },
       { time: "10:47", name: "Ramesh", text: "Kal 7 PM possible?", isClara: false },
     ],
   },
@@ -22,7 +22,7 @@ const scenarios = [
     label: "TAMIL",
     msgs: [
       { time: "09:15", name: "Rajesh", text: "echo test ku appointment venum", isClara: false },
-      { time: "09:15", name: "Clara", text: "Kaalai 9 manikku avail \u2014 Dr. Kumar saturday ku free. Book pannalaama?", isClara: true },
+      { time: "09:15", name: "Clara", text: "Kaalai 9 manikku avail — Dr. Kumar saturday ku free. Book pannalaama?", isClara: true },
       { time: "09:15", name: "Rajesh", text: "romba nandri", isClara: false },
     ],
   },
@@ -57,7 +57,7 @@ export default function LiveDemoVideo() {
         {/* LIVE pill */}
         <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-full bg-black/40 px-2.5 py-1">
           <span className="h-2 w-2 rounded-full bg-red-500" style={{ animation: "liveBlink 1.5s infinite" }} />
-          <span className="text-[10px] text-white/80 font-medium">LIVE \u00B7 Dr. Sharma Dental, Hyderabad</span>
+          <span className="text-[10px] text-white/80 font-medium">LIVE · Dr. Sharma Dental, Hyderabad</span>
         </div>
 
         {/* Timer */}
@@ -81,13 +81,13 @@ export default function LiveDemoVideo() {
         {/* Bottom overlay */}
         <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm px-4 py-3">
           <p className="text-[10px] text-white/50 uppercase tracking-wider">Now playing</p>
-          <p className="text-xs text-white/80">Clara books a root canal in 47 seconds \u2014 WhatsApp, EMI, reminder all auto</p>
+          <p className="text-xs text-white/80">Clara books a root canal in 47 seconds — WhatsApp, EMI, reminder all auto</p>
         </div>
 
         {/* Toast */}
         {showToast && (
           <div className="absolute top-16 left-4 right-4 rounded-lg bg-white/10 backdrop-blur px-4 py-3 text-xs text-white text-center" style={{ animation: "slideIn 0.3s ease" }}>
-            Video launching April 21 \u2014 this is a preview of what Clara does live.
+            Video launching April 21 — this is a preview of what Clara does live.
           </div>
         )}
       </div>
@@ -95,7 +95,7 @@ export default function LiveDemoVideo() {
       {/* RIGHT - Transcript */}
       <div className="bg-[#F8FAFC] p-5">
         <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mb-3">
-          Transcript \u00B7 {scenario.label}
+          Transcript · {scenario.label}
         </p>
         <div className="space-y-2.5 min-h-[200px]">
           {scenario.msgs.map((msg, i) => (
@@ -127,7 +127,7 @@ export default function LiveDemoVideo() {
 
         {/* Success pills */}
         <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-gray-200">
-          {["\u2713 Booked", "\u2713 WhatsApp sent", "\u2713 EMI attached", "\u2713 Reminder set"].map((p) => (
+          {["✓ Booked", "✓ WhatsApp sent", "✓ EMI attached", "✓ Reminder set"].map((p) => (
             <span key={p} className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">{p}</span>
           ))}
         </div>
