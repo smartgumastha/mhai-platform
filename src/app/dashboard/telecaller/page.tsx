@@ -278,6 +278,26 @@ export default function TelecallerPage() {
         })}
       </div>
 
+      {/* Quick nav cards */}
+      {stats && (parseInt(stats.active_campaigns) > 0 || parseInt(stats.converted_leads) > 0) && (
+        <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <a href="/dashboard/telecaller/coaching" className="flex items-center justify-between rounded-xl border bg-white px-4 py-3 hover:shadow-sm transition">
+            <div>
+              <p className="text-xs text-gray-400">This week's coaching</p>
+              <p className="text-sm font-medium text-gray-800">Team score available</p>
+            </div>
+            <span className="text-xs text-emerald-600 font-medium">View reports &rarr;</span>
+          </a>
+          <a href="/dashboard/telecaller/campaigns" className="flex items-center justify-between rounded-xl border bg-white px-4 py-3 hover:shadow-sm transition">
+            <div>
+              <p className="text-xs text-gray-400">Active campaigns</p>
+              <p className="text-sm font-medium text-gray-800">{stats.active_campaigns} running</p>
+            </div>
+            <span className="text-xs text-emerald-600 font-medium">Manage &rarr;</span>
+          </a>
+        </div>
+      )}
+
       {/* Pipeline bar */}
       {total > 0 && (
         <div className="mb-5">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/app/providers/auth-context";
@@ -31,7 +32,6 @@ var navGroups = [
       { name: "MHAI Pay", href: "/dashboard/mhai-pay" },
       { name: "MHAI Receptionist", href: "/dashboard/receptionist" },
       { name: "MHAI Caller", href: "/dashboard/caller" },
-      { name: "Telecaller CRM", href: "/dashboard/telecaller" },
     ],
   },
   {
@@ -53,6 +53,14 @@ var navGroups = [
   },
 ];
 
+var telecallerSubItems = [
+  { name: "Dashboard", href: "/dashboard/telecaller" },
+  { name: "Import contacts", href: "/dashboard/telecaller/import" },
+  { name: "Campaigns", href: "/dashboard/telecaller/campaigns" },
+  { name: "Scripts", href: "/dashboard/telecaller/scripts" },
+  { name: "Coaching", href: "/dashboard/telecaller/coaching" },
+];
+
 export default function DashboardSidebar({
   businessName,
 }: {
@@ -60,6 +68,8 @@ export default function DashboardSidebar({
 }) {
   var pathname = usePathname();
   var { logout } = useAuth();
+  var isTelecallerActive = pathname.startsWith("/dashboard/telecaller");
+  var [telecallerOpen, setTelecallerOpen] = useState(isTelecallerActive);
 
   return (
     <aside className="flex h-screen w-[220px] min-w-[220px] flex-col overflow-y-auto bg-[#0a1a14]">
@@ -100,6 +110,48 @@ export default function DashboardSidebar({
                 </Link>
               );
             })}
+
+            {/* Telecaller CRM collapsible section — after AI AUTOMATION */}
+            {group.label === "AI AUTOMATION" && (
+              <div>
+                <button
+                  onClick={function () { setTelecallerOpen(!telecallerOpen); }}
+                  className={`mx-2 flex w-[calc(100%-16px)] items-center justify-between rounded-md px-3 py-2 text-[13px] transition-all duration-150 ${
+                    isTelecallerActive
+                      ? "border-l-[3px] border-emerald-500 bg-emerald-500/20 pl-2.5 font-medium text-white"
+                      : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                  }`}
+                >
+                  <span>Telecaller CRM</span>
+                  <svg
+                    width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"
+                    className={"transition-transform " + (telecallerOpen ? "rotate-180" : "")}
+                  >
+                    <path d="M3 4.5l3 3 3-3" />
+                  </svg>
+                </button>
+                {telecallerOpen && (
+                  <div className="ml-4">
+                    {telecallerSubItems.map(function (sub) {
+                      var isSubActive = pathname === sub.href;
+                      return (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className={`mx-2 block rounded-md px-3 py-1.5 text-[12px] transition-all duration-150 ${
+                            isSubActive
+                              ? "bg-emerald-500/15 font-medium text-emerald-300"
+                              : "text-gray-500 hover:bg-white/5 hover:text-gray-300"
+                          }`}
+                        >
+                          {sub.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </nav>
