@@ -15,9 +15,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MediHost AI — AI Marketing Platform for Healthcare",
+  title: "MHAI — 11 AI teammates in one magical assistant for your clinic",
   description:
-    "Google reviews, Instagram reels, WhatsApp reminders, appointments, billing, SEO — one AI platform does it all for clinics, dentists, hospitals & labs.",
+    "Clara writes your website, books patients, calls leads, posts social media. Officially integrates with WhatsApp, Meta, Google, YouTube. Powered by Claude AI. 70+ languages, 8 countries. Free trial.",
+  openGraph: {
+    title: "Meet Clara — your clinic's 11 AI teammates",
+    description: "Launch in 5 minutes. Free for 14 days.",
+    images: ["/clara-demo-poster.svg"],
+  },
 };
 
 export const viewport: Viewport = {
@@ -41,6 +46,16 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="MHAI" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
         <script src="https://checkout.razorpay.com/v1/checkout.js" async />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "MHAI - MediHost AI",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          offers: { "@type": "Offer", price: "2999", priceCurrency: "INR" },
+          description: "AI marketing platform for healthcare clinics with 11 integrated tools.",
+          creator: { "@type": "Organization", name: "MediHost AI Technologies Pvt Ltd", url: "https://medihost.in" }
+        })}} />
       </head>
       <body className="min-h-full flex flex-col">
         <Providers>

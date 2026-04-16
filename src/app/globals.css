@@ -64,3 +64,23 @@ body {
     animation: none !important;
   }
 }
+
+/* Clara landing page */
+@keyframes flow { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+@keyframes pulseGlow { 0%, 100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.08); } }
+@keyframes sparkle { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+@keyframes glowRing { 0%, 100% { box-shadow: 0 0 0 0 rgba(93, 202, 165, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(93, 202, 165, 0); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes liveBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+@keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes typeDots { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
+@keyframes shine { 0%, 100% { background-position: -200% 0; } 50% { background-position: 200% 0; } }
+
+.cosmic-bg { background: linear-gradient(135deg, #042C53 0%, #26215C 35%, #04342C 100%); background-size: 200% 200%; animation: flow 15s ease infinite; }
+.gradient-text-hero { background: linear-gradient(90deg, #5DCAA5, #AFA9EC); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.gradient-text-emerald { background: linear-gradient(90deg, #1D9E75, #085041); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.shine-text { background: linear-gradient(90deg, #FAC775, #fff 50%, #FAC775); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shine 4s ease infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cosmic-bg, .shine-text { animation: none !important; }
+}

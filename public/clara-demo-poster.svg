@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#042C53"/>
+      <stop offset="35%" stop-color="#26215C"/>
+      <stop offset="100%" stop-color="#04342C"/>
+    </linearGradient>
+    <linearGradient id="txt" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#5DCAA5"/>
+      <stop offset="100%" stop-color="#AFA9EC"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <circle cx="300" cy="200" r="120" fill="#5DCAA5" opacity="0.15" filter="url(#blur)"/>
+  <circle cx="900" cy="400" r="150" fill="#AFA9EC" opacity="0.12"/>
+  <text x="600" y="310" text-anchor="middle" font-family="system-ui, sans-serif" font-size="80" font-weight="600" fill="url(#txt)">CLARA</text>
+  <text x="600" y="380" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" fill="rgba(255,255,255,0.5)">47-second demo coming April 21</text>
+  <text x="600" y="420" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="rgba(255,255,255,0.3)">11 AI teammates for your clinic</text>
+</svg>
