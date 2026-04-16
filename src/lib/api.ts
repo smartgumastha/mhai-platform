@@ -529,3 +529,247 @@ export function getLocaleConfig(countryCode: string) {
       locale?: { currency: string; symbol: string; payment: string; phone_format: string; date_format: string; compliance: string; tld: string; languages: string[]; country_code: string };
     }>;
 }
+
+// ════════════════════════════════════════════════════════════
+//  TELECALLER CRM
+// ════════════════════════════════════════════════════════════
+
+// ── Leads ──
+export function getLeads(filters?: { status?: string; source?: string; assigned_to?: string; dnd_status?: string; search?: string; limit?: number; offset?: number }) {
+  var params = new URLSearchParams();
+  if (filters) {
+    Object.entries(filters).forEach(function ([k, v]) { if (v != null) params.set(k, String(v)); });
+  }
+  var qs = params.toString();
+  return aiApi<{ success: boolean; data?: any[]; total?: number; error?: string }>(
+    "/api/mhai/telecaller/leads" + (qs ? "?" + qs : "")
+  );
+}
+
+export function getLead(id: string) {
+  return aiApi<{ success: boolean; data?: { lead: any; calls: any[] }; error?: string }>(
+    "/api/mhai/telecaller/leads/" + encodeURIComponent(id)
+  );
+}
+
+export function createLead(data: { name?: string; phone: string; email?: string; source: string; source_tag?: string; inquiry?: string; specialty?: string; assigned_to?: string; consent_type?: string; language_pref?: string; notes?: string; metadata?: Record<string, any> }) {
+  return aiApi<{ success: boolean; data?: { id: string; dnd_status: string }; error?: string }>(
+    "/api/mhai/telecaller/leads",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function updateLead(id: string, data: Record<string, any>) {
+  return aiApi<{ success: boolean; data?: { id: string }; error?: string }>(
+    "/api/mhai/telecaller/leads/" + encodeURIComponent(id),
+    { method: "PATCH", body: JSON.stringify(data) }
+  );
+}
+
+export function deleteLead(id: string) {
+  return aiApi<{ success: boolean; data?: { id: string }; error?: string }>(
+    "/api/mhai/telecaller/leads/" + encodeURIComponent(id),
+    { method: "DELETE" }
+  );
+}
+
+export function scoreLead(id: string) {
+  return aiApi<{ success: boolean; data?: any; error?: string }>(
+    "/api/mhai/telecaller/leads/" + encodeURIComponent(id) + "/score",
+    { method: "POST" }
+  );
+}
+
+export function scoreBatchLeads(lead_ids: string[]) {
+  return aiApi<{ success: boolean; data?: any[]; error?: string }>(
+    "/api/mhai/telecaller/leads/batch-score",
+    { method: "POST", body: JSON.stringify({ lead_ids }) }
+  );
+}
+
+export function bulkScrubLeads() {
+  return aiApi<{ success: boolean; data?: { total: number; updated: number }; error?: string }>(
+    "/api/mhai/telecaller/leads/bulk-scrub",
+    { method: "POST" }
+  );
+}
+
+// ── Imports ──
+export function importLeads(leads: any[], meta: { source_tag: string; file_name?: string }) {
+  return aiApi<{ success: boolean; data?: { import_id: string; status: string; total_rows: number }; error?: string }>(
+    "/api/mhai/telecaller/leads/import",
+    { method: "POST", body: JSON.stringify({ leads, ...meta }) }
+  );
+}
+
+export function getImportStatus(id: string) {
+  return aiApi<{ success: boolean; data?: any; error?: string }>(
+    "/api/mhai/telecaller/leads/import/" + encodeURIComponent(id)
+  );
+}
+
+// ── Campaigns ──
+export function getCampaigns() {
+  return aiApi<{ success: boolean; data?: any[]; error?: string }>(
+    "/api/mhai/telecaller/campaigns"
+  );
+}
+
+export function createCampaign(data: { name: string; description?: string; target_segment?: any; script_id?: string; time_window_start?: string; time_window_end?: string; timezone?: string; assigned_to?: string[]; use_ai_voice?: boolean; max_attempts?: number }) {
+  return aiApi<{ success: boolean; data?: { id: string }; error?: string }>(
+    "/api/mhai/telecaller/campaigns",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function updateCampaign(id: string, data: Record<string, any>) {
+  return aiApi<{ success: boolean; data?: { id: string }; error?: string }>(
+    "/api/mhai/telecaller/campaigns/" + encodeURIComponent(id),
+    { method: "PATCH", body: JSON.stringify(data) }
+  );
+}
+
+export function startCampaign(id: string) {
+  return aiApi<{ success: boolean; data?: { id: string; status: string }; error?: string }>(
+    "/api/mhai/telecaller/campaigns/" + encodeURIComponent(id) + "/start",
+    { method: "POST" }
+  );
+}
+
+export function pauseCampaign(id: string) {
+  return aiApi<{ success: boolean; data?: { id: string; status: string }; error?: string }>(
+    "/api/mhai/telecaller/campaigns/" + encodeURIComponent(id) + "/pause",
+    { method: "POST" }
+  );
+}
+
+export function getCampaignQueue(id: string) {
+  return aiApi<{ success: boolean; data?: any; message?: string; error?: string }>(
+    "/api/mhai/telecaller/campaigns/" + encodeURIComponent(id) + "/queue"
+  );
+}
+
+// ── Calls ──
+export function logCall(data: { lead_id: string; campaign_id?: string; telecaller_id?: string; call_type?: string; started_at: number; ended_at?: number; duration_seconds?: number; disposition?: string; disposition_notes?: string; ai_disclosed?: boolean; consent_verified?: boolean; follow_up_at?: number }) {
+  return aiApi<{ success: boolean; data?: { id: string; compliance_flags: any }; error?: string; message?: string }>(
+    "/api/mhai/telecaller/calls/log",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function uploadRecording(callId: string, url: string) {
+  return aiApi<{ success: boolean; data?: { id: string }; error?: string }>(
+    "/api/mhai/telecaller/calls/" + encodeURIComponent(callId) + "/recording",
+    { method: "POST", body: JSON.stringify({ recording_url: url }) }
+  );
+}
+
+export function saveTranscript(callId: string, transcript: string) {
+  return aiApi<{ success: boolean; data?: { id: string }; error?: string }>(
+    "/api/mhai/telecaller/calls/" + encodeURIComponent(callId) + "/transcript",
+    { method: "POST", body: JSON.stringify({ transcript }) }
+  );
+}
+
+export function analyzeCall(callId: string) {
+  return aiApi<{ success: boolean; data?: any; error?: string }>(
+    "/api/mhai/telecaller/calls/" + encodeURIComponent(callId) + "/analyze",
+    { method: "POST" }
+  );
+}
+
+// ── Scripts ──
+export function getScripts(filters?: { specialty?: string; language?: string }) {
+  var params = new URLSearchParams();
+  if (filters) {
+    Object.entries(filters).forEach(function ([k, v]) { if (v) params.set(k, v); });
+  }
+  var qs = params.toString();
+  return aiApi<{ success: boolean; data?: any[]; error?: string }>(
+    "/api/mhai/telecaller/scripts" + (qs ? "?" + qs : "")
+  );
+}
+
+export function getScript(id: string) {
+  return aiApi<{ success: boolean; data?: any; error?: string }>(
+    "/api/mhai/telecaller/scripts/" + encodeURIComponent(id)
+  );
+}
+
+export function createScript(data: { name: string; specialty?: string; language?: string; opening?: string; qualifying_questions?: string[]; value_props?: string[]; objection_handlers?: Record<string, string>; closing?: string; ai_disclosure?: string; is_default?: boolean }) {
+  return aiApi<{ success: boolean; data?: { id: string }; error?: string }>(
+    "/api/mhai/telecaller/scripts",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function generateScript(data: { specialty: string; language?: string; goal?: string; clinic_name?: string }) {
+  return aiApi<{ success: boolean; data?: { id: string; script: any; model: string; latency_ms: number }; error?: string }>(
+    "/api/mhai/telecaller/scripts/generate",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function updateScript(id: string, data: Record<string, any>) {
+  return aiApi<{ success: boolean; data?: { id: string }; error?: string }>(
+    "/api/mhai/telecaller/scripts/" + encodeURIComponent(id),
+    { method: "PATCH", body: JSON.stringify(data) }
+  );
+}
+
+export function deleteScript(id: string) {
+  return aiApi<{ success: boolean; data?: { id: string }; error?: string }>(
+    "/api/mhai/telecaller/scripts/" + encodeURIComponent(id),
+    { method: "DELETE" }
+  );
+}
+
+// ── Coaching ──
+export function getCoachingReports(telecallerId?: string) {
+  var qs = telecallerId ? "?telecaller_id=" + encodeURIComponent(telecallerId) : "";
+  return aiApi<{ success: boolean; data?: any[]; error?: string }>(
+    "/api/mhai/telecaller/coaching" + qs
+  );
+}
+
+export function generateCoachingReport(data: { telecaller_id: string; week_start: string; week_end: string }) {
+  return aiApi<{ success: boolean; data?: any; error?: string }>(
+    "/api/mhai/telecaller/coaching/generate",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function generateAllCoachingReports() {
+  return aiApi<{ success: boolean; data?: any; error?: string }>(
+    "/api/mhai/telecaller/coaching/generate-all",
+    { method: "POST" }
+  );
+}
+
+// ── Consent ──
+export function recordConsent(data: { phone: string; consent_type: string; consent_source?: string; consent_text?: string; proof_url?: string }) {
+  return aiApi<{ success: boolean; data?: { id: string }; error?: string }>(
+    "/api/mhai/telecaller/consent",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function checkConsent(phone: string) {
+  return aiApi<{ success: boolean; data?: any[]; error?: string }>(
+    "/api/mhai/telecaller/consent/" + encodeURIComponent(phone)
+  );
+}
+
+export function withdrawConsent(phone: string) {
+  return aiApi<{ success: boolean; message?: string; error?: string }>(
+    "/api/mhai/telecaller/consent/" + encodeURIComponent(phone),
+    { method: "DELETE" }
+  );
+}
+
+// ── Stats ──
+export function getTelecallerStats() {
+  return aiApi<{ success: boolean; data?: { total_leads: string; new_leads: string; converted_leads: string; pending_followups: string; dnd_blocked: string; calls_today: string; active_campaigns: string; total_scripts: string }; error?: string }>(
+    "/api/mhai/telecaller/stats"
+  );
+}

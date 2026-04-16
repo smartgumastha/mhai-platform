@@ -31,6 +31,7 @@ var navGroups = [
       { name: "MHAI Pay", href: "/dashboard/mhai-pay" },
       { name: "MHAI Receptionist", href: "/dashboard/receptionist" },
       { name: "MHAI Caller", href: "/dashboard/caller" },
+      { name: "Telecaller CRM", href: "/dashboard/telecaller" },
     ],
   },
   {
