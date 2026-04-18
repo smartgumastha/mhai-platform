@@ -1,8 +1,15 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { detectLocaleV2, cityLookupV2, V2Locale } from "@/lib/api";
 
-// ── Types ──
+// ════════════════════════════════════════════════════
+// Types
+// ════════════════════════════════════════════════════
+
+// Legacy flat shape — what 11 existing consumers still read.
+// Derived from V2Locale via unwrapV2() below. T1.2.4b migrates consumers
+// to read localeV2 directly, then this type can be removed.
 export type LocaleData = {
   country_code: string;
   currency_code: string;
@@ -25,213 +32,284 @@ export type LocaleData = {
 };
 
 type LocaleCtx = {
-  locale: LocaleData;
+  locale: LocaleData;                                 // legacy flat shape
+  localeV2: V2Locale | null;                          // new nested shape (T1.2.4b consumers)
   isLocaleLoading: boolean;
   country: string;
-  setCountryFromCity: (cityName: string) => boolean;
+  cascadePending: boolean;                            // NEW — set true during async city-lookup
+  setCountryFromCity: (cityName: string) => Promise<boolean>;  // NOW ASYNC
   switchedFromCity: string | null;
   didAutoSwitch: boolean;
 };
 
-// ── Fallback locale data (instant, no network) ──
-export var FALLBACK_LOCALES: Record<string, LocaleData> = {
-  IN: {
-    country_code: "IN",
-    currency_code: "INR",
-    currency_symbol: "\u20B9",
-    phone_prefix: "+91",
-    phone_digits: 10,
-    phone_placeholder: "98765 43210",
-    date_format: "DD/MM/YYYY",
-    cities: ["Hyderabad", "Mumbai", "Delhi", "Bangalore", "Chennai", "Pune"],
-    languages: ["English", "Hindi"],
-    compliance_badges: ["ABDM ready", "NMC compliant"],
-    terminology: { clinic: "clinic", optimize: "optimize", specialty: "specialty", practice: "clinic" },
-    domain_tld: ".in",
-    extra_specialties: [
-      { id: "ayurveda", label: "Ayurveda", sub: "Traditional Indian medicine, Panchakarma", icon: "A" },
-      { id: "homeopathy", label: "Homeopathy", sub: "Alternative medicine, holistic care", icon: "H" },
-      { id: "unani", label: "Unani", sub: "Greco-Arabic traditional medicine", icon: "U" },
-      { id: "physiotherapy", label: "Physiotherapy", sub: "Rehabilitation, sports physio, neuro", icon: "P" },
-    ],
-  },
-  AE: {
-    country_code: "AE",
-    currency_code: "AED",
-    currency_symbol: "AED",
-    phone_prefix: "+971",
-    phone_digits: 9,
-    phone_placeholder: "5X XXX XXXX",
-    date_format: "DD/MM/YYYY",
-    cities: ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "RAK", "Al Ain"],
-    languages: ["English", "Arabic"],
-    compliance_badges: ["DHA licensed", "MOHAP ready"],
-    terminology: { clinic: "clinic", optimize: "optimize", specialty: "specialty", practice: "clinic" },
-    domain_tld: ".ae",
-    extra_specialties: [
-      { id: "aesthetic", label: "Aesthetic medicine", sub: "Cosmetic procedures, fillers, Botox", icon: "A" },
-    ],
-  },
-  GB: {
-    country_code: "GB",
-    currency_code: "GBP",
-    currency_symbol: "\u00A3",
-    phone_prefix: "+44",
-    phone_digits: 11,
-    phone_placeholder: "7XXX XXXXXX",
-    date_format: "DD/MM/YYYY",
-    cities: ["London", "Manchester", "Birmingham", "Leeds", "Bristol", "Edinburgh"],
-    languages: ["British English"],
-    compliance_badges: ["CQC ready", "GDPR compliant"],
-    terminology: { clinic: "practice", optimize: "optimise", specialty: "speciality", practice: "practice" },
-    domain_tld: ".co.uk",
-    extra_specialties: [
-      { id: "nhs_dental", label: "NHS dentistry", sub: "NHS contracts, mixed practice", icon: "N" },
-    ],
-  },
-  US: {
-    country_code: "US",
-    currency_code: "USD",
-    currency_symbol: "$",
-    phone_prefix: "+1",
-    phone_digits: 10,
-    phone_placeholder: "(XXX) XXX-XXXX",
-    date_format: "MM/DD/YYYY",
-    cities: ["Houston", "Los Angeles", "New York", "Chicago", "Phoenix", "Dallas"],
-    languages: ["American English"],
-    compliance_badges: ["HIPAA compliant", "ADA ready"],
-    terminology: { clinic: "practice", optimize: "optimize", specialty: "specialty", practice: "practice" },
-    domain_tld: ".com",
-    extra_specialties: [],
-  },
-  KE: {
-    country_code: "KE",
-    currency_code: "KES",
-    currency_symbol: "KES",
-    phone_prefix: "+254",
-    phone_digits: 9,
-    phone_placeholder: "7XX XXX XXX",
-    date_format: "DD/MM/YYYY",
-    cities: ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret", "Thika"],
-    languages: ["English", "Swahili"],
-    compliance_badges: ["KMPDC ready", "NHIF ready"],
-    terminology: { clinic: "clinic", optimize: "optimize", specialty: "specialty", practice: "clinic" },
-    domain_tld: ".co.ke",
-    extra_specialties: [
-      { id: "traditional", label: "Traditional medicine", sub: "Herbal, traditional healing", icon: "T" },
-    ],
-  },
-  SG: {
-    country_code: "SG",
-    currency_code: "SGD",
-    currency_symbol: "S$",
-    phone_prefix: "+65",
-    phone_digits: 8,
-    phone_placeholder: "XXXX XXXX",
-    date_format: "DD/MM/YYYY",
-    cities: ["Singapore"],
-    languages: ["English", "Mandarin"],
-    compliance_badges: ["MOH licensed", "PDPA compliant"],
-    terminology: { clinic: "clinic", optimize: "optimize", specialty: "specialty", practice: "clinic" },
-    domain_tld: ".sg",
-    extra_specialties: [],
-  },
-  DE: {
-    country_code: "DE",
-    currency_code: "EUR",
-    currency_symbol: "\u20AC",
-    phone_prefix: "+49",
-    phone_digits: 11,
-    phone_placeholder: "XXX XXXXXXX",
-    date_format: "DD.MM.YYYY",
-    cities: ["Berlin", "Munich", "Hamburg", "Frankfurt", "Cologne", "Stuttgart"],
-    languages: ["Deutsch"],
-    compliance_badges: ["KBV certified", "DSGVO compliant"],
-    terminology: { clinic: "clinic", optimize: "optimize", specialty: "specialty", practice: "Praxis" },
-    domain_tld: ".de",
-    extra_specialties: [],
-  },
+// ════════════════════════════════════════════════════
+// Thin cookie — 5 fields for instant repeat-visitor hydration
+// ════════════════════════════════════════════════════
+
+type ThinCookie = {
+  cc: string;     // country_code
+  sym: string;    // currency.symbol
+  gw: string;     // payment.primary_gateway
+  tld: string;    // domain.primary_tld
+  lang: string;   // ai_content.primary_language
 };
 
-// ── City → country mapping ──
-var CITY_TO_COUNTRY: Record<string, string> = {
-  london: "GB", manchester: "GB", birmingham: "GB", leeds: "GB", bristol: "GB", edinburgh: "GB",
-  dubai: "AE", "abu dhabi": "AE", sharjah: "AE", ajman: "AE",
-  "new york": "US", houston: "US", "los angeles": "US", chicago: "US", dallas: "US", phoenix: "US",
-  nairobi: "KE", mombasa: "KE", kisumu: "KE",
-  singapore: "SG",
-  berlin: "DE", munich: "DE", hamburg: "DE", frankfurt: "DE",
-  hyderabad: "IN", mumbai: "IN", delhi: "IN", bangalore: "IN", chennai: "IN", pune: "IN",
-  kolkata: "IN", ahmedabad: "IN", jaipur: "IN", lucknow: "IN",
-  sydney: "AU", melbourne: "AU", perth: "AU",
-  toronto: "CA", vancouver: "CA",
-  lagos: "NG", abuja: "NG",
-};
+var COOKIE_NAME = "mhai_locale_v2";
+var COOKIE_LEGACY_NAME = "mhai_locale_country";  // we keep writing this for backward-compat
+var COOKIE_MAX_AGE = 2592000; // 30 days
 
-// Countries without full locale fallback map to IN as base
-function getLocaleForCountry(code: string): LocaleData {
-  return FALLBACK_LOCALES[code] || FALLBACK_LOCALES["IN"];
+function readThinCookie(): ThinCookie | null {
+  if (typeof document === "undefined") return null;
+  var match = document.cookie.match(new RegExp("(?:^|; )" + COOKIE_NAME + "=([^;]*)"));
+  if (!match) return null;
+  try {
+    var decoded = decodeURIComponent(match[1]);
+    var parsed = JSON.parse(decoded);
+    if (parsed && typeof parsed.cc === "string") return parsed as ThinCookie;
+  } catch {}
+  return null;
 }
 
+function writeThinCookie(v2: V2Locale) {
+  if (typeof document === "undefined") return;
+  var thin: ThinCookie = {
+    cc: v2.country_code,
+    sym: v2.currency.symbol,
+    gw: v2.payment.primary_gateway || "",
+    tld: v2.domain.primary_tld || "",
+    lang: v2.ai_content.primary_language || "en",
+  };
+  var payload = encodeURIComponent(JSON.stringify(thin));
+  document.cookie = COOKIE_NAME + "=" + payload + ";path=/;max-age=" + COOKIE_MAX_AGE + ";SameSite=Lax";
+  document.cookie = COOKIE_LEGACY_NAME + "=" + v2.country_code + ";path=/;max-age=" + COOKIE_MAX_AGE + ";SameSite=Lax";
+}
+
+// ════════════════════════════════════════════════════
+// Default V2Locale — minimal IN-based fallback used when backend
+// is unreachable AND no thin cookie is present. This is a safety
+// net, NOT a source of truth. Matches the v2 contract shape exactly.
+// ════════════════════════════════════════════════════
+
+var DEFAULT_V2_IN: V2Locale = {
+  country_code: "IN",
+  country_name: "India",
+  is_supported: true,
+  is_active: true,
+  currency: { code: "INR", symbol: "\u20B9", decimal_places: 2, format_locale: "en-IN" },
+  compliance: {
+    frameworks: ["DPDP_2023", "ABDM", "NABL_112A"],
+    display_badges: ["ABDM", "NMC", "DPDP"],
+    ruleset_id: "IN_NMC",
+    medical_advertising_rules_url: "/compliance/in-nmc.html",
+  },
+  payment: {
+    primary_gateway: "razorpay",
+    fallback_gateway: null,
+    methods: ["upi", "card", "netbanking", "wallet"],
+    tax_rate: 18,
+    tax_label: "GST",
+  },
+  phone: {
+    country_code: "+91",
+    regex: "^[6-9]\\d{9}$",
+    display_format: "+91 XXXXX XXXXX",
+    digit_count: 10,
+    placeholder: "+91 98765 43210",
+  },
+  domain: { primary_tld: ".in", alternate_tlds: [".co.in", ".com"], recommendation_note: null },
+  ai_content: {
+    primary_language: "en-IN",
+    language_options: ["en", "hi"],
+    cultural_tone: null,
+    terminology_style: { clinic_word: "clinic", optimize: "optimize", specialty: "specialty" },
+    content_safety_rules: [],
+  },
+  datetime: { date_format: "DD/MM/YYYY", time_format: "HH:mm", timezone: "Asia/Kolkata", clock_style: "24h" },
+  social_proof: {
+    clinic_count: 2400,
+    clinic_count_text: "2,400+ clinics across India",
+    regulatory_authority_name: "NMC-compliant",
+    featured_badge_url: null,
+  },
+  cascade: { detected_via: "fallback", switched_from_country: null, switched_from_city: null },
+};
+
+// ════════════════════════════════════════════════════
+// unwrapV2 — derive legacy flat shape from v2 response.
+// T1.2.4b consumers will bypass this by reading localeV2 directly.
+// ════════════════════════════════════════════════════
+
+function unwrapV2(v2: V2Locale): LocaleData {
+  return {
+    country_code: v2.country_code,
+    currency_code: v2.currency.code,
+    currency_symbol: v2.currency.symbol,
+    phone_prefix: v2.phone.country_code,
+    phone_digits: v2.phone.digit_count || 10,
+    phone_placeholder: v2.phone.placeholder || "",
+    date_format: v2.datetime.date_format,
+    cities: [],  // removed from locale — onboarding handles city picker directly now
+    languages: v2.ai_content.language_options || [],
+    compliance_badges: v2.compliance.display_badges || [],
+    terminology: {
+      clinic: (v2.ai_content.terminology_style && v2.ai_content.terminology_style.clinic_word) || "clinic",
+      optimize: (v2.ai_content.terminology_style && v2.ai_content.terminology_style.optimize) || "optimize",
+      specialty: (v2.ai_content.terminology_style && v2.ai_content.terminology_style.specialty) || "specialty",
+      practice: (v2.ai_content.terminology_style && v2.ai_content.terminology_style.clinic_word) || "clinic",
+    },
+    domain_tld: v2.domain.primary_tld || "",
+    extra_specialties: [],  // moved to onboarding page constant in T1.2.4b
+  };
+}
+
+// Partial legacy shape derived from thin cookie — instant render,
+// limited fields, gets replaced by full v2 within ~150ms.
+function partialFromThinCookie(thin: ThinCookie): LocaleData {
+  return {
+    country_code: thin.cc,
+    currency_code: "",  // unknown without v2
+    currency_symbol: thin.sym,
+    phone_prefix: "",
+    phone_digits: 10,
+    phone_placeholder: "",
+    date_format: "DD/MM/YYYY",
+    cities: [],
+    languages: [thin.lang || "en"],
+    compliance_badges: [],
+    terminology: { clinic: "clinic", optimize: "optimize", specialty: "specialty", practice: "clinic" },
+    domain_tld: thin.tld,
+    extra_specialties: [],
+  };
+}
+
+// ════════════════════════════════════════════════════
+// Context
+// ════════════════════════════════════════════════════
+
+var DEFAULT_LEGACY = unwrapV2(DEFAULT_V2_IN);
+
 var LocaleContext = createContext<LocaleCtx>({
-  locale: FALLBACK_LOCALES["IN"],
+  locale: DEFAULT_LEGACY,
+  localeV2: DEFAULT_V2_IN,
   isLocaleLoading: true,
   country: "IN",
-  setCountryFromCity: () => false,
+  cascadePending: false,
+  setCountryFromCity: async function () { return false; },
   switchedFromCity: null,
   didAutoSwitch: false,
 });
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  var [country, setCountry] = useState("IN");
-  var [locale, setLocale] = useState<LocaleData>(FALLBACK_LOCALES["IN"]);
-  var [isLocaleLoading, setIsLocaleLoading] = useState(true);
+  var [localeV2, setLocaleV2] = useState<V2Locale>(DEFAULT_V2_IN);
+  var [locale, setLocale] = useState<LocaleData>(DEFAULT_LEGACY);
+  var [country, setCountry] = useState<string>("IN");
+  var [isLocaleLoading, setIsLocaleLoading] = useState<boolean>(true);
+  var [cascadePending, setCascadePending] = useState<boolean>(false);
   var [switchedFromCity, setSwitchedFromCity] = useState<string | null>(null);
-  var [didAutoSwitch, setDidAutoSwitch] = useState(false);
+  var [didAutoSwitch, setDidAutoSwitch] = useState<boolean>(false);
 
-  useEffect(() => {
-    // Check cookie first for instant render
-    var cookieMatch = document.cookie.match(/mhai_locale_country=([A-Z]{2})/);
-    if (cookieMatch) {
-      var cached = cookieMatch[1];
-      setCountry(cached);
-      setLocale(getLocaleForCountry(cached));
+  var mountedRef = useRef<boolean>(false);
+
+  // ── Apply a new v2 locale to all state + cookie ──
+  var applyV2 = useCallback(function (v2: V2Locale, cascadeMeta?: { fromCity?: string }) {
+    setLocaleV2(v2);
+    setLocale(unwrapV2(v2));
+    setCountry(v2.country_code);
+    writeThinCookie(v2);
+    if (cascadeMeta && cascadeMeta.fromCity) {
+      setSwitchedFromCity(cascadeMeta.fromCity);
+      setDidAutoSwitch(true);
     }
-
-    fetch("https://smartgumastha-backend-production.up.railway.app/api/mhai/locale/detect")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && data.detected && data.detected.country_code) {
-          var code = data.detected.country_code as string;
-          setCountry(code);
-          setLocale(getLocaleForCountry(code));
-          document.cookie = "mhai_locale_country=" + code + ";path=/;max-age=2592000";
-        }
-      })
-      .catch(() => {})
-      .finally(() => setIsLocaleLoading(false));
   }, []);
 
+  // ── Page-mount detection ──
+  useEffect(function () {
+    if (mountedRef.current) return;
+    mountedRef.current = true;
+
+    // Step 1 — thin cookie hydration for instant partial render
+    var thin = readThinCookie();
+    if (thin) {
+      setCountry(thin.cc);
+      setLocale(partialFromThinCookie(thin));
+      // localeV2 stays at DEFAULT_V2_IN — consumers of localeV2 will see a
+      // partial shape for ~150ms until fetch completes. This is acceptable;
+      // only T1.2.4b consumers read localeV2, and they tolerate loading.
+    }
+
+    // Step 2 — Full v2 fetch with 3s timeout
+    var ctl = new AbortController();
+    var timer = setTimeout(function () { ctl.abort(); }, 3000);
+
+    detectLocaleV2(ctl.signal)
+      .then(function (res) {
+        clearTimeout(timer);
+        if (res && res.success && res.locale) {
+          applyV2(res.locale);
+        }
+      })
+      .catch(function (err) {
+        clearTimeout(timer);
+        console.warn("[LocaleProvider] v2/detect failed, using fallback:", err && err.message);
+        // If thin cookie was present we already hydrated partially.
+        // Otherwise stay on DEFAULT_V2_IN.
+      })
+      .finally(function () {
+        setIsLocaleLoading(false);
+      });
+
+    return function () {
+      clearTimeout(timer);
+      ctl.abort();
+    };
+  }, [applyV2]);
+
+  // ── Async cascade via backend /city-lookup ──
   var setCountryFromCity = useCallback(
-    (cityName: string): boolean => {
-      var key = cityName.toLowerCase().trim();
-      var mapped = CITY_TO_COUNTRY[key];
-      if (mapped && mapped !== country) {
-        setCountry(mapped);
-        setLocale(getLocaleForCountry(mapped));
-        setSwitchedFromCity(cityName);
-        setDidAutoSwitch(true);
-        document.cookie = "mhai_locale_country=" + mapped + ";path=/;max-age=2592000";
-        return true;
+    async function (cityName: string): Promise<boolean> {
+      var trimmed = (cityName || "").trim();
+      if (!trimmed) return false;
+
+      setCascadePending(true);
+      var ctl = new AbortController();
+      var timer = setTimeout(function () { ctl.abort(); }, 3000);
+
+      try {
+        var res = await cityLookupV2(trimmed, ctl.signal);
+        clearTimeout(timer);
+
+        if (res && res.success && res.matched && res.locale) {
+          var matchedCc = res.locale.country_code;
+          if (matchedCc !== country) {
+            applyV2(res.locale, { fromCity: (res.city && res.city.display) || trimmed });
+            return true;
+          }
+          return false;  // matched but same country — no-op
+        }
+        return false;
+      } catch (err) {
+        clearTimeout(timer);
+        console.warn("[LocaleProvider] city-lookup failed:", err && (err as Error).message);
+        return false;
+      } finally {
+        setCascadePending(false);
       }
-      return false;
     },
-    [country]
+    [country, applyV2]
   );
 
   return (
     <LocaleContext.Provider
-      value={{ locale, isLocaleLoading, country, setCountryFromCity, switchedFromCity, didAutoSwitch }}
+      value={{
+        locale: locale,
+        localeV2: localeV2,
+        isLocaleLoading: isLocaleLoading,
+        country: country,
+        cascadePending: cascadePending,
+        setCountryFromCity: setCountryFromCity,
+        switchedFromCity: switchedFromCity,
+        didAutoSwitch: didAutoSwitch,
+      }}
     >
       {children}
     </LocaleContext.Provider>
@@ -242,7 +320,9 @@ export function useLocale() {
   return useContext(LocaleContext);
 }
 
-// Country name helper
+// ════════════════════════════════════════════════════
+// COUNTRY_NAMES — preserved export (consumed by onboarding page)
+// ════════════════════════════════════════════════════
 export var COUNTRY_NAMES: Record<string, string> = {
   IN: "India", AE: "UAE", GB: "United Kingdom", US: "United States",
   KE: "Kenya", SG: "Singapore", DE: "Germany", AU: "Australia",

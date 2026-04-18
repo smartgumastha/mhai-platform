@@ -773,3 +773,113 @@ export function getTelecallerStats() {
     "/api/mhai/telecaller/stats"
   );
 }
+
+// ── v2 locale wrappers (T1.2.4a) ──
+
+var BACKEND_URL_V2 = "https://smartgumastha-backend-production.up.railway.app";
+
+export type V2Locale = {
+  country_code: string;
+  country_name: string;
+  is_supported: boolean;
+  is_active: boolean;
+  currency: { code: string; symbol: string; decimal_places: number; format_locale: string };
+  compliance: {
+    frameworks: string[];
+    display_badges: string[];
+    ruleset_id: string | null;
+    medical_advertising_rules_url: string | null;
+  };
+  payment: {
+    primary_gateway: string | null;
+    fallback_gateway: string | null;
+    methods: string[];
+    tax_rate: number;
+    tax_label: string | null;
+  };
+  phone: {
+    country_code: string;
+    regex: string;
+    display_format: string | null;
+    digit_count: number | null;
+    placeholder: string | null;
+  };
+  domain: {
+    primary_tld: string | null;
+    alternate_tlds: string[];
+    recommendation_note: string | null;
+  };
+  ai_content: {
+    primary_language: string;
+    language_options: string[];
+    cultural_tone: string | null;
+    terminology_style: Record<string, string>;
+    content_safety_rules: string[];
+  };
+  datetime: {
+    date_format: string;
+    time_format: string;
+    timezone: string | null;
+    clock_style: string;
+  };
+  social_proof: {
+    clinic_count: number;
+    clinic_count_text: string;
+    regulatory_authority_name: string;
+    featured_badge_url: string | null;
+  };
+  cascade: {
+    detected_via: string;
+    switched_from_country: string | null;
+    switched_from_city: string | null;
+  };
+  patient_identity?: any;
+  insurance?: any;
+  clinical_coding?: any;
+  state_province?: any;
+  address_schema?: any;
+  postal_code?: any;
+  rtl_language?: boolean;
+  version?: string;
+  served_at?: number;
+};
+
+export type V2LocaleResponse = { success: true; locale: V2Locale };
+export type V2DetectResponse = {
+  success: true;
+  detected: { ip: string; country_code: string; country_name: string | null; city: string | null; source: string };
+  locale: V2Locale;
+};
+export type V2CityLookupResponse = {
+  success: true;
+  matched: boolean;
+  input: string;
+  normalized: string;
+  city: { key: string; display: string; country_code: string; region: string | null; is_capital: boolean } | null;
+  locale: V2Locale | null;
+  note?: string;
+};
+
+/** Fetch the canonical v2 locale contract for a country code. */
+export async function getLocaleV2(countryCode: string, signal?: AbortSignal): Promise<V2LocaleResponse> {
+  var res = await fetch(BACKEND_URL_V2 + "/api/mhai/locale/v2/" + encodeURIComponent(countryCode), { signal: signal });
+  if (!res.ok) throw new Error("getLocaleV2 " + countryCode + " failed: " + res.status);
+  return res.json();
+}
+
+/** IP-based detection returning full v2 locale. */
+export async function detectLocaleV2(signal?: AbortSignal): Promise<V2DetectResponse> {
+  var res = await fetch(BACKEND_URL_V2 + "/api/mhai/locale/v2/detect", { signal: signal });
+  if (!res.ok) throw new Error("detectLocaleV2 failed: " + res.status);
+  return res.json();
+}
+
+/** Backend city-name cascade. Returns matched=false when city is unknown. */
+export async function cityLookupV2(city: string, signal?: AbortSignal): Promise<V2CityLookupResponse> {
+  var res = await fetch(
+    BACKEND_URL_V2 + "/api/mhai/locale/v2/city-lookup?city=" + encodeURIComponent(city),
+    { signal: signal }
+  );
+  if (!res.ok) throw new Error("cityLookupV2 " + city + " failed: " + res.status);
+  return res.json();
+}
