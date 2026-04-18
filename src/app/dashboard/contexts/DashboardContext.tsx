@@ -2,16 +2,10 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "@/app/providers/auth-context";
-import { useLocale } from "@/app/providers/locale-context";
 import { getBrandSettings } from "@/lib/api";
 
 type DashboardCtx = {
   brand: Record<string, any> | null;
-  locale: {
-    country: string;
-    currency_code: string;
-    currency_symbol: string;
-  };
   hospital: {
     hospital_id: string | null;
     business_name: string;
@@ -21,14 +15,12 @@ type DashboardCtx = {
 
 var DashboardContext = createContext<DashboardCtx>({
   brand: null,
-  locale: { country: "IN", currency_code: "INR", currency_symbol: "\u20B9" },
   hospital: { hospital_id: null, business_name: "" },
   isLoading: true,
 });
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
   var { user } = useAuth();
-  var { locale: localeData, country } = useLocale();
   var [brand, setBrand] = useState<Record<string, any> | null>(null);
   var [isLoading, setIsLoading] = useState(true);
 
@@ -45,14 +37,9 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
   var value: DashboardCtx = {
     brand: brand,
-    locale: {
-      country: country,
-      currency_code: localeData.currency_code,
-      currency_symbol: localeData.currency_symbol,
-    },
     hospital: {
-      hospital_id: user?.hospital_id || null,
-      business_name: user?.business_name || "",
+      hospital_id: (user && user.hospital_id) || null,
+      business_name: (user && (user as any).business_name) || "",
     },
     isLoading: isLoading,
   };

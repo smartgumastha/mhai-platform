@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createCampaign, startCampaign, getScripts, getLeads } from "@/lib/api";
 import { useNotification } from "@/app/providers/NotificationProvider";
-import { useDashboard } from "@/app/dashboard/contexts/DashboardContext";
+import { useLocale } from "@/app/providers/locale-context";
 import { useRouter } from "next/navigation";
 import ScriptGenerateModal from "../../_components/ScriptGenerateModal";
 
@@ -20,7 +20,7 @@ var STATUS_OPTIONS = ["new", "contacted", "follow_up"];
 export default function NewCampaignPage() {
   var notify = useNotification();
   var router = useRouter();
-  var { locale } = useDashboard();
+  var ctx = useLocale();
 
   // Form state
   var [name, setName] = useState("");
@@ -88,7 +88,7 @@ export default function NewCampaignPage() {
       description: description || undefined,
       target_segment: Object.keys(targetSegment).length > 0 ? targetSegment : undefined,
       script_id: selectedScript || undefined,
-      timezone: locale.country === "US" ? "America/New_York" : "Asia/Kolkata",
+      timezone: ctx.localeV2?.country_code === "US" ? "America/New_York" : "Asia/Kolkata",
       use_ai_voice: assignMode === "ai_only",
       max_attempts: maxAttempts,
     });
