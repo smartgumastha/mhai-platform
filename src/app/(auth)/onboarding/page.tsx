@@ -16,15 +16,64 @@ var BASE_SPECIALTIES = [
   { id: "ophthalmology", label: "Ophthalmology", sub: "Eye care, LASIK, cataract", icon: "E" },
 ];
 
+// ── Page-local: city dropdown population by country (T1.2.4b-phase2) ──
+var CITIES_BY_COUNTRY: Record<string, string[]> = {
+  IN: ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Pune", "Ahmedabad"],
+  US: ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego"],
+  GB: ["London", "Manchester", "Birmingham", "Leeds", "Edinburgh", "Glasgow", "Bristol", "Liverpool"],
+  AE: ["Dubai", "Abu Dhabi", "Sharjah", "Al Ain", "Ajman", "Ras Al Khaimah"],
+  KE: ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Eldoret"],
+  SG: ["Singapore"],
+  AU: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide"],
+  CA: ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa"],
+  DE: ["Berlin", "Munich", "Hamburg", "Frankfurt", "Cologne"],
+};
+
+// ── Page-local: country-specific specialty additions (T1.2.4b-phase2) ──
+// Preserves geo-localization patent claim without depending on shim's extra_specialties.
+var EXTRA_SPECIALTIES: Record<string, Array<{ id: string; label: string; sub: string; icon: string }>> = {
+  IN: [
+    { id: "ayurveda", label: "Ayurveda", sub: "Traditional medicine", icon: "🌿" },
+    { id: "homeopathy", label: "Homeopathy", sub: "Natural remedies", icon: "💧" },
+    { id: "siddha", label: "Siddha", sub: "Tamil traditional medicine", icon: "🌾" },
+  ],
+  AE: [
+    { id: "aesthetic", label: "Aesthetic Medicine", sub: "Non-surgical cosmetic", icon: "✨" },
+    { id: "cosmetic_surgery", label: "Cosmetic Surgery", sub: "Surgical aesthetic", icon: "💎" },
+  ],
+  GB: [
+    { id: "nhs_dental", label: "NHS Dental", sub: "NHS-registered practice", icon: "🇬🇧" },
+    { id: "private_gp", label: "Private GP", sub: "Private general practice", icon: "🩺" },
+  ],
+  US: [],
+  KE: [],
+  SG: [],
+  AU: [],
+  CA: [],
+  DE: [],
+};
+
 export default function OnboardingPage() {
   var router = useRouter();
   var { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  var { locale, country, setCountryFromCity, switchedFromCity, didAutoSwitch } = useLocale();
+  var { locale, localeV2, country, setCountryFromCity, switchedFromCity, didAutoSwitch } = useLocale();
+  var terminologyClinic = (localeV2 && localeV2.ai_content && localeV2.ai_content.terminology_style && localeV2.ai_content.terminology_style.clinic_word) || "clinic";
+  var terminologyOptimize = (localeV2 && localeV2.ai_content && localeV2.ai_content.terminology_style && localeV2.ai_content.terminology_style.optimize) || "optimize";
+  var terminologySpecialty = (localeV2 && localeV2.ai_content && localeV2.ai_content.terminology_style && localeV2.ai_content.terminology_style.specialty) || "specialty";
+  var terminologyClinicTitle = terminologyClinic.charAt(0).toUpperCase() + terminologyClinic.slice(1);
+
+  // ── City auto-prefill when country changes (T1.2.4b-phase2) ──
+  var [userEditedCity, setUserEditedCity] = useState(false);
+  useEffect(function () {
+    if (userEditedCity) return;
+    var defaultCity = (CITIES_BY_COUNTRY[country] || [])[0] || "";
+    if (defaultCity && !city) setCity(defaultCity);
+  }, [country]);
 
   var [currentStep, setCurrentStep] = useState(1);
   var [specialty, setSpecialty] = useState("");
   var [customSpecialty, setCustomSpecialty] = useState("");
-  var [city, setCity] = useState("");
+  var [city, setCity] = useState((CITIES_BY_COUNTRY[country] || [])[0] || "");
   var [doctorCount, setDoctorCount] = useState(1);
   var [isSubmitting, setIsSubmitting] = useState(false);
   var [error, setError] = useState<string | null>(null);
@@ -45,13 +94,14 @@ export default function OnboardingPage() {
 
   var allSpecialties = [
     ...BASE_SPECIALTIES,
-    ...locale.extra_specialties,
+    ...(EXTRA_SPECIALTIES[country] || []),
     { id: "other", label: "Other", sub: "Type your specialty...", icon: "+" },
   ];
 
   var specialtyLabel = specialty === "other" ? customSpecialty : (allSpecialties.find((s) => s.id === specialty)?.label || specialty);
 
   function handleCityChange(val: string) {
+    setUserEditedCity(true);
     setCity(val);
   }
 
@@ -60,6 +110,7 @@ export default function OnboardingPage() {
   }
 
   function handleCityChip(c: string) {
+    setUserEditedCity(true);
     setCity(c);
     setCountryFromCity(c);
   }
@@ -111,7 +162,7 @@ export default function OnboardingPage() {
             <span className="text-[12px] text-gray-500">AI</span>
           </div>
           <div className="text-[11px] text-gray-500">
-            Let&apos;s set up your {locale.terminology.clinic}
+            Let&apos;s set up your {terminologyClinic}
           </div>
         </div>
       </div>
@@ -134,10 +185,10 @@ export default function OnboardingPage() {
       {currentStep === 1 && (
         <div>
           <h2 className="mb-1 text-[19px] font-medium text-[#f0fdf4]">
-            What&apos;s your {locale.terminology.specialty}?
+            What&apos;s your {terminologySpecialty}?
           </h2>
           <p className="mb-5 text-[12px] text-gray-400">
-            Our AI tailors your website and marketing to your {locale.terminology.clinic}
+            Our AI tailors your website and marketing to your {terminologyClinic}
           </p>
 
           <div className="space-y-2.5">
@@ -200,15 +251,15 @@ export default function OnboardingPage() {
       {currentStep === 2 && (
         <div>
           <h2 className="mb-1 text-[19px] font-medium text-[#f0fdf4]">
-            Where&apos;s your {locale.terminology.clinic}?
+            Where&apos;s your {terminologyClinic}?
           </h2>
           <p className="mb-5 text-[12px] text-gray-400">
-            We&apos;ll {locale.terminology.optimize} your SEO for local searches
+            We&apos;ll {terminologyOptimize} your SEO for local searches
           </p>
 
           <input
             className="h-[48px] w-full rounded-lg border border-[#1f2e28] bg-[#111916] px-3 text-[16px] text-[#f0fdf4] placeholder-[#4b5563] outline-none transition focus:border-emerald-500"
-            placeholder={"e.g. " + locale.cities[0]}
+            placeholder={"e.g. " + (CITIES_BY_COUNTRY[country] || [])[0] || ""}
             value={city}
             onChange={(e) => handleCityChange(e.target.value)}
             onBlur={handleCityBlur}
@@ -216,7 +267,7 @@ export default function OnboardingPage() {
 
           {/* Quick-pick chips */}
           <div className="mt-3 flex flex-wrap gap-2">
-            {locale.cities.map((c) => (
+            {(CITIES_BY_COUNTRY[country] || []).map((c) => (
               <button
                 key={c}
                 type="button"
@@ -245,7 +296,7 @@ export default function OnboardingPage() {
               </div>
               <p className="mt-1.5 text-[11px] text-gray-400">
                 We detected {switchedFromCity} is in {COUNTRY_NAMES[country] || country}. Your AI engine will now use:{" "}
-                {locale.compliance_badges.join(", ")}, {locale.languages.join(" + ")}, {locale.currency_symbol}, {locale.domain_tld}
+                {((localeV2 && localeV2.compliance && localeV2.compliance.display_badges) || []).join(", ")}, {((localeV2 && localeV2.ai_content && localeV2.ai_content.language_options) || []).join(" + ")}, {(localeV2 && localeV2.currency && localeV2.currency.symbol) || "\u20B9"}, {(localeV2 && localeV2.domain && localeV2.domain.primary_tld) || ""}
               </p>
             </div>
           )}
@@ -254,13 +305,13 @@ export default function OnboardingPage() {
           {city.trim().length >= 2 && (
             <div className="mt-3 rounded-lg border border-[#1f2e28] bg-[#111916] p-3">
               <p className="mb-2 text-[11px] font-medium text-gray-500">
-                AI will {locale.terminology.optimize} for:
+                AI will {terminologyOptimize} for:
               </p>
               <div className="space-y-1 text-[11px] text-gray-400">
-                <p>&bull; &ldquo;Best {specialtyLabel} {locale.terminology.clinic} in {city}&rdquo; SEO</p>
+                <p>&bull; &ldquo;Best {specialtyLabel} {terminologyClinic} in {city}&rdquo; SEO</p>
                 <p>&bull; Google business listing</p>
                 <p>&bull; Instagram targeting {city}</p>
-                <p>&bull; Content in {locale.languages.join(" + ")}</p>
+                <p>&bull; Content in {((localeV2 && localeV2.ai_content && localeV2.ai_content.language_options) || []).join(" + ")}</p>
               </div>
             </div>
           )}
@@ -306,7 +357,7 @@ export default function OnboardingPage() {
             <div className="text-center">
               <div className="text-4xl font-medium text-[#f0fdf4]">{doctorCount}</div>
               <div className="text-sm text-gray-500">
-                doctor{doctorCount !== 1 ? "s" : ""} at your {locale.terminology.clinic}
+                doctor{doctorCount !== 1 ? "s" : ""} at your {terminologyClinic}
               </div>
             </div>
             <button
@@ -325,12 +376,12 @@ export default function OnboardingPage() {
               Your AI marketing engine will set up:
             </p>
             <div className="space-y-2 text-[12px] text-gray-300">
-              <p>&bull; {locale.terminology.clinic.charAt(0).toUpperCase() + locale.terminology.clinic.slice(1)} website with {specialtyLabel} content</p>
+              <p>&bull; {terminologyClinicTitle} website with {specialtyLabel} content</p>
               <p>&bull; {doctorCount} doctor profile{doctorCount !== 1 ? "s" : ""} with online booking</p>
               <p>&bull; Instagram + Facebook content calendar</p>
               <p>&bull; Google review auto-responder</p>
               <p>&bull; WhatsApp appointment bot</p>
-              <p>&bull; SEO for &ldquo;{specialtyLabel} {locale.terminology.clinic} {city}&rdquo;</p>
+              <p>&bull; SEO for &ldquo;{specialtyLabel} {terminologyClinic} {city}&rdquo;</p>
             </div>
           </div>
 

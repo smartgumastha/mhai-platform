@@ -52,22 +52,22 @@ function validate(
 export default function SignupPage() {
   var router = useRouter();
   var { signupUser } = useAuth();
-  var { locale } = useLocale();
+  var { locale, localeV2 } = useLocale();
   var [form, setForm] = useState({ business_name: "", email: "", phone: "", password: "" });
   var [errors, setErrors] = useState<Record<string, string>>({});
   var [apiError, setApiError] = useState("");
   var [loading, setLoading] = useState(false);
   var [showPw, setShowPw] = useState(false);
   var [touched, setTouched] = useState<Record<string, boolean>>({});
-  var [phonePrefix, setPhonePrefix] = useState(locale.phone_prefix);
+  var [phonePrefix, setPhonePrefix] = useState((localeV2 && localeV2.phone && localeV2.phone.country_code) || "+91");
   var [prefixManuallyChanged, setPrefixManuallyChanged] = useState(false);
   var [showPrefixPicker, setShowPrefixPicker] = useState(false);
   var pickerRef = useRef<HTMLDivElement>(null);
 
   // Sync prefix with locale when locale changes (only if not manually changed)
   useEffect(() => {
-    if (!prefixManuallyChanged) setPhonePrefix(locale.phone_prefix);
-  }, [locale.phone_prefix, prefixManuallyChanged]);
+    if (!prefixManuallyChanged) setPhonePrefix((localeV2 && localeV2.phone && localeV2.phone.country_code) || "+91");
+  }, [localeV2 && localeV2.phone && localeV2.phone.country_code, prefixManuallyChanged]);
 
   // Close picker on outside click
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function SignupPage() {
   function onChange(field: string, value: string) {
     setForm((p) => ({ ...p, [field]: value }));
     if (touched[field]) {
-      var v = validate({ ...form, [field]: value }, locale.phone_digits, prefixManuallyChanged);
+      var v = validate({ ...form, [field]: value }, (localeV2 && localeV2.phone && localeV2.phone.digit_count) || 10, prefixManuallyChanged);
       setErrors((prev) => {
         var next = { ...prev };
         if (v[field]) next[field] = v[field]; else delete next[field];
@@ -94,14 +94,14 @@ export default function SignupPage() {
 
   function onBlur(field: string) {
     setTouched((p) => ({ ...p, [field]: true }));
-    var v = validate(form, locale.phone_digits, prefixManuallyChanged);
+    var v = validate(form, (localeV2 && localeV2.phone && localeV2.phone.digit_count) || 10, prefixManuallyChanged);
     if (v[field]) setErrors((p) => ({ ...p, [field]: v[field] }));
     else setErrors((p) => { var n = { ...p }; delete n[field]; return n; });
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    var v = validate(form, locale.phone_digits, prefixManuallyChanged);
+    var v = validate(form, (localeV2 && localeV2.phone && localeV2.phone.digit_count) || 10, prefixManuallyChanged);
     setTouched({ business_name: true, email: true, phone: true, password: true });
     if (Object.keys(v).length > 0) { setErrors(v); return; }
 
@@ -122,7 +122,9 @@ export default function SignupPage() {
   var inputOk = "border-[#1f2e28] focus:border-emerald-500";
   var inputErr = "border-red-400";
 
-  var badges = ["No card needed", ...locale.compliance_badges.slice(0, 2)];
+  var terminologyClinic = (localeV2 && localeV2.ai_content && localeV2.ai_content.terminology_style && localeV2.ai_content.terminology_style.clinic_word) || "clinic";
+  var terminologyClinicTitle = terminologyClinic.charAt(0).toUpperCase() + terminologyClinic.slice(1);
+  var badges = ["No card needed", ...((localeV2 && localeV2.compliance && localeV2.compliance.display_badges) || []).slice(0, 2)];
 
   return (
     <div className="w-full max-w-[380px]">
@@ -156,7 +158,7 @@ export default function SignupPage() {
       {/* Title */}
       <h1 className="mb-1.5 text-[21px] font-medium text-[#f0fdf4]">Start free</h1>
       <p className="mb-6 text-[12px] leading-relaxed text-gray-400">
-        AI runs your {locale.terminology.clinic}&apos;s marketing across every channel. Website, social, reviews, WhatsApp — all on autopilot.
+        AI runs your {terminologyClinic}&apos;s marketing across every channel. Website, social, reviews, WhatsApp — all on autopilot.
       </p>
 
       {/* API error */}
@@ -170,11 +172,11 @@ export default function SignupPage() {
         {/* Clinic/Practice name */}
         <div>
           <label className="mb-1 block text-[11px] uppercase tracking-wider text-gray-500">
-            {locale.terminology.clinic} name
+            {terminologyClinic} name
           </label>
           <input
             className={`${inputCls} ${errors.business_name && touched.business_name ? inputErr : inputOk}`}
-            placeholder={"e.g. Sunrise Dental " + locale.terminology.clinic.charAt(0).toUpperCase() + locale.terminology.clinic.slice(1)}
+            placeholder={"e.g. Sunrise Dental " + terminologyClinicTitle}
             value={form.business_name}
             onChange={(e) => onChange("business_name", e.target.value)}
             onBlur={() => onBlur("business_name")}
@@ -240,7 +242,7 @@ export default function SignupPage() {
             </div>
             <input
               className={`${inputCls} flex-1 ${errors.phone && touched.phone ? inputErr : inputOk}`}
-              placeholder={locale.phone_placeholder}
+              placeholder={(localeV2 && localeV2.phone && localeV2.phone.placeholder) || ""}
               value={form.phone}
               onChange={(e) => onChange("phone", e.target.value)}
               onBlur={() => onBlur("phone")}
