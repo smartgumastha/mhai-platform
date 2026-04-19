@@ -52,7 +52,7 @@ function validate(
 export default function SignupPage() {
   var router = useRouter();
   var { signupUser } = useAuth();
-  var { locale, localeV2 } = useLocale();
+  var { localeV2 } = useLocale();
   var [form, setForm] = useState({ business_name: "", email: "", phone: "", password: "" });
   var [errors, setErrors] = useState<Record<string, string>>({});
   var [apiError, setApiError] = useState("");

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { normalizePhone } from "@/app/lib/phone-normalize";
+import { useLocale } from "@/app/providers/locale-context";
 import { logCall, getScripts } from "@/lib/api";
 import { useNotification } from "@/app/providers/NotificationProvider";
 
@@ -22,6 +24,7 @@ type Props = {
 };
 
 export default function CallDispositionModal({ lead, campaignId, onClose, onSubmitted }: Props) {
+  var { localeV2 } = useLocale();
   var notify = useNotification();
   var [disposition, setDisposition] = useState("");
   var [notes, setNotes] = useState("");
@@ -111,7 +114,7 @@ export default function CallDispositionModal({ lead, campaignId, onClose, onSubm
     }
   }
 
-  var fullPhone = lead?.phone?.startsWith("+") ? lead.phone : "+91" + (lead?.phone || "");
+  var fullPhone = normalizePhone(lead?.phone, ((localeV2 && localeV2.phone && localeV2.phone.country_code) || "+91"));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>

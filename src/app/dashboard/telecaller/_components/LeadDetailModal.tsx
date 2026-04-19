@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { normalizePhone, countryFromPhone } from "@/app/lib/phone-normalize";
+import { useLocale } from "@/app/providers/locale-context";
 import { getLead, updateLead, withdrawConsent, checkConsent } from "@/lib/api";
 import { useNotification } from "@/app/providers/NotificationProvider";
 import { useCurrency } from "@/app/hooks/useCurrency";
@@ -28,6 +30,7 @@ type Props = {
 };
 
 export default function LeadDetailModal({ leadId, onClose, onCallClick, onUpdated }: Props) {
+  var { localeV2 } = useLocale();
   var notify = useNotification();
   var currency = useCurrency();
   var [lead, setLead] = useState<any>(null);
@@ -92,16 +95,6 @@ export default function LeadDetailModal({ leadId, onClose, onCallClick, onUpdate
     });
   }
 
-  function getCountryActions(phone: string) {
-    if (phone.startsWith("+91") || phone.startsWith("91") || phone.length === 10) return "IN";
-    if (phone.startsWith("+971")) return "AE";
-    if (phone.startsWith("+65")) return "SG";
-    if (phone.startsWith("+1")) return "US";
-    if (phone.startsWith("+44")) return "UK";
-    if (phone.startsWith("+61")) return "AU";
-    return "IN";
-  }
-
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
@@ -114,8 +107,8 @@ export default function LeadDetailModal({ leadId, onClose, onCallClick, onUpdate
 
   if (!lead) return null;
 
-  var region = getCountryActions(lead.phone || "");
-  var fullPhone = lead.phone?.startsWith("+") ? lead.phone : "+91" + lead.phone;
+  var region = countryFromPhone(lead.phone || "");
+  var fullPhone = normalizePhone(lead.phone, ((localeV2 && localeV2.phone && localeV2.phone.country_code) || "+91"));
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 pt-10 pb-10" onClick={onClose}>

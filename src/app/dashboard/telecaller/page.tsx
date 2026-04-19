@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { normalizePhone, countryFromPhone } from "@/app/lib/phone-normalize";
+import { useLocale } from "@/app/providers/locale-context";
 import { getLeads, createLead, getTelecallerStats } from "@/lib/api";
 import { useNotification } from "@/app/providers/NotificationProvider";
 import { useCurrency } from "@/app/hooks/useCurrency";
@@ -73,24 +75,13 @@ function getInitials(name: string) {
   return parts[0].substring(0, 2).toUpperCase();
 }
 
-function getCountryFromPhone(phone: string): string {
-  if (!phone) return "IN";
-  if (phone.startsWith("+1")) return "US";
-  if (phone.startsWith("+44")) return "UK";
-  if (phone.startsWith("+61")) return "AU";
-  if (phone.startsWith("+971")) return "AE";
-  if (phone.startsWith("+65")) return "SG";
-  if (phone.startsWith("+49") || phone.startsWith("+33") || phone.startsWith("+39")) return "EU";
-  if (phone.startsWith("+91")) return "IN";
-  return "IN";
-}
-
 function getCountryName(code: string): string {
   var names: Record<string, string> = { IN: "India", US: "United States", UK: "United Kingdom", AU: "Australia", AE: "UAE", SG: "Singapore", EU: "Europe", CA: "Canada" };
   return names[code] || code;
 }
 
 export default function TelecallerPage() {
+  var { localeV2 } = useLocale();
   var notify = useNotification();
   var currency = useCurrency();
   var { brand, hospital } = useDashboard();
@@ -417,8 +408,8 @@ export default function TelecallerPage() {
               </thead>
               <tbody>
                 {leads.map(function (lead) {
-                  var country = lead.metadata?.country || getCountryFromPhone(lead.phone || "");
-                  var fullPhone = lead.phone?.startsWith("+") ? lead.phone : "+91" + lead.phone;
+                  var country = lead.metadata?.country || countryFromPhone(lead.phone || "");
+                  var fullPhone = normalizePhone(lead.phone, ((localeV2 && localeV2.phone && localeV2.phone.country_code) || "+91"));
                   var score = lead.lead_score || 0;
                   var scoreClass = score >= 70 ? "bg-emerald-50 text-emerald-600" : score >= 40 ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-gray-500";
 
@@ -508,8 +499,8 @@ export default function TelecallerPage() {
           {/* Mobile cards */}
           <div className="lg:hidden space-y-3">
             {leads.map(function (lead) {
-              var country = lead.metadata?.country || getCountryFromPhone(lead.phone || "");
-              var fullPhone = lead.phone?.startsWith("+") ? lead.phone : "+91" + lead.phone;
+              var country = lead.metadata?.country || countryFromPhone(lead.phone || "");
+              var fullPhone = normalizePhone(lead.phone, ((localeV2 && localeV2.phone && localeV2.phone.country_code) || "+91"));
               var score = lead.lead_score || 0;
               var scoreClass = score >= 70 ? "bg-emerald-50 text-emerald-600" : score >= 40 ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-gray-500";
 

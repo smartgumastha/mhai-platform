@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocale } from "@/app/providers/locale-context";
 
 /* ── currency system ── */
 type PricingTier = {
@@ -141,30 +142,14 @@ var faqs = [
 ];
 
 export default function PricingPage() {
-  var [country, setCountry] = useState("IN");
+  var { country } = useLocale();
   var [isYearly, setIsYearly] = useState(false);
   var [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  useEffect(() => {
-    fetch("https://smartgumastha-backend-production.up.railway.app/api/mhai/locale/detect")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && data.detected && data.detected.country_code && pricing[data.detected.country_code]) {
-          setCountry(data.detected.country_code);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   var p = pricing[country] || pricing.IN;
   var ap = addonPricing[country] || addonPricing.IN;
   var proPrice = isYearly ? p.proYearly : p.pro;
   var bizPrice = isYearly ? p.businessYearly : p.business;
-
-  function cycleCountry() {
-    var idx = countryKeys.indexOf(country);
-    setCountry(countryKeys[(idx + 1) % countryKeys.length]);
-  }
 
   var cards = [
     {

@@ -30,7 +30,7 @@ var engineChips = [
 export default function LoginPage() {
   var router = useRouter();
   var { loginUser } = useAuth();
-  var { locale, localeV2 } = useLocale();
+  var { localeV2 } = useLocale();
   var [form, setForm] = useState({ email: "", password: "" });
   var [errors, setErrors] = useState<Record<string, string>>({});
   var [apiError, setApiError] = useState("");
