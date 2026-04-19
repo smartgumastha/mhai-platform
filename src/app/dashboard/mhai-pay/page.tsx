@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { normalizePhone } from "@/app/lib/phone-normalize";
+import { useLocale } from "@/app/providers/locale-context";
 import { createPaymentLink, getPayments } from "@/lib/api";
 import { useCurrency } from "@/app/hooks/useCurrency";
 import { useNotification } from "@/app/providers/NotificationProvider";
@@ -102,6 +104,7 @@ function formatDate(ts: number) {
 }
 
 export default function MhaiPayPage() {
+  var { localeV2 } = useLocale();
   var currency = useCurrency();
   var notify = useNotification();
 
@@ -254,7 +257,7 @@ export default function MhaiPayPage() {
           {/* Share buttons */}
           <div className="mt-3 grid grid-cols-4 gap-2">
             <a
-              href={"https://wa.me/" + (created.patient_phone.startsWith("+") ? created.patient_phone.slice(1) : "91" + created.patient_phone) + "?text=" + whatsappMsg}
+              href={"https://wa.me/" + (created.patient_phone.startsWith("+") ? created.patient_phone.slice(1) : normalizePhone(created.patient_phone, ((localeV2 && localeV2.phone && localeV2.phone.country_code) || "+91")).replace("+", "")) + "?text=" + whatsappMsg}
               target="_blank"
               rel="noopener noreferrer"
               className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-200 hover:border-emerald-300 hover:shadow-md"

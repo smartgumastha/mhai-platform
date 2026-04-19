@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocale, COUNTRY_NAMES } from "@/app/providers/locale-context";
 import { getBrandSettings, saveBrandSettings } from "@/lib/api";
 import { useNotification } from "@/app/providers/NotificationProvider";
 
@@ -82,13 +83,7 @@ var allInsurance = [
 ];
 var defaultOnInsurance = ["Star Health", "ICICI Lombard", "CGHS"];
 
-var complianceOptions = [
-  "India — NMC guidelines",
-  "US — HIPAA + FTC",
-  "UK — HCPC + ASA",
-  "UAE — DHA",
-  "Kenya — KMPDC",
-];
+// complianceOptions moved inside component (T1.2.4b-phase3)
 
 type BrandDNA = {
   clinicName: string;
@@ -194,6 +189,10 @@ function PillSelector({
 }
 
 export default function BrandDNAPage() {
+  var { localeV2: lv2, country: currentCountry } = useLocale();
+  var complianceOptions = [
+    (COUNTRY_NAMES[currentCountry] || currentCountry) + " — " + ((lv2 && lv2.compliance && lv2.compliance.display_badges && lv2.compliance.display_badges[0]) || "Healthcare Guidelines")
+  ];
   var notify = useNotification();
   var [data, setData] = useState<BrandDNA>(defaults);
   var [loaded, setLoaded] = useState(false);

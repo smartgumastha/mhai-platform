@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { normalizePhone, countryFromPhone } from "@/app/lib/phone-normalize";
+import { useLocale } from "@/app/providers/locale-context";
 import { useParams, useRouter } from "next/navigation";
 import { getLead, getScripts, logCall, analyzeCall, withdrawConsent } from "@/lib/api";
 import { useNotification } from "@/app/providers/NotificationProvider";
@@ -21,16 +23,8 @@ function getInitials(name: string) {
   return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].substring(0, 2).toUpperCase();
 }
 
-function getCountry(phone: string): string {
-  if (!phone) return "IN";
-  if (phone.startsWith("+1")) return "US";
-  if (phone.startsWith("+44")) return "UK";
-  if (phone.startsWith("+971")) return "AE";
-  if (phone.startsWith("+65")) return "SG";
-  return "IN";
-}
-
 export default function ActiveCallPage() {
+  var { localeV2 } = useLocale();
   var params = useParams();
   var router = useRouter();
   var notify = useNotification();
@@ -175,8 +169,8 @@ export default function ActiveCallPage() {
 
   if (!lead) return null;
 
-  var fullPhone = lead.phone?.startsWith("+") ? lead.phone : "+91" + lead.phone;
-  var country = getCountry(fullPhone);
+  var fullPhone = normalizePhone(lead.phone, ((localeV2 && localeV2.phone && localeV2.phone.country_code) || "+91"));
+  var country = countryFromPhone(fullPhone);
   var callingStatus = compliance.getCallingStatus();
   var score = lead.lead_score || 0;
   var scoreClass = score >= 70 ? "bg-emerald-100 text-emerald-700" : score >= 40 ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-gray-600";

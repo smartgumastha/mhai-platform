@@ -56,7 +56,7 @@ var EXTRA_SPECIALTIES: Record<string, Array<{ id: string; label: string; sub: st
 export default function OnboardingPage() {
   var router = useRouter();
   var { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  var { locale, localeV2, country, setCountryFromCity, switchedFromCity, didAutoSwitch } = useLocale();
+  var { localeV2, country, setCountryFromCity, switchedFromCity, didAutoSwitch } = useLocale();
   var terminologyClinic = (localeV2 && localeV2.ai_content && localeV2.ai_content.terminology_style && localeV2.ai_content.terminology_style.clinic_word) || "clinic";
   var terminologyOptimize = (localeV2 && localeV2.ai_content && localeV2.ai_content.terminology_style && localeV2.ai_content.terminology_style.optimize) || "optimize";
   var terminologySpecialty = (localeV2 && localeV2.ai_content && localeV2.ai_content.terminology_style && localeV2.ai_content.terminology_style.specialty) || "specialty";

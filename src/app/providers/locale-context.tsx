@@ -7,32 +7,9 @@ import { detectLocaleV2, cityLookupV2, V2Locale } from "@/lib/api";
 // Types
 // ════════════════════════════════════════════════════
 
-// Legacy flat shape — what 11 existing consumers still read.
-// Derived from V2Locale via unwrapV2() below. T1.2.4b migrates consumers
-// to read localeV2 directly, then this type can be removed.
-export type LocaleData = {
-  country_code: string;
-  currency_code: string;
-  currency_symbol: string;
-  phone_prefix: string;
-  phone_digits: number;
-  phone_placeholder: string;
-  date_format: string;
-  cities: string[];
-  languages: string[];
-  compliance_badges: string[];
-  terminology: {
-    clinic: string;
-    optimize: string;
-    specialty: string;
-    practice: string;
-  };
-  domain_tld: string;
-  extra_specialties: { id: string; label: string; sub: string; icon: string }[];
-};
+// LocaleData type deleted T1.2.4b-phase3 — all consumers now read localeV2 directly.
 
 type LocaleCtx = {
-  locale: LocaleData;                                 // legacy flat shape
   localeV2: V2Locale | null;                          // new nested shape (T1.2.4b consumers)
   isLocaleLoading: boolean;
   country: string;
@@ -134,62 +111,14 @@ var DEFAULT_V2_IN: V2Locale = {
   cascade: { detected_via: "fallback", switched_from_country: null, switched_from_city: null },
 };
 
-// ════════════════════════════════════════════════════
-// unwrapV2 — derive legacy flat shape from v2 response.
-// T1.2.4b consumers will bypass this by reading localeV2 directly.
-// ════════════════════════════════════════════════════
-
-function unwrapV2(v2: V2Locale): LocaleData {
-  return {
-    country_code: v2.country_code,
-    currency_code: v2.currency.code,
-    currency_symbol: v2.currency.symbol,
-    phone_prefix: v2.phone.country_code,
-    phone_digits: v2.phone.digit_count || 10,
-    phone_placeholder: v2.phone.placeholder || "",
-    date_format: v2.datetime.date_format,
-    cities: [],  // removed from locale — onboarding handles city picker directly now
-    languages: v2.ai_content.language_options || [],
-    compliance_badges: v2.compliance.display_badges || [],
-    terminology: {
-      clinic: (v2.ai_content.terminology_style && v2.ai_content.terminology_style.clinic_word) || "clinic",
-      optimize: (v2.ai_content.terminology_style && v2.ai_content.terminology_style.optimize) || "optimize",
-      specialty: (v2.ai_content.terminology_style && v2.ai_content.terminology_style.specialty) || "specialty",
-      practice: (v2.ai_content.terminology_style && v2.ai_content.terminology_style.clinic_word) || "clinic",
-    },
-    domain_tld: v2.domain.primary_tld || "",
-    extra_specialties: [],  // moved to onboarding page constant in T1.2.4b
-  };
-}
-
-// Partial legacy shape derived from thin cookie — instant render,
-// limited fields, gets replaced by full v2 within ~150ms.
-function partialFromThinCookie(thin: ThinCookie): LocaleData {
-  return {
-    country_code: thin.cc,
-    currency_code: "",  // unknown without v2
-    currency_symbol: thin.sym,
-    phone_prefix: "",
-    phone_digits: 10,
-    phone_placeholder: "",
-    date_format: "DD/MM/YYYY",
-    cities: [],
-    languages: [thin.lang || "en"],
-    compliance_badges: [],
-    terminology: { clinic: "clinic", optimize: "optimize", specialty: "specialty", practice: "clinic" },
-    domain_tld: thin.tld,
-    extra_specialties: [],
-  };
-}
+// unwrapV2 deleted T1.2.4b-phase3 — consumers read localeV2 directly.
+// partialFromThinCookie deleted T1.2.4b-phase3 — thin cookie only drives setCountry now.
 
 // ════════════════════════════════════════════════════
 // Context
 // ════════════════════════════════════════════════════
 
-var DEFAULT_LEGACY = unwrapV2(DEFAULT_V2_IN);
-
 var LocaleContext = createContext<LocaleCtx>({
-  locale: DEFAULT_LEGACY,
   localeV2: DEFAULT_V2_IN,
   isLocaleLoading: true,
   country: "IN",
@@ -201,7 +130,6 @@ var LocaleContext = createContext<LocaleCtx>({
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   var [localeV2, setLocaleV2] = useState<V2Locale>(DEFAULT_V2_IN);
-  var [locale, setLocale] = useState<LocaleData>(DEFAULT_LEGACY);
   var [country, setCountry] = useState<string>("IN");
   var [isLocaleLoading, setIsLocaleLoading] = useState<boolean>(true);
   var [cascadePending, setCascadePending] = useState<boolean>(false);
@@ -213,7 +141,6 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   // ── Apply a new v2 locale to all state + cookie ──
   var applyV2 = useCallback(function (v2: V2Locale, cascadeMeta?: { fromCity?: string }) {
     setLocaleV2(v2);
-    setLocale(unwrapV2(v2));
     setCountry(v2.country_code);
     writeThinCookie(v2);
     if (cascadeMeta && cascadeMeta.fromCity) {
@@ -231,10 +158,8 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     var thin = readThinCookie();
     if (thin) {
       setCountry(thin.cc);
-      setLocale(partialFromThinCookie(thin));
       // localeV2 stays at DEFAULT_V2_IN — consumers of localeV2 will see a
-      // partial shape for ~150ms until fetch completes. This is acceptable;
-      // only T1.2.4b consumers read localeV2, and they tolerate loading.
+      // partial shape for ~150ms until fetch completes. This is acceptable.
     }
 
     // Step 2 — Full v2 fetch with 3s timeout
@@ -301,7 +226,6 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   return (
     <LocaleContext.Provider
       value={{
-        locale: locale,
         localeV2: localeV2,
         isLocaleLoading: isLocaleLoading,
         country: country,
