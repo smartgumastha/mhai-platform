@@ -1,13 +1,29 @@
-"use client";
+import RoadmapPlaceholder from "@/app/components/RoadmapPlaceholder";
 
 export default function HmsPage() {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
-        <span className="text-lg text-emerald-600">🔜</span>
-      </div>
-      <h2 className="mb-1 text-lg font-medium text-gray-900">Hospital Management</h2>
-      <p className="text-sm text-gray-500">Coming soon — this module is being built</p>
-    </div>
+    <RoadmapPlaceholder
+      featureName="Hospital Management System"
+      tagline="Full clinical + admin suite — appointments, billing, pharmacy, lab, IPD. We're building this with input from 50+ pilot clinics, not rushing a skeleton out the door."
+      eta="Launching June 2026"
+      breadcrumbLabel="Hospital Management"
+      waitlistSource="hms"
+      waitlistSubtext="We'll email you the moment HMS opens to pilot clinics. No spam, one email."
+      buildStage="backend"
+      stageLabel="Backend in progress"
+      previewBullets={[
+        "OPD workflow with queue management and doctor assignment",
+        "IPD admissions, ward mapping, and discharge summaries",
+        "Integrated pharmacy, lab orders, and NABH-aligned records",
+      ]}
+      icon={
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 21V9a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v12" />
+          <path d="M9 21v-6h6v6" />
+          <path d="M8 8V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3" />
+          <path d="M12 12v1" />
+        </svg>
+      }
+    />
   );
 }

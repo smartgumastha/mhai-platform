@@ -1,13 +1,30 @@
-"use client";
+import RoadmapPlaceholder from "@/app/components/RoadmapPlaceholder";
 
 export default function PrintStudioPage() {
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
-      <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
-        <span className="text-lg text-emerald-600">🔜</span>
-      </div>
-      <h2 className="mb-1 text-lg font-medium text-gray-900">Print + Flyer Studio</h2>
-      <p className="text-sm text-gray-500">Coming soon — this module is being built</p>
-    </div>
+    <RoadmapPlaceholder
+      featureName="Brand Print Studio"
+      tagline="Business cards, prescription pads, pamphlets — all auto-designed in your clinic's brand, printed by our local partners, delivered to your door."
+      eta="Launching July 2026"
+      breadcrumbLabel="Print Studio"
+      waitlistSource="print-studio"
+      waitlistSubtext="Be first to print branded materials when Print Studio opens."
+      buildStage="design"
+      stageLabel="Design complete"
+      previewBullets={[
+        "One-click business cards using your clinic's brand DNA",
+        "Prescription pads, appointment cards, patient pamphlets",
+        "Local print + delivery partners in India, US, UK",
+      ]}
+      icon={
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="6" y="3" width="12" height="6" rx="1" />
+          <path d="M6 17h12v4H6z" />
+          <path d="M18 9H6a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h0" />
+          <path d="M18 17a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2" />
+          <circle cx="17" cy="13" r="0.5" fill="currentColor" />
+        </svg>
+      }
+    />
   );
 }
