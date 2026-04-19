@@ -30,7 +30,7 @@ var engineChips = [
 export default function LoginPage() {
   var router = useRouter();
   var { loginUser } = useAuth();
-  var { locale } = useLocale();
+  var { locale, localeV2 } = useLocale();
   var [form, setForm] = useState({ email: "", password: "" });
   var [errors, setErrors] = useState<Record<string, string>>({});
   var [apiError, setApiError] = useState("");
@@ -243,7 +243,7 @@ export default function LoginPage() {
 
       {/* Trust badges */}
       <div className="mt-4 flex items-center justify-center gap-4">
-        {["256-bit SSL", ...locale.compliance_badges.slice(0, 2)].map((t) => (
+        {["256-bit SSL", ...(localeV2?.compliance?.display_badges || []).slice(0, 2)].map((t) => (
           <span key={t} className="flex items-center gap-1 text-[10px] text-gray-600">
             <span className="h-1 w-1 rounded-full bg-emerald-500" />
             {t}
