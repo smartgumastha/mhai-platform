@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCurrency } from "@/app/hooks/useCurrency";
 import { usePaymentGateway } from "@/app/hooks/usePaymentGateway";
 import { useNotification } from "@/app/providers/NotificationProvider";
+import { getOrCaptureAttribution } from "@/lib/attribution";
 
 var BACKEND = "https://smartgumastha-backend-production.up.railway.app";
 
@@ -72,6 +73,12 @@ export default function BookingWidget({ hospitalId, clinicName, clinicAddress }:
 
   var [tab, setTab] = useState("visit");
 
+  /* ── attribution capture (invisible; runs once on mount) ── */
+  var attributionRef = useRef<ReturnType<typeof getOrCaptureAttribution>>(null);
+  useEffect(function () {
+    attributionRef.current = getOrCaptureAttribution();
+  }, []);
+
   /* ── shared state ── */
   var [name, setName] = useState("");
   var [phone, setPhone] = useState("");
@@ -108,6 +115,7 @@ export default function BookingWidget({ hospitalId, clinicName, clinicAddress }:
           slot_time: selectedTime,
           service: SERVICES.find(function (s) { return s.id === service; })?.label || service,
           source: source,
+          attribution: attributionRef.current || null,
         }),
       });
       var data = await res.json();
