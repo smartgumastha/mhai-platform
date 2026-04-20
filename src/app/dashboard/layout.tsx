@@ -6,6 +6,7 @@ import { useAuth } from "@/app/providers/auth-context";
 import { DashboardProvider } from "@/app/dashboard/contexts/DashboardContext";
 import { NotificationProvider } from "@/app/providers/NotificationProvider";
 import DashboardSidebar from "@/app/components/DashboardSidebar";
+import TrialBanner from "@/app/components/TrialBanner";
 
 export default function DashboardLayout({
   children,
@@ -36,11 +37,14 @@ export default function DashboardLayout({
   return (
     <DashboardProvider>
       <NotificationProvider>
-        <div className="grid h-screen grid-cols-[220px_1fr] overflow-hidden">
-          <DashboardSidebar
-            businessName={user?.business_name || user?.owner_name || "My Clinic"}
-          />
-          <main className="overflow-y-auto bg-gray-50/80">{children}</main>
+        <div className="flex h-screen flex-col overflow-hidden">
+          <TrialBanner />
+          <div className="grid flex-1 grid-cols-[220px_1fr] overflow-hidden">
+            <DashboardSidebar
+              businessName={user?.business_name || user?.owner_name || "My Clinic"}
+            />
+            <main className="overflow-y-auto bg-gray-50/80">{children}</main>
+          </div>
         </div>
       </NotificationProvider>
     </DashboardProvider>

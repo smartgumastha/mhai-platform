@@ -18,6 +18,14 @@ type Partner = {
   slug?: string;
   owner_name?: string;
   phone?: string;
+  // Day 5 — subscription-aware fields (legacy-schema names, populated by
+  // GET /api/presence/partner-auth/me from presence_partners). Audit 2026-04-20
+  // confirmed all three already return from /me via the passthrough;
+  // typing them here just surfaces them to consumers.
+  subscription_status?: "trial" | "trialing" | "active" | "expired" | "cancelled" | string | null;
+  plan_tier?: string | null;
+  trial_ends_at?: number | null; // epoch ms
+  is_super_admin?: boolean;
   [key: string]: any;
 };
 
