@@ -87,7 +87,7 @@ export default function OnboardingPage() {
   if (authLoading || !isAuthenticated) {
     return (
       <div className="flex min-h-[300px] items-center justify-center">
-        <span className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-coral border-t-transparent" />
       </div>
     );
   }
@@ -145,7 +145,7 @@ export default function OnboardingPage() {
 
   var progressBars = [1, 2, 3].map((s) => {
     if (s < currentStep) return "bg-[#065f46]";
-    if (s === currentStep) return "bg-emerald-500";
+    if (s === currentStep) return "bg-coral";
     return "bg-[#1f2e28]";
   });
 
@@ -153,15 +153,15 @@ export default function OnboardingPage() {
     <div className="w-full max-w-[420px]">
       {/* Header */}
       <div className="mb-5 flex items-center gap-2.5">
-        <div className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-emerald-500">
+        <div className="flex h-[34px] w-[34px] items-center justify-center rounded-lg bg-coral">
           <span className="text-[10px] font-medium tracking-[0.5px] text-[#064e3b]">MHAI</span>
         </div>
         <div>
-          <div className="text-[15px] font-medium text-white">
-            Medi<span className="text-emerald-400">Host</span>{" "}
-            <span className="text-[12px] text-gray-500">AI</span>
+          <div className="text-[15px] font-medium text-ink">
+            Medi<span className="text-coral-deep">Host</span>{" "}
+            <span className="text-[12px] text-text-muted">AI</span>
           </div>
-          <div className="text-[11px] text-gray-500">
+          <div className="text-[11px] text-text-muted">
             Let&apos;s set up your {terminologyClinic}
           </div>
         </div>
@@ -184,10 +184,10 @@ export default function OnboardingPage() {
       {/* STEP 1: Specialty */}
       {currentStep === 1 && (
         <div>
-          <h2 className="mb-1 text-[19px] font-medium text-[#f0fdf4]">
+          <h2 className="mb-1 text-[22px] font-fraunces font-light tracking-tight text-ink">
             What&apos;s your {terminologySpecialty}?
           </h2>
-          <p className="mb-5 text-[12px] text-gray-400">
+          <p className="mb-5 text-[12px] text-text-muted">
             Our AI tailors your website and marketing to your {terminologyClinic}
           </p>
 
@@ -202,7 +202,7 @@ export default function OnboardingPage() {
                     onClick={() => setSpecialty(s.id)}
                     className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${
                       selected
-                        ? "border-emerald-500 bg-[#0d1f17]"
+                        ? "border-coral bg-[#0d1f17]"
                         : isOther
                         ? "border-dashed border-[#1f2e28] bg-[#111916]"
                         : "border-[#1f2e28] bg-[#111916]"
@@ -210,13 +210,13 @@ export default function OnboardingPage() {
                   >
                     <div
                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-medium ${
-                        selected ? "bg-[#064e3b] text-emerald-400" : "bg-[#1f2e28] text-gray-400"
+                        selected ? "bg-[#064e3b] text-coral-deep" : "bg-[#1f2e28] text-text-muted"
                       }`}
                     >
                       {s.icon}
                     </div>
                     <div className="min-w-0">
-                      <div className={`text-[13px] ${selected ? "text-[#f0fdf4]" : "text-gray-200"}`}>
+                      <div className={`text-[13px] ${selected ? "text-ink" : "text-gray-200"}`}>
                         {s.label}
                       </div>
                       <div className="text-[10px] text-gray-600">{s.sub}</div>
@@ -225,7 +225,7 @@ export default function OnboardingPage() {
                   {isOther && selected && (
                     <input
                       autoFocus
-                      className="mt-2 h-[42px] w-full rounded-lg border border-[#1f2e28] bg-[#111916] px-3 text-[14px] text-[#f0fdf4] placeholder-[#4b5563] outline-none focus:border-emerald-500"
+                      className="mt-2 h-[42px] w-full rounded-lg border border-[#1f2e28] bg-[#111916] px-3 text-[14px] text-ink placeholder-[#4b5563] outline-none focus:border-coral"
                       placeholder="Type your specialty..."
                       value={customSpecialty}
                       onChange={(e) => setCustomSpecialty(e.target.value)}
@@ -240,7 +240,7 @@ export default function OnboardingPage() {
             type="button"
             disabled={!specialty || (specialty === "other" && !customSpecialty.trim())}
             onClick={() => setCurrentStep(2)}
-            className="mt-5 flex h-[46px] w-full items-center justify-center rounded-lg bg-emerald-500 text-[15px] font-medium text-[#064e3b] transition disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-5 flex h-[46px] w-full items-center justify-center rounded-lg bg-coral text-[15px] font-medium text-[#064e3b] transition disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>
@@ -250,15 +250,15 @@ export default function OnboardingPage() {
       {/* STEP 2: City */}
       {currentStep === 2 && (
         <div>
-          <h2 className="mb-1 text-[19px] font-medium text-[#f0fdf4]">
+          <h2 className="mb-1 text-[22px] font-fraunces font-light tracking-tight text-ink">
             Where&apos;s your {terminologyClinic}?
           </h2>
-          <p className="mb-5 text-[12px] text-gray-400">
+          <p className="mb-5 text-[12px] text-text-muted">
             We&apos;ll {terminologyOptimize} your SEO for local searches
           </p>
 
           <input
-            className="h-[48px] w-full rounded-lg border border-[#1f2e28] bg-[#111916] px-3 text-[16px] text-[#f0fdf4] placeholder-[#4b5563] outline-none transition focus:border-emerald-500"
+            className="h-[48px] w-full rounded-lg border border-[#1f2e28] bg-[#111916] px-3 text-[16px] text-ink placeholder-[#4b5563] outline-none transition focus:border-coral"
             placeholder={"e.g. " + (CITIES_BY_COUNTRY[country] || [])[0] || ""}
             value={city}
             onChange={(e) => handleCityChange(e.target.value)}
@@ -274,8 +274,8 @@ export default function OnboardingPage() {
                 onClick={() => handleCityChip(c)}
                 className={`rounded-full border px-4 py-2 text-sm transition ${
                   city === c
-                    ? "border-emerald-500 text-emerald-400"
-                    : "border-[#1f2e28] bg-[#111916] text-gray-400 hover:border-[#2a3f35]"
+                    ? "border-coral text-coral-deep"
+                    : "border-[#1f2e28] bg-[#111916] text-text-muted hover:border-[#2a3f35]"
                 }`}
               >
                 {c}
@@ -285,16 +285,16 @@ export default function OnboardingPage() {
 
           {/* Country auto-switch notification */}
           {didAutoSwitch && switchedFromCity && (
-            <div className="mt-3 rounded-lg border border-emerald-500 bg-[#0d1f17] p-3">
+            <div className="mt-3 rounded-lg border border-coral bg-[#0d1f17] p-3">
               <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#064e3b] text-[9px] font-medium text-emerald-400">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#064e3b] text-[9px] font-medium text-coral-deep">
                   {country}
                 </span>
-                <span className="text-[13px] font-medium text-emerald-400">
+                <span className="text-[13px] font-medium text-coral-deep">
                   Switched to {COUNTRY_NAMES[country] || country}
                 </span>
               </div>
-              <p className="mt-1.5 text-[11px] text-gray-400">
+              <p className="mt-1.5 text-[11px] text-text-muted">
                 We detected {switchedFromCity} is in {COUNTRY_NAMES[country] || country}. Your AI engine will now use:{" "}
                 {((localeV2 && localeV2.compliance && localeV2.compliance.display_badges) || []).join(", ")}, {((localeV2 && localeV2.ai_content && localeV2.ai_content.language_options) || []).join(" + ")}, {(localeV2 && localeV2.currency && localeV2.currency.symbol) || "\u20B9"}, {(localeV2 && localeV2.domain && localeV2.domain.primary_tld) || ""}
               </p>
@@ -304,10 +304,10 @@ export default function OnboardingPage() {
           {/* AI preview */}
           {city.trim().length >= 2 && (
             <div className="mt-3 rounded-lg border border-[#1f2e28] bg-[#111916] p-3">
-              <p className="mb-2 text-[11px] font-medium text-gray-500">
+              <p className="mb-2 text-[11px] font-medium text-text-muted">
                 AI will {terminologyOptimize} for:
               </p>
-              <div className="space-y-1 text-[11px] text-gray-400">
+              <div className="space-y-1 text-[11px] text-text-muted">
                 <p>&bull; &ldquo;Best {specialtyLabel} {terminologyClinic} in {city}&rdquo; SEO</p>
                 <p>&bull; Google business listing</p>
                 <p>&bull; Instagram targeting {city}</p>
@@ -320,7 +320,7 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={() => setCurrentStep(1)}
-              className="flex h-[46px] items-center px-4 text-[13px] text-gray-400 hover:text-gray-200 transition"
+              className="flex h-[46px] items-center px-4 text-[13px] text-text-muted hover:text-gray-200 transition"
             >
               Back
             </button>
@@ -328,7 +328,7 @@ export default function OnboardingPage() {
               type="button"
               disabled={city.trim().length < 2}
               onClick={() => setCurrentStep(3)}
-              className="flex h-[46px] flex-1 items-center justify-center rounded-lg bg-emerald-500 text-[15px] font-medium text-[#064e3b] transition disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-[46px] flex-1 items-center justify-center rounded-lg bg-coral text-[15px] font-medium text-[#064e3b] transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
             </button>
@@ -339,8 +339,8 @@ export default function OnboardingPage() {
       {/* STEP 3: Doctor count + Launch */}
       {currentStep === 3 && (
         <div>
-          <h2 className="mb-1 text-[19px] font-medium text-[#f0fdf4]">How many doctors?</h2>
-          <p className="mb-6 text-[12px] text-gray-400">
+          <h2 className="mb-1 text-[22px] font-fraunces font-light tracking-tight text-ink">How many doctors?</h2>
+          <p className="mb-6 text-[12px] text-text-muted">
             We&apos;ll create individual profiles for each on your website
           </p>
 
@@ -350,13 +350,13 @@ export default function OnboardingPage() {
               type="button"
               disabled={doctorCount <= 1}
               onClick={() => setDoctorCount((c) => Math.max(1, c - 1))}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#1f2e28] bg-[#111916] text-xl text-gray-400 transition disabled:opacity-30 hover:border-emerald-500"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#1f2e28] bg-[#111916] text-xl text-text-muted transition disabled:opacity-30 hover:border-coral"
             >
               -
             </button>
             <div className="text-center">
-              <div className="text-4xl font-medium text-[#f0fdf4]">{doctorCount}</div>
-              <div className="text-sm text-gray-500">
+              <div className="text-4xl font-medium text-ink">{doctorCount}</div>
+              <div className="text-sm text-text-muted">
                 doctor{doctorCount !== 1 ? "s" : ""} at your {terminologyClinic}
               </div>
             </div>
@@ -364,18 +364,18 @@ export default function OnboardingPage() {
               type="button"
               disabled={doctorCount >= 50}
               onClick={() => setDoctorCount((c) => Math.min(50, c + 1))}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#1f2e28] bg-[#111916] text-xl text-gray-400 transition disabled:opacity-30 hover:border-emerald-500"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-[#1f2e28] bg-[#111916] text-xl text-text-muted transition disabled:opacity-30 hover:border-coral"
             >
               +
             </button>
           </div>
 
           {/* Preview */}
-          <div className="rounded-xl border border-emerald-800 bg-[#0d1f17] p-4">
-            <p className="mb-3 text-sm font-medium text-emerald-500">
+          <div className="rounded-xl border border-line bg-[#0d1f17] p-4">
+            <p className="mb-3 text-sm font-medium text-coral">
               Your AI marketing engine will set up:
             </p>
-            <div className="space-y-2 text-[12px] text-gray-300">
+            <div className="space-y-2 text-[12px] text-text-dim">
               <p>&bull; {terminologyClinicTitle} website with {specialtyLabel} content</p>
               <p>&bull; {doctorCount} doctor profile{doctorCount !== 1 ? "s" : ""} with online booking</p>
               <p>&bull; Instagram + Facebook content calendar</p>
@@ -389,7 +389,7 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
-              className="flex h-[46px] items-center px-4 text-[13px] text-gray-400 hover:text-gray-200 transition"
+              className="flex h-[46px] items-center px-4 text-[13px] text-text-muted hover:text-gray-200 transition"
             >
               Back
             </button>
@@ -397,7 +397,7 @@ export default function OnboardingPage() {
               type="button"
               disabled={isSubmitting}
               onClick={handleSubmit}
-              className="flex h-[46px] flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 text-[15px] font-medium text-[#064e3b] transition disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-[46px] flex-1 items-center justify-center gap-2 rounded-lg bg-coral text-[15px] font-medium text-[#064e3b] transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

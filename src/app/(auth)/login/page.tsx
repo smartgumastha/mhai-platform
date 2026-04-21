@@ -83,23 +83,23 @@ export default function LoginPage() {
     }
   }
 
-  var inputCls = "h-[42px] w-full rounded-lg border bg-[#111916] px-3 text-[14px] text-[#f0fdf4] placeholder-[#4b5563] outline-none transition";
-  var inputOk = "border-[#1f2e28] focus:border-emerald-500";
+  var inputCls = "h-[42px] w-full rounded-lg border bg-[#111916] px-3 text-[14px] text-ink placeholder-[#4b5563] outline-none transition";
+  var inputOk = "border-[#1f2e28] focus:border-coral";
   var inputErr = "border-red-400";
 
   return (
     <div className="w-full max-w-[380px]">
       {/* Logo */}
       <div className="mb-4 flex items-center gap-2.5">
-        <div className="flex h-[38px] w-[38px] items-center justify-center rounded-lg bg-emerald-500">
+        <div className="flex h-[38px] w-[38px] items-center justify-center rounded-lg bg-coral">
           <span className="text-[11px] font-medium tracking-[0.5px] text-[#064e3b]">MHAI</span>
         </div>
         <div>
-          <div className="text-[17px] font-medium text-white">
-            Medi<span className="text-emerald-400">Host</span>{" "}
-            <span className="text-[13px] text-gray-500">AI</span>
+          <div className="text-[17px] font-medium text-ink">
+            Medi<span className="text-coral-deep">Host</span>{" "}
+            <span className="text-[13px] text-text-muted">AI</span>
           </div>
-          <div className="text-[11px] text-gray-500">AI marketing platform for healthcare</div>
+          <div className="text-[11px] text-text-muted">AI marketing platform for healthcare</div>
         </div>
       </div>
 
@@ -108,7 +108,7 @@ export default function LoginPage() {
         {channels.map((ch) => (
           <span
             key={ch.name}
-            className="flex h-[26px] items-center gap-1.5 rounded-full border border-[#1f2e28] bg-[#111916] px-2.5 text-[11px] text-gray-500"
+            className="flex h-[26px] items-center gap-1.5 rounded-full border border-[#1f2e28] bg-[#111916] px-2.5 text-[11px] text-text-muted"
           >
             <span className="h-[7px] w-[7px] rounded-full" style={{ background: ch.color }} />
             {ch.name}
@@ -117,8 +117,8 @@ export default function LoginPage() {
       </div>
 
       {/* Title */}
-      <h1 className="mb-1.5 text-[21px] font-medium text-[#f0fdf4]">Welcome back</h1>
-      <p className="mb-6 text-[12px] leading-relaxed text-gray-400">
+      <h1 className="mb-1.5 text-[28px] font-fraunces font-light tracking-tight text-ink">Welcome <em className="italic text-coral-deep font-normal">back</em></h1>
+      <p className="mb-6 text-[12px] leading-relaxed text-text-muted">
         Your AI marketing engine is running. Log in to see results.
       </p>
 
@@ -132,7 +132,7 @@ export default function LoginPage() {
       <form onSubmit={onSubmit} className="space-y-4">
         {/* Email */}
         <div>
-          <label className="mb-1 block text-[11px] uppercase tracking-wider text-gray-500">Email</label>
+          <label className="mb-1 block text-[11px] uppercase tracking-wider text-text-muted">Email</label>
           <input
             type="email"
             className={`${inputCls} ${errors.email && touched.email ? inputErr : inputOk}`}
@@ -149,11 +149,11 @@ export default function LoginPage() {
         {/* Password */}
         <div>
           <div className="mb-1 flex items-center justify-between">
-            <label className="text-[11px] uppercase tracking-wider text-gray-500">Password</label>
+            <label className="text-[11px] uppercase tracking-wider text-text-muted">Password</label>
             <button
               type="button"
               onClick={() => showToast("Password reset coming soon", "info")}
-              className="text-[11px] text-emerald-500"
+              className="text-[11px] text-coral"
             >
               Forgot?
             </button>
@@ -184,7 +184,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="flex h-[46px] w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 text-[15px] font-medium text-[#064e3b] transition disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-[46px] w-full items-center justify-center gap-2 rounded-lg bg-coral text-[15px] font-medium text-[#064e3b] transition disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             <>
@@ -207,25 +207,25 @@ export default function LoginPage() {
       {/* Google */}
       <button
         onClick={() => showToast("Google login coming soon", "info")}
-        className="relative flex h-[42px] w-full items-center justify-center gap-2 rounded-lg border border-[#1f2e28] bg-[#111916] text-[13px] text-gray-400 transition hover:border-[#2a3f35]"
+        className="relative flex h-[42px] w-full items-center justify-center gap-2 rounded-lg border border-[#1f2e28] bg-[#111916] text-[13px] text-text-muted transition hover:border-[#2a3f35]"
       >
-        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#1f2e28] text-[11px] font-bold text-gray-400">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#1f2e28] text-[11px] font-bold text-text-muted">
           G
         </span>
         Continue with Google
-        <span className="absolute -top-[7px] right-[10px] rounded bg-[#1f2e28] px-1.5 text-[9px] text-gray-500">
+        <span className="absolute -top-[7px] right-[10px] rounded bg-[#1f2e28] px-1.5 text-[9px] text-text-muted">
           soon
         </span>
       </button>
 
       {/* Engine preview */}
-      <div className="mt-5 rounded-lg border border-emerald-800 bg-[#0d1f17] p-3">
-        <p className="mb-2 text-[11px] font-medium text-emerald-500">Your AI engine manages:</p>
+      <div className="mt-5 rounded-lg border border-line bg-[#0d1f17] p-3">
+        <p className="mb-2 text-[11px] font-medium text-coral">Your AI engine manages:</p>
         <div className="flex flex-wrap gap-1.5">
           {engineChips.map((c) => (
             <span
               key={c}
-              className="rounded border border-[#1f2e28] bg-[#111916] px-2 py-0.5 text-[10px] text-gray-400"
+              className="rounded border border-[#1f2e28] bg-[#111916] px-2 py-0.5 text-[10px] text-text-muted"
             >
               {c}
             </span>
@@ -234,9 +234,9 @@ export default function LoginPage() {
       </div>
 
       {/* Footer link */}
-      <p className="mt-5 text-center text-[12px] text-gray-500">
+      <p className="mt-5 text-center text-[12px] text-text-muted">
         New to MediHost AI?{" "}
-        <a href="/signup" className="text-emerald-500 hover:underline">
+        <a href="/signup" className="text-coral hover:underline">
           Start free
         </a>
       </p>
@@ -245,7 +245,7 @@ export default function LoginPage() {
       <div className="mt-4 flex items-center justify-center gap-4">
         {["256-bit SSL", ...(localeV2?.compliance?.display_badges || []).slice(0, 2)].map((t) => (
           <span key={t} className="flex items-center gap-1 text-[10px] text-gray-600">
-            <span className="h-1 w-1 rounded-full bg-emerald-500" />
+            <span className="h-1 w-1 rounded-full bg-coral" />
             {t}
           </span>
         ))}
