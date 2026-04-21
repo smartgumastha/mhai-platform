@@ -16,6 +16,39 @@
   --color-medihost-700: #047857;
   --color-medihost-800: #065f46;
   --color-medihost-900: #064e3b;
+
+  /* ═══════════════════════════════════════════════════════════════ */
+  /* v4.1 Paper + Coral theme tokens (added April 21 2026)           */
+  /* ═══════════════════════════════════════════════════════════════ */
+
+  /* Neutrals */
+  --color-ink: #14100c;
+  --color-paper: #faf6ed;
+  --color-paper-warm: #f2ebdc;
+  --color-paper-soft: #f5efe0;
+  --color-text-dim: #5c5248;
+  --color-text-muted: #8a7f72;
+  --color-line: #e5dec9;
+  --color-line-soft: #f0e9d8;
+
+  /* Brand accent */
+  --color-coral: #ff6b4a;
+  --color-coral-deep: #e04527;
+
+  /* Stripe accents (used in gradients / trial banners) */
+  --color-stripe-purple: #8b5cf6;
+  --color-stripe-pink: #ec4899;
+  --color-stripe-blue: #5b8def;
+
+  /* Status colors (already exist as medihost-500 etc. — these are shorter aliases) */
+  --color-emerald-accent: #10b981;
+  --color-amber-accent: #f59e0b;
+  --color-rose-accent: #f43f5e;
+
+  /* v4.1 font stack */
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-v41-sans: var(--font-inter), var(--font-geist-sans), system-ui, sans-serif;
+  --font-v41-mono: var(--font-jetbrains-mono), var(--font-geist-mono), ui-monospace, monospace;
 }
 
 :root {
