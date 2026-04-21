@@ -12,6 +12,7 @@ var navGroups = [
       { name: "Dashboard", href: "/dashboard" },
       { name: "Appointments", href: "/dashboard/appointments" },
       { name: "Patients", href: "/dashboard/patients" },
+      { name: "Bills", href: "/dashboard/bills" },
     ],
   },
   {
