@@ -5,6 +5,8 @@ import { useAuth } from "@/app/providers/auth-context";
 import { useCurrency } from "@/app/hooks/useCurrency";
 import { useNotification } from "@/app/providers/NotificationProvider";
 import { getAiActivity, getDashboardStats, createAppointment } from "@/lib/api";
+import ProfileCompleteNudge from "@/app/components/ProfileCompleteNudge";
+import RegulatoryIdsGate from "@/app/components/RegulatoryIdsGate";
 
 var channels = [
   {
@@ -80,6 +82,20 @@ export default function DashboardPage() {
   var [pdPhone, setPdPhone] = useState("");
   var [pdSubmitting, setPdSubmitting] = useState(false);
   var [pdToast, setPdToast] = useState("");
+
+  /* ── Regulatory IDs gate state ── */
+  var [gateOpen, setGateOpen] = useState(false);
+  var [gateInitialStatus, setGateInitialStatus] = useState<any>(null);
+
+  function handleOpenGate(status: any) {
+    setGateInitialStatus(status);
+    setGateOpen(true);
+  }
+
+  function handleGateSaved() {
+    setGateOpen(false);
+    if (typeof window !== "undefined") window.location.reload();
+  }
 
   useEffect(() => {
     getDashboardStats()
@@ -196,6 +212,15 @@ export default function DashboardPage() {
 
   return (
     <div className="px-8 py-6">
+      <ProfileCompleteNudge onOpenModal={handleOpenGate} />
+      <RegulatoryIdsGate
+        open={gateOpen}
+        onClose={function () { setGateOpen(false); }}
+        onSaved={handleGateSaved}
+        initialStatus={gateInitialStatus}
+        mode="soft"
+      />
+
       {/* Section A: Greeting */}
       <div className="mb-5 flex items-start justify-between">
         <div>
