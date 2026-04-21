@@ -72,16 +72,16 @@ export default function DashboardSidebar({
   var [telecallerOpen, setTelecallerOpen] = useState(isTelecallerActive);
 
   return (
-    <aside className="flex h-screen w-[220px] min-w-[220px] flex-col overflow-y-auto bg-[#0a1a14]">
+    <aside className="flex h-screen w-[220px] min-w-[220px] flex-col overflow-y-auto bg-ink">
       {/* Logo + business info */}
-      <div className="flex items-center gap-2.5 border-b border-white/5 px-4 pb-4 pt-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-500 shadow-sm">
+      <div className="flex items-center gap-2.5 border-b border-white/10 px-4 pb-4 pt-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-coral shadow-sm">
           <span className="text-[11px] font-medium text-white">MHAI</span>
         </div>
         <div>
           <div className="text-sm font-medium text-white">{businessName}</div>
-          <div className="flex items-center text-[11px] text-emerald-300">
-            <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+          <div className="flex items-center text-[11px] text-emerald-accent">
+            <span className="mr-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-accent" />
             AI engine active
           </div>
         </div>
@@ -91,7 +91,7 @@ export default function DashboardSidebar({
       <nav className="mb-2 flex-1 pt-1">
         {navGroups.map((group) => (
           <div key={group.label}>
-            <div className="mb-1 mt-4 px-4 text-[10px] uppercase tracking-wider text-gray-500">
+            <div className="mb-1 mt-4 px-4 text-[10px] uppercase tracking-wider text-text-muted">
               {group.label}
             </div>
             {group.items.map((item) => {
@@ -102,8 +102,8 @@ export default function DashboardSidebar({
                   href={item.href}
                   className={`mx-2 block rounded-md px-3 py-2 text-[13px] transition-all duration-150 ${
                     isActive
-                      ? "border-l-[3px] border-emerald-500 bg-emerald-500/20 pl-2.5 font-medium text-white"
-                      : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                      ? "border-l-[3px] border-coral bg-coral/20 pl-2.5 font-medium text-white"
+                      : "text-text-muted hover:bg-white/5 hover:text-paper"
                   }`}
                 >
                   {item.name}
@@ -118,8 +118,8 @@ export default function DashboardSidebar({
                   onClick={function () { setTelecallerOpen(!telecallerOpen); }}
                   className={`mx-2 flex w-[calc(100%-16px)] items-center justify-between rounded-md px-3 py-2 text-[13px] transition-all duration-150 ${
                     isTelecallerActive
-                      ? "border-l-[3px] border-emerald-500 bg-emerald-500/20 pl-2.5 font-medium text-white"
-                      : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                      ? "border-l-[3px] border-coral bg-coral/20 pl-2.5 font-medium text-white"
+                      : "text-text-muted hover:bg-white/5 hover:text-paper"
                   }`}
                 >
                   <span>Telecaller CRM</span>
@@ -140,8 +140,8 @@ export default function DashboardSidebar({
                           href={sub.href}
                           className={`mx-2 block rounded-md px-3 py-1.5 text-[12px] transition-all duration-150 ${
                             isSubActive
-                              ? "bg-emerald-500/15 font-medium text-emerald-300"
-                              : "text-gray-500 hover:bg-white/5 hover:text-gray-300"
+                              ? "bg-coral/15 font-medium text-coral"
+                              : "text-text-muted hover:bg-white/5 hover:text-paper"
                           }`}
                         >
                           {sub.name}
@@ -157,14 +157,14 @@ export default function DashboardSidebar({
       </nav>
 
       {/* Bottom section */}
-      <div className="mt-auto border-t border-white/5 p-3">
-        <div className="text-[11px] text-gray-500">Plan: Free trial</div>
-        <div className="mt-1.5 inline-block cursor-pointer rounded-md bg-emerald-500/10 px-3 py-1 text-[11px] text-emerald-400 transition-all duration-200 hover:bg-emerald-500/20">
+      <div className="mt-auto border-t border-white/10 p-3">
+        <div className="text-[11px] text-text-muted">Plan: Free trial</div>
+        <div className="mt-1.5 inline-block cursor-pointer rounded-md bg-coral/15 px-3 py-1 text-[11px] text-coral transition-all duration-200 hover:bg-coral/25">
           Upgrade →
         </div>
         <button
           onClick={logout}
-          className="mt-2 w-full cursor-pointer rounded-md py-2 text-xs text-gray-500 transition-all duration-200 hover:bg-white/5 hover:text-gray-300"
+          className="mt-2 w-full cursor-pointer rounded-md py-2 text-xs text-text-muted transition-all duration-200 hover:bg-white/5 hover:text-paper"
         >
           Log out
         </button>
