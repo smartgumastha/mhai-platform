@@ -68,7 +68,7 @@ type Sec = { title: string; dot: string; features: Feat[] };
 function buildSections(p: PricingTier, plan: "free" | "pro" | "business" | "enterprise"): Sec[] {
   var ap = addonPricing[countryKeys.find((k) => pricing[k] === p) || "IN"] || addonPricing.IN;
   if (plan === "free") return [
-    { title: "Marketing", dot: "bg-emerald-500", features: [
+    { title: "Marketing", dot: "bg-coral", features: [
       { text: "AI website (MHAI branded)", included: true },
       { text: "Google Business Profile", included: true },
       { text: "3 AI review replies/mo", included: true },
@@ -80,7 +80,7 @@ function buildSections(p: PricingTier, plan: "free" | "pro" | "business" | "ente
     { title: "HMS", dot: "bg-red-500", features: [{ text: "Not included", included: false }] },
   ];
   if (plan === "pro") return [
-    { title: "Marketing", dot: "bg-emerald-500", features: [
+    { title: "Marketing", dot: "bg-coral", features: [
       { text: "Custom domain + AI website", included: true },
       { text: "Unlimited reviews + AI replies", included: true },
       { text: "Social posts (all platforms)", included: true },
@@ -100,7 +100,7 @@ function buildSections(p: PricingTier, plan: "free" | "pro" | "business" | "ente
     { title: "HMS", dot: "bg-red-500", features: [{ text: `${p.symbol}${fmt(ap.hms, p.locale)}/mo`, included: true, addon: true }] },
   ];
   if (plan === "business") return [
-    { title: "Marketing", dot: "bg-emerald-500", features: [
+    { title: "Marketing", dot: "bg-coral", features: [
       { text: "Everything in Pro + autopilot", included: true },
       { text: "Google + Meta Ads", included: true },
       { text: "Print studio + field marketing", included: true },
@@ -121,7 +121,7 @@ function buildSections(p: PricingTier, plan: "free" | "pro" | "business" | "ente
     { title: "HMS", dot: "bg-red-500", features: [{ text: "OPD + billing + Rx + lab", included: true }] },
   ];
   return [
-    { title: "Marketing", dot: "bg-emerald-500", features: [
+    { title: "Marketing", dot: "bg-coral", features: [
       { text: "Unlimited branches + command center", included: true },
       { text: "White-label option", included: true },
     ]},
@@ -155,20 +155,20 @@ export default function PricingPage() {
     {
       name: "Free", tagline: "Get online in 5 minutes", plan: "free" as const,
       price: "Free", sub: "forever", accent: "border-t-gray-300",
-      cta: "Start free", ctaClass: "bg-gray-100 text-gray-700 hover:bg-gray-200", ctaHref: "/signup",
+      cta: "Start free", ctaClass: "bg-gray-100 text-ink hover:bg-gray-200", ctaHref: "/signup",
     },
     {
       name: "Pro", tagline: "Full AI marketing on autopilot", plan: "pro" as const,
       price: `${p.symbol}${fmt(proPrice, p.locale)}`, sub: "/mo", accent: "border-t-emerald-500",
       yearly: isYearly ? `Billed ${p.symbol}${fmt(p.pro * 10, p.locale)}/year` : "",
-      cta: "Start 14-day trial", ctaClass: "bg-emerald-500 text-white shadow-sm hover:bg-emerald-600 hover:shadow-md", ctaHref: "/signup",
+      cta: "Start 14-day trial", ctaClass: "bg-coral text-white shadow-sm hover:bg-coral-deep hover:shadow-md", ctaHref: "/signup",
     },
     {
       name: "Business", tagline: "Complete engine + intelligence", plan: "business" as const,
       price: `${p.symbol}${fmt(bizPrice, p.locale)}`, sub: "/mo", accent: "border-t-emerald-500",
       yearly: isYearly ? `Billed ${p.symbol}${fmt(p.business * 10, p.locale)}/year` : "",
       popular: true,
-      cta: "Start 14-day trial", ctaClass: "bg-emerald-500 text-white shadow-md hover:bg-emerald-600 hover:shadow-lg", ctaHref: "/signup",
+      cta: "Start 14-day trial", ctaClass: "bg-coral text-white shadow-md hover:bg-coral-deep hover:shadow-lg", ctaHref: "/signup",
     },
     {
       name: "Enterprise", tagline: "Multi-branch healthcare empire", plan: "enterprise" as const,
@@ -191,49 +191,49 @@ export default function PricingPage() {
       {/* NAV */}
       <nav className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white/80 px-8 py-4 backdrop-blur-sm">
         <a href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-[10px] font-bold text-white shadow-sm">MHAI</div>
-          <span className="text-lg font-semibold text-gray-900">MediHost AI</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-coral text-[10px] font-bold text-white shadow-sm">MHAI</div>
+          <span className="text-lg font-semibold text-ink">MediHost AI</span>
         </a>
         <div className="flex items-center gap-3">
-          <a href="/login" className="text-sm text-gray-500 transition-colors hover:text-gray-900">Login</a>
-          <a href="/signup" className="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md">Start free →</a>
+          <a href="/login" className="text-sm text-text-muted transition-colors hover:text-ink">Login</a>
+          <a href="/signup" className="rounded-xl bg-coral px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-coral-deep hover:shadow-md">Start free →</a>
         </div>
       </nav>
 
       {/* HERO */}
       <section className="bg-gradient-to-b from-emerald-50/40 via-white to-white px-8 pb-10 pt-20 text-center">
-        <h1 className="text-5xl font-bold leading-tight tracking-tight text-gray-900">
+        <h1 className="text-5xl font-bold leading-tight tracking-tight text-ink">
           Every tool your clinic needs.
         </h1>
-        <div className="mt-1 text-5xl font-bold text-emerald-500">One price.</div>
-        <p className="mx-auto mt-6 max-w-2xl text-xl text-gray-500">
+        <div className="mt-1 text-5xl font-bold text-coral">One price.</div>
+        <p className="mx-auto mt-6 max-w-2xl text-xl text-text-muted">
           AI marketing + payments + chatbot + telecaller + HMS
         </p>
-        <p className="mt-2 text-sm text-gray-400">
+        <p className="mt-2 text-sm text-text-muted">
           Start free. Upgrade when you&apos;re ready. Cancel anytime.
         </p>
 
         {/* Toggle */}
         <div className="mt-6 flex items-center justify-center gap-3">
-          <span className={`text-sm font-medium ${!isYearly ? "text-gray-900" : "text-gray-400"}`}>Monthly</span>
+          <span className={`text-sm font-medium ${!isYearly ? "text-ink" : "text-text-muted"}`}>Monthly</span>
           <div
             onClick={() => setIsYearly(!isYearly)}
-            className={`flex h-6 w-12 cursor-pointer items-center rounded-full transition-colors duration-300 ${isYearly ? "bg-emerald-500" : "bg-gray-300"}`}
+            className={`flex h-6 w-12 cursor-pointer items-center rounded-full transition-colors duration-300 ${isYearly ? "bg-coral" : "bg-gray-300"}`}
           >
             <div
               className="h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-300"
               style={{ transform: isYearly ? "translateX(24px)" : "translateX(2px)" }}
             />
           </div>
-          <span className={`text-sm font-medium ${isYearly ? "text-gray-900" : "text-gray-400"}`}>Yearly</span>
-          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-medium text-emerald-700">Save 20%</span>
+          <span className={`text-sm font-medium ${isYearly ? "text-ink" : "text-text-muted"}`}>Yearly</span>
+          <span className="rounded-full bg-coral/10 px-2.5 py-1 text-[10px] font-medium text-coral-deep">Save 20%</span>
         </div>
 
         {/* Trust strip */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-6">
           {["Patent filed", "HIPAA compliant", "GDPR ready", "10 languages", "Cancel anytime"].map((t) => (
-            <span key={t} className="flex items-center gap-1.5 text-[11px] text-gray-400">
-              <span className="text-emerald-500">✓</span> {t}
+            <span key={t} className="flex items-center gap-1.5 text-[11px] text-text-muted">
+              <span className="text-coral">✓</span> {t}
             </span>
           ))}
         </div>
@@ -249,37 +249,37 @@ export default function PricingPage() {
                 key={card.name}
                 className={`relative flex flex-col overflow-hidden rounded-2xl bg-white transition-all duration-300 hover:shadow-xl ${
                   card.popular
-                    ? "border-2 border-emerald-500 shadow-lg"
+                    ? "border-2 border-coral shadow-lg"
                     : `border border-gray-100 shadow-sm border-t-[3px] ${card.accent}`
                 }`}
               >
                 {card.popular && (
-                  <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-500 px-5 py-1.5 text-[11px] font-medium text-white shadow-sm">
+                  <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-coral px-5 py-1.5 text-[11px] font-medium text-white shadow-sm">
                     Most popular
                   </span>
                 )}
 
                 {/* Header */}
                 <div className="p-7">
-                  <div className="text-xl font-bold text-gray-900">{card.name}</div>
-                  <div className="mt-1 text-[13px] leading-relaxed text-gray-500">{card.tagline}</div>
+                  <div className="text-xl font-bold text-ink">{card.name}</div>
+                  <div className="mt-1 text-[13px] leading-relaxed text-text-muted">{card.tagline}</div>
                   <div className="mt-5">
                     {card.name === "Free" ? (
                       <>
-                        <span className="text-4xl font-bold text-gray-900">Free</span>
-                        <span className="ml-1 text-sm text-gray-400">forever</span>
+                        <span className="text-4xl font-bold text-ink">Free</span>
+                        <span className="ml-1 text-sm text-text-muted">forever</span>
                       </>
                     ) : card.name === "Enterprise" ? (
                       <>
-                        <span className="text-3xl font-bold text-gray-900">Custom</span>
-                        <span className="ml-1 text-sm text-gray-400">per branch</span>
+                        <span className="text-3xl font-bold text-ink">Custom</span>
+                        <span className="ml-1 text-sm text-text-muted">per branch</span>
                       </>
                     ) : (
                       <>
-                        <span className="text-4xl font-bold text-gray-900">{card.price}</span>
-                        <span className="text-sm text-gray-400">{card.sub}</span>
+                        <span className="text-4xl font-bold text-ink">{card.price}</span>
+                        <span className="text-sm text-text-muted">{card.sub}</span>
                         {card.yearly && (
-                          <span className="mt-1 block text-[11px] text-gray-400">{card.yearly}</span>
+                          <span className="mt-1 block text-[11px] text-text-muted">{card.yearly}</span>
                         )}
                       </>
                     )}
@@ -296,16 +296,16 @@ export default function PricingPage() {
                 <div className="flex-1">
                   {sections.map((sec) => (
                     <div key={sec.title}>
-                      <div className="flex items-center gap-2 bg-gray-50 px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                      <div className="flex items-center gap-2 bg-paper px-5 py-2 text-[10px] font-semibold uppercase tracking-wider text-text-muted">
                         <span className={`h-1.5 w-1.5 rounded-full ${sec.dot}`} />
                         {sec.title}
                       </div>
                       {sec.features.map((f, fi) => (
                         <div key={fi} className="flex items-start gap-2 px-5 py-2.5 text-[12px]">
-                          <span className={`text-sm font-bold ${f.included ? (f.addon ? "text-blue-500" : "text-emerald-500") : "text-gray-200"}`}>
+                          <span className={`text-sm font-bold ${f.included ? (f.addon ? "text-blue-500" : "text-coral") : "text-gray-200"}`}>
                             {f.included ? "✓" : "—"}
                           </span>
-                          <span className={`flex-1 ${f.included ? (f.addon ? "text-gray-600" : "text-gray-700") : "text-gray-300"}`}>
+                          <span className={`flex-1 ${f.included ? (f.addon ? "text-text-dim" : "text-ink") : "text-gray-300"}`}>
                             {f.text}
                           </span>
                           {f.addon && (
@@ -326,42 +326,42 @@ export default function PricingPage() {
 
       {/* ADD-ONS */}
       <section className="mx-auto mt-20 max-w-5xl px-8">
-        <h2 className="text-center text-3xl font-bold text-gray-900">Add-ons</h2>
-        <p className="mt-2 text-center text-sm text-gray-500">Expand any plan with what you need</p>
+        <h2 className="text-center text-3xl font-bold text-ink">Add-ons</h2>
+        <p className="mt-2 text-center text-sm text-text-muted">Expand any plan with what you need</p>
         <div className="mt-10 grid grid-cols-3 gap-4">
           {addonCards.map((a) => (
             <div
               key={a.name}
               className={`rounded-2xl border border-gray-100 border-l-[3px] bg-white p-6 shadow-sm transition-all duration-200 hover:scale-[1.02] hover:shadow-md ${a.border}`}
             >
-              <div className="text-sm font-semibold text-gray-900">{a.name}</div>
-              <div className="mt-1 text-[12px] text-gray-500">{a.desc}</div>
-              <div className="mt-3 text-xl font-bold text-gray-900">{a.price}</div>
+              <div className="text-sm font-semibold text-ink">{a.name}</div>
+              <div className="mt-1 text-[12px] text-text-muted">{a.desc}</div>
+              <div className="mt-3 text-xl font-bold text-ink">{a.price}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* TRUST */}
-      <div className="mt-16 text-center text-[13px] text-gray-400">
+      <div className="mt-16 text-center text-[13px] text-text-muted">
         HIPAA/GDPR compliant · 10 languages · Cancel anytime · Free migration · 24/7 AI support
       </div>
 
       {/* FAQ */}
       <section className="mx-auto mt-16 max-w-3xl px-8 pb-16">
-        <h2 className="mb-10 text-center text-3xl font-bold text-gray-900">Frequently asked questions</h2>
+        <h2 className="mb-10 text-center text-3xl font-bold text-ink">Frequently asked questions</h2>
         <div className="space-y-3">
           {faqs.map((faq, i) => (
             <div key={i} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
               <button
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="flex w-full cursor-pointer items-center justify-between px-6 py-5 text-left transition-colors hover:bg-gray-50"
+                className="flex w-full cursor-pointer items-center justify-between px-6 py-5 text-left transition-colors hover:bg-paper"
               >
-                <span className="text-[14px] font-medium text-gray-900">{faq.q}</span>
-                <span className={`text-xl text-gray-400 transition-transform duration-200 ${openFaq === i ? "rotate-45" : ""}`}>+</span>
+                <span className="text-[14px] font-medium text-ink">{faq.q}</span>
+                <span className={`text-xl text-text-muted transition-transform duration-200 ${openFaq === i ? "rotate-45" : ""}`}>+</span>
               </button>
               {openFaq === i && (
-                <div className="px-6 pb-5 text-[13px] leading-relaxed text-gray-600">{faq.a}</div>
+                <div className="px-6 pb-5 text-[13px] leading-relaxed text-text-dim">{faq.a}</div>
               )}
             </div>
           ))}
@@ -369,9 +369,9 @@ export default function PricingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="flex items-center justify-between bg-gray-900 px-8 py-8 text-sm text-gray-500">
+      <footer className="flex items-center justify-between bg-gray-900 px-8 py-8 text-sm text-text-muted">
         <span>© 2026 SmartGumastha Technologies Pvt Ltd</span>
-        <span className="text-gray-400">MHAI — where AI is not a feature, it&apos;s the DNA</span>
+        <span className="text-text-muted">MHAI — where AI is not a feature, it&apos;s the DNA</span>
         <div className="flex gap-4">
           <a href="/privacy" className="transition-colors hover:text-gray-200">Privacy</a>
           <a href="/terms" className="transition-colors hover:text-gray-200">Terms</a>

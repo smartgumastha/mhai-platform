@@ -83,10 +83,10 @@ function PlatformToggles({ active, onToggle, connectedIds }: { active: string[];
               disabled={!connected}
               className={`flex h-8 w-8 items-center justify-center rounded-lg text-[9px] font-medium transition-all duration-200 ${
                 !connected
-                  ? "cursor-not-allowed bg-gray-50 text-gray-300 opacity-60"
+                  ? "cursor-not-allowed bg-paper text-gray-300 opacity-60"
                   : on
                     ? `${p.bg} cursor-pointer text-white shadow-sm ring-2 ring-offset-1 ring-gray-300`
-                    : "cursor-pointer bg-gray-100 text-gray-400"
+                    : "cursor-pointer bg-gray-100 text-text-muted"
               }`}
             >
               {p.label}
@@ -95,15 +95,15 @@ function PlatformToggles({ active, onToggle, connectedIds }: { active: string[];
           </div>
         );
       })}
-      <span className="ml-1 text-[9px] text-gray-400">{count === platformDefs.length ? "All platforms" : `${count} platform${count !== 1 ? "s" : ""}`}</span>
+      <span className="ml-1 text-[9px] text-text-muted">{count === platformDefs.length ? "All platforms" : `${count} platform${count !== 1 ? "s" : ""}`}</span>
     </div>
   );
 }
 
 var STATUS_BADGES: Record<string, { label: string; cls: string }> = {
-  draft: { label: "Draft", cls: "bg-gray-100 text-gray-600" },
+  draft: { label: "Draft", cls: "bg-gray-100 text-text-dim" },
   scheduled: { label: "Scheduled", cls: "bg-blue-50 text-blue-600" },
-  published: { label: "Published", cls: "bg-emerald-50 text-emerald-600" },
+  published: { label: "Published", cls: "bg-emerald-accent/10 text-coral-deep" },
   failed: { label: "Failed", cls: "bg-red-50 text-red-600" },
 };
 
@@ -336,36 +336,36 @@ export default function SocialPostsPage() {
   }
 
   var inputClass =
-    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
+    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-ink transition-all duration-200 focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20";
 
   return (
     <div className="px-8 py-6">
       {/* SECTION 1: Performance pulse */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
         <div className="flex items-center gap-6">
-          <div><div className="text-[10px] text-gray-400">Yesterday</div><div className="text-sm font-semibold text-gray-900">342 reach</div></div>
-          <div className="text-sm font-semibold text-gray-900">18 likes</div>
-          <div className="flex items-center gap-1"><span className="text-sm font-semibold text-emerald-600">1 booking</span><span className="text-[11px] text-gray-400">(from bookings)</span></div>
+          <div><div className="text-[10px] text-text-muted">Yesterday</div><div className="text-sm font-semibold text-ink">342 reach</div></div>
+          <div className="text-sm font-semibold text-ink">18 likes</div>
+          <div className="flex items-center gap-1"><span className="text-sm font-semibold text-coral-deep">1 booking</span><span className="text-[11px] text-text-muted">(from bookings)</span></div>
           <div className="h-6 w-px bg-gray-200" />
           <span className="rounded-full border border-amber-100 bg-amber-50 px-3 py-1 text-[11px] font-medium text-amber-700">5-day posting streak</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-600">Top 20% of physio clinics on MHAI</span>
-          <span className="text-[11px] text-gray-500">18 posts · 4.2K reach · 7 bookings</span>
+          <span className="rounded-full border border-emerald-100 bg-emerald-accent/10 px-3 py-1 text-[11px] font-medium text-coral-deep">Top 20% of physio clinics on MHAI</span>
+          <span className="text-[11px] text-text-muted">18 posts · 4.2K reach · 7 bookings</span>
         </div>
       </div>
 
       {/* SECTION 2: Header + action bar */}
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Content Studio</h1>
-          <p className="mt-1 text-sm text-gray-500">AI creates, you approve. 30 seconds. Done.</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">Content Studio</h1>
+          <p className="mt-1 text-sm text-text-muted">AI creates, you approve. 30 seconds. Done.</p>
         </div>
         <div className="flex gap-2">
           <button className="cursor-pointer rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 px-4 py-2.5 text-xs font-medium text-white shadow-md transition-all duration-200 hover:shadow-lg">Capture moment</button>
           <button className="cursor-pointer rounded-xl bg-gray-900 px-4 py-2.5 text-xs font-medium text-white shadow-md transition-all duration-200 hover:bg-gray-800">Create reel from text</button>
-          <button className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-gray-400">WhatsApp import</button>
-          <button onClick={() => setShowCreate(true)} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-medium text-white shadow-md transition-all duration-200 hover:bg-emerald-600">+ Create post</button>
+          <button className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-medium text-ink shadow-sm transition-all duration-200 hover:border-gray-400">WhatsApp import</button>
+          <button onClick={() => setShowCreate(true)} className="cursor-pointer rounded-xl bg-coral px-4 py-2.5 text-xs font-medium text-white shadow-md transition-all duration-200 hover:bg-coral-deep">+ Create post</button>
         </div>
       </div>
 
@@ -374,11 +374,11 @@ export default function SocialPostsPage() {
         {[
           { accent: "border-l-blue-500", iconBg: "bg-blue-50", iconColor: "text-blue-500", icon: "\u25B6", text: "Post a doctor intro video \u2014 clinics with video get 35% more bookings" },
           { accent: "border-l-red-500", iconBg: "bg-red-50", iconColor: "text-red-500", icon: "\uD83D\uDCC5", text: "World Hypertension Day in 3 days \u2014 your post is ready, preview?" },
-          { accent: "border-l-emerald-500", iconBg: "bg-emerald-50", iconColor: "text-emerald-500", icon: "\u2191", text: "Your before/after post got 4x more saves \u2014 post more of these!" },
+          { accent: "border-l-emerald-500", iconBg: "bg-emerald-accent/10", iconColor: "text-coral", icon: "\u2191", text: "Your before/after post got 4x more saves \u2014 post more of these!" },
         ].map((s, i) => (
           <div key={i} className={`flex flex-shrink-0 cursor-pointer items-center gap-3 rounded-xl border border-gray-100 border-l-[3px] bg-white px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md ${s.accent}`} style={{ maxWidth: 280 }}>
             <div className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm ${s.iconBg} ${s.iconColor}`}>{s.icon}</div>
-            <div className="flex-1 text-[11px] leading-snug text-gray-700">{s.text}</div>
+            <div className="flex-1 text-[11px] leading-snug text-ink">{s.text}</div>
             <span className="text-gray-300">&rarr;</span>
           </div>
         ))}
@@ -387,9 +387,9 @@ export default function SocialPostsPage() {
       {/* SECTION 4: Tabs */}
       <div className="mb-4 flex gap-0 border-b border-gray-100">
         {contentTabs.map((t) => (
-          <button key={t.id} onClick={() => setActiveTab(t.id)} className={`cursor-pointer pb-2 pr-5 text-sm transition-all duration-200 ${activeTab === t.id ? "border-b-2 border-emerald-500 font-medium text-gray-900" : "text-gray-400 hover:text-gray-600"}`}>
+          <button key={t.id} onClick={() => setActiveTab(t.id)} className={`cursor-pointer pb-2 pr-5 text-sm transition-all duration-200 ${activeTab === t.id ? "border-b-2 border-coral font-medium text-ink" : "text-text-muted hover:text-text-dim"}`}>
             {t.label}
-            {t.coming && <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-500">Coming soon</span>}
+            {t.coming && <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-text-muted">Coming soon</span>}
           </button>
         ))}
       </div>
@@ -399,24 +399,24 @@ export default function SocialPostsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Create post</h2>
-              <button onClick={resetCreate} className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600">&times;</button>
+              <h2 className="text-lg font-medium text-ink">Create post</h2>
+              <button onClick={resetCreate} className="cursor-pointer text-text-muted transition-colors hover:text-text-dim">&times;</button>
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">Post type</label>
+              <label className="mb-1 block text-xs text-text-muted">Post type</label>
               <select className={inputClass} value={newType} onChange={(e) => setNewType(e.target.value)}>
                 {postTypeOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">Platforms</label>
+              <label className="mb-1 block text-xs text-text-muted">Platforms</label>
               <PlatformToggles active={newPlatforms} onToggle={(plat) => setNewPlatforms((prev) => prev.includes(plat) ? prev.filter((x) => x !== plat) : [...prev, plat])} connectedIds={connectedIds.length > 0 ? connectedIds : undefined} />
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">Language</label>
+              <label className="mb-1 block text-xs text-text-muted">Language</label>
               <select className={inputClass} value={newLanguage} onChange={(e) => setNewLanguage(e.target.value)}>
                 {languageOptions.map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
@@ -424,7 +424,7 @@ export default function SocialPostsPage() {
 
             <div className="mb-3">
               <div className="mb-1 flex items-center justify-between">
-                <label className="text-xs text-gray-500">Content</label>
+                <label className="text-xs text-text-muted">Content</label>
                 <button
                   onClick={handleAiGenerate}
                   disabled={aiGenerating}
@@ -437,13 +437,13 @@ export default function SocialPostsPage() {
             </div>
 
             <div className="mb-4">
-              <label className="mb-1 block text-xs text-gray-500">Hashtags</label>
+              <label className="mb-1 block text-xs text-text-muted">Hashtags</label>
               <input className={inputClass} placeholder="#physiotherapy #health" value={newHashtags} onChange={(e) => setNewHashtags(e.target.value)} />
             </div>
 
             <div className="flex justify-end gap-2">
-              <button onClick={resetCreate} className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs text-gray-700 transition-all duration-200 hover:border-gray-400">Cancel</button>
-              <button onClick={handleCreatePost} disabled={posting} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50">
+              <button onClick={resetCreate} className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs text-ink transition-all duration-200 hover:border-gray-400">Cancel</button>
+              <button onClick={handleCreatePost} disabled={posting} className="cursor-pointer rounded-xl bg-coral px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-coral-deep disabled:cursor-not-allowed disabled:opacity-50">
                 {posting ? "Creating..." : "Create post"}
               </button>
             </div>
@@ -456,11 +456,11 @@ export default function SocialPostsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Post now</h2>
-              <button onClick={() => setPublishModal(null)} className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600">&times;</button>
+              <h2 className="text-lg font-medium text-ink">Post now</h2>
+              <button onClick={() => setPublishModal(null)} className="cursor-pointer text-text-muted transition-colors hover:text-text-dim">&times;</button>
             </div>
 
-            <div className="mb-1 text-xs text-gray-500">Select platforms to publish to:</div>
+            <div className="mb-1 text-xs text-text-muted">Select platforms to publish to:</div>
             <div className="mb-4">
               <PlatformToggles
                 active={publishPlatforms}
@@ -470,11 +470,11 @@ export default function SocialPostsPage() {
             </div>
 
             <div className="flex justify-end gap-2">
-              <button onClick={() => setPublishModal(null)} className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs text-gray-700 transition-all duration-200 hover:border-gray-400">Cancel</button>
+              <button onClick={() => setPublishModal(null)} className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs text-ink transition-all duration-200 hover:border-gray-400">Cancel</button>
               <button
                 onClick={handlePublishConfirm}
                 disabled={publishingId === publishModal}
-                className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="cursor-pointer rounded-xl bg-coral px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-coral-deep disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {publishingId === publishModal ? "Publishing..." : "Publish"}
               </button>
@@ -488,12 +488,12 @@ export default function SocialPostsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Schedule post</h2>
-              <button onClick={() => setScheduleModal(null)} className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600">&times;</button>
+              <h2 className="text-lg font-medium text-ink">Schedule post</h2>
+              <button onClick={() => setScheduleModal(null)} className="cursor-pointer text-text-muted transition-colors hover:text-text-dim">&times;</button>
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">Platforms</label>
+              <label className="mb-1 block text-xs text-text-muted">Platforms</label>
               <PlatformToggles
                 active={schedulePlatforms}
                 onToggle={(plat) => setSchedulePlatforms((prev) => prev.includes(plat) ? prev.filter((x) => x !== plat) : [...prev, plat])}
@@ -502,7 +502,7 @@ export default function SocialPostsPage() {
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">Date</label>
+              <label className="mb-1 block text-xs text-text-muted">Date</label>
               <input
                 type="date"
                 className={inputClass}
@@ -512,7 +512,7 @@ export default function SocialPostsPage() {
             </div>
 
             <div className="mb-4">
-              <label className="mb-1 block text-xs text-gray-500">Time</label>
+              <label className="mb-1 block text-xs text-text-muted">Time</label>
               <input
                 type="time"
                 className={inputClass}
@@ -522,7 +522,7 @@ export default function SocialPostsPage() {
             </div>
 
             <div className="flex justify-end gap-2">
-              <button onClick={() => setScheduleModal(null)} className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs text-gray-700 transition-all duration-200 hover:border-gray-400">Cancel</button>
+              <button onClick={() => setScheduleModal(null)} className="cursor-pointer rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs text-ink transition-all duration-200 hover:border-gray-400">Cancel</button>
               <button
                 onClick={handleScheduleSubmit}
                 disabled={publishingId === scheduleModal}
@@ -541,11 +541,11 @@ export default function SocialPostsPage() {
         return (
           <div className="flex min-h-[40vh] flex-col items-center justify-center text-center">
             <div className="mb-2 flex items-center gap-2">
-              <span className="text-lg font-medium text-gray-900">{tab?.label}</span>
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-500">Coming soon</span>
+              <span className="text-lg font-medium text-ink">{tab?.label}</span>
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-text-muted">Coming soon</span>
             </div>
-            <p className="mb-4 max-w-md text-sm text-gray-500">{tab?.desc}</p>
-            <button className="cursor-pointer rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-2.5 text-xs font-medium text-emerald-700 transition-all duration-200 hover:bg-emerald-100">
+            <p className="mb-4 max-w-md text-sm text-text-muted">{tab?.desc}</p>
+            <button className="cursor-pointer rounded-xl border border-emerald-200 bg-emerald-accent/10 px-5 py-2.5 text-xs font-medium text-coral-deep transition-all duration-200 hover:bg-emerald-100">
               Notify me when ready
             </button>
           </div>
@@ -559,19 +559,19 @@ export default function SocialPostsPage() {
           <div>
             {loading ? (
               <div className="flex min-h-[30vh] items-center justify-center">
-                <div className="text-sm text-gray-400">Loading posts...</div>
+                <div className="text-sm text-text-muted">Loading posts...</div>
               </div>
             ) : posts.length === 0 ? (
-              <div className="flex min-h-[30vh] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-center">
-                <div className="mb-2 text-sm font-medium text-gray-700">No posts yet</div>
-                <p className="mb-3 max-w-sm text-xs text-gray-500">Create your first post or let AI generate content for you. Posts will appear here as you use the platform.</p>
-                <button onClick={() => setShowCreate(true)} className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600">+ Create your first post</button>
+              <div className="flex min-h-[30vh] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-paper text-center">
+                <div className="mb-2 text-sm font-medium text-ink">No posts yet</div>
+                <p className="mb-3 max-w-sm text-xs text-text-muted">Create your first post or let AI generate content for you. Posts will appear here as you use the platform.</p>
+                <button onClick={() => setShowCreate(true)} className="cursor-pointer rounded-xl bg-coral px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-coral-deep">+ Create your first post</button>
               </div>
             ) : (
               <>
                 <div className="mb-3 flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-900">Your posts</span>
-                  <span className="text-[11px] text-gray-400">{posts.length} post{posts.length !== 1 ? "s" : ""}</span>
+                  <span className="text-sm font-medium text-ink">Your posts</span>
+                  <span className="text-[11px] text-text-muted">{posts.length} post{posts.length !== 1 ? "s" : ""}</span>
                 </div>
 
                 {posts.map((post) => (
@@ -613,14 +613,14 @@ export default function SocialPostsPage() {
                         active={postPlatforms[post.id] || post.platforms || []}
                         onToggle={(plat) => togglePostPlatform(post.id, plat)}
                       />
-                      <div className="mb-2 text-[13px] leading-relaxed text-gray-700">{post.content}</div>
+                      <div className="mb-2 text-[13px] leading-relaxed text-ink">{post.content}</div>
                       {post.hashtags && (
                         <div className="mb-3 text-[11px] text-blue-500">{post.hashtags}</div>
                       )}
                       {post.ai_insight && (
-                        <div className="mb-3 rounded-xl bg-gray-50 p-3">
-                          <span className="text-[10px] font-medium text-gray-500">AI insight: </span>
-                          <span className="text-[10px] text-gray-500">{post.ai_insight}</span>
+                        <div className="mb-3 rounded-xl bg-paper p-3">
+                          <span className="text-[10px] font-medium text-text-muted">AI insight: </span>
+                          <span className="text-[10px] text-text-muted">{post.ai_insight}</span>
                         </div>
                       )}
                       {post.status === "scheduled" && post.scheduled_at && (
@@ -633,7 +633,7 @@ export default function SocialPostsPage() {
                           {post.status !== "published" && (
                             <button
                               onClick={() => openPublishModal(post.id)}
-                              className="cursor-pointer rounded-xl bg-emerald-500 px-4 py-2 text-[11px] font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600"
+                              className="cursor-pointer rounded-xl bg-coral px-4 py-2 text-[11px] font-medium text-white shadow-sm transition-all duration-200 hover:bg-coral-deep"
                             >
                               Post now
                             </button>
@@ -641,12 +641,12 @@ export default function SocialPostsPage() {
                           {post.status !== "published" && post.status !== "scheduled" && (
                             <button
                               onClick={() => openScheduleModal(post.id)}
-                              className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] text-gray-700 transition-all duration-200 hover:border-emerald-500"
+                              className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] text-ink transition-all duration-200 hover:border-coral"
                             >
                               Schedule
                             </button>
                           )}
-                          <button className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] text-gray-700 transition-all duration-200 hover:border-emerald-500">Edit</button>
+                          <button className="cursor-pointer rounded-xl border border-gray-200 bg-white px-3 py-2 text-[11px] text-ink transition-all duration-200 hover:border-coral">Edit</button>
                         </div>
                         <div className="flex gap-3">
                           <span className="cursor-pointer text-[10px] text-purple-500 transition-colors hover:text-purple-700">Make reel</span>
@@ -664,10 +664,10 @@ export default function SocialPostsPage() {
           <div>
             {/* Card 1: Content calendar */}
             <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <div className="mb-2 text-sm font-medium text-gray-900">April 2026</div>
+              <div className="mb-2 text-sm font-medium text-ink">April 2026</div>
               <div className="mb-1 grid grid-cols-7 gap-0">
                 {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-                  <div key={d} className="py-1 text-center text-[9px] text-gray-400">{d}</div>
+                  <div key={d} className="py-1 text-center text-[9px] text-text-muted">{d}</div>
                 ))}
               </div>
               {calRows.map((row, ri) => (
@@ -676,7 +676,7 @@ export default function SocialPostsPage() {
                     <div key={ci} className="flex flex-col items-center py-1">
                       {cell.d === 0 ? <span className="h-5" /> : (
                         <>
-                          <span className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] ${cell.today ? "bg-emerald-50 font-medium text-emerald-600" : cell.muted ? "text-gray-300" : "text-gray-700"}`}>{cell.d}</span>
+                          <span className={`flex h-5 w-5 items-center justify-center rounded-lg text-[10px] ${cell.today ? "bg-emerald-accent/10 font-medium text-coral-deep" : cell.muted ? "text-gray-300" : "text-ink"}`}>{cell.d}</span>
                           {cell.dot && <span className="mx-auto mt-0.5 h-1.5 w-1.5 rounded-full" style={{ backgroundColor: cell.dot }} />}
                         </>
                       )}
@@ -684,7 +684,7 @@ export default function SocialPostsPage() {
                   ))}
                 </div>
               ))}
-              <div className="mt-2 flex flex-wrap gap-2 text-[9px] text-gray-400">
+              <div className="mt-2 flex flex-wrap gap-2 text-[9px] text-text-muted">
                 {[
                   { c: "#E4405F", l: "Instagram" }, { c: "#1877F2", l: "Facebook" }, { c: "#FF0000", l: "YouTube" },
                   { c: "#0A66C2", l: "LinkedIn" }, { c: "#10b981", l: "Multi" }, { c: "#dc2626", l: "Health day" },
@@ -696,15 +696,15 @@ export default function SocialPostsPage() {
 
             {/* Card 2: Upcoming health days */}
             <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <div className="mb-2 text-sm font-medium text-gray-900">Upcoming health days</div>
+              <div className="mb-2 text-sm font-medium text-ink">Upcoming health days</div>
               {[
-                { day: "17", bg: "bg-red-50", text: "text-red-600", name: "World Hypertension Day", date: "May 17", badge: "Ready", badgeClass: "bg-emerald-50 text-emerald-600" },
+                { day: "17", bg: "bg-red-50", text: "text-red-600", name: "World Hypertension Day", date: "May 17", badge: "Ready", badgeClass: "bg-emerald-accent/10 text-coral-deep" },
                 { day: "31", bg: "bg-amber-50", text: "text-amber-600", name: "World No Tobacco Day", date: "May 31", badge: "Drafting", badgeClass: "bg-amber-50 text-amber-600" },
-                { day: "21", bg: "bg-blue-50", text: "text-blue-600", name: "International Yoga Day", date: "Jun 21", badge: "Planned", badgeClass: "bg-gray-100 text-gray-500" },
+                { day: "21", bg: "bg-blue-50", text: "text-blue-600", name: "International Yoga Day", date: "Jun 21", badge: "Planned", badgeClass: "bg-gray-100 text-text-muted" },
               ].map((h) => (
                 <div key={h.day} className="flex items-center gap-2.5 border-b border-gray-50 py-2">
                   <div className={`flex h-8 w-8 items-center justify-center rounded-lg text-[11px] font-bold ${h.bg} ${h.text}`}>{h.day}</div>
-                  <div className="flex-1"><div className="text-[11px] font-medium text-gray-900">{h.name}</div><div className="text-[9px] text-gray-400">{h.date}</div></div>
+                  <div className="flex-1"><div className="text-[11px] font-medium text-ink">{h.name}</div><div className="text-[9px] text-text-muted">{h.date}</div></div>
                   <span className={`rounded px-1.5 py-0.5 text-[8px] font-medium ${h.badgeClass}`}>{h.badge}</span>
                 </div>
               ))}
@@ -712,7 +712,7 @@ export default function SocialPostsPage() {
 
             {/* Card 3: Channel performance */}
             <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <div className="mb-2 text-sm font-medium text-gray-900">Channel performance</div>
+              <div className="mb-2 text-sm font-medium text-ink">Channel performance</div>
               {[
                 { icon: "Ig", color: "bg-pink-500", name: "Instagram", stat: "847 reach", book: "4 bookings" },
                 { icon: "Fb", color: "bg-blue-500", name: "Facebook", stat: "2.3K reach", book: "2 bookings" },
@@ -721,17 +721,17 @@ export default function SocialPostsPage() {
               ].map((c) => (
                 <div key={c.name} className="flex items-center gap-2 border-b border-gray-50 py-2">
                   <div className={`flex h-5 w-5 items-center justify-center rounded text-[8px] font-bold text-white ${c.color}`}>{c.icon}</div>
-                  <span className="flex-1 text-[11px] text-gray-700">{c.name}</span>
-                  <span className="text-[10px] text-gray-400">{c.stat}</span>
-                  <span className="text-[10px] font-medium text-emerald-600">{c.book}</span>
+                  <span className="flex-1 text-[11px] text-ink">{c.name}</span>
+                  <span className="text-[10px] text-text-muted">{c.stat}</span>
+                  <span className="text-[10px] font-medium text-coral-deep">{c.book}</span>
                 </div>
               ))}
-              <div className="mt-2 rounded-lg border border-emerald-100 bg-emerald-50 p-2 text-[10px] text-emerald-700">Instagram drives 57% of bookings. Increase to 4x/week.</div>
+              <div className="mt-2 rounded-lg border border-emerald-100 bg-emerald-accent/10 p-2 text-[10px] text-coral-deep">Instagram drives 57% of bookings. Increase to 4x/week.</div>
             </div>
 
             {/* Card 4: Auto-post settings */}
             <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <div className="mb-2 text-sm font-medium text-gray-900">Auto-post settings</div>
+              <div className="mb-2 text-sm font-medium text-ink">Auto-post settings</div>
               {[
                 { name: "Health day auto-posts", on: true },
                 { name: "Weekly patient tips", on: true },
@@ -740,8 +740,8 @@ export default function SocialPostsPage() {
                 { name: "Translate to Telugu", on: false },
               ].map((s) => (
                 <div key={s.name} className="flex items-center justify-between border-b border-gray-50 py-2">
-                  <span className="text-[11px] text-gray-700">{s.name}</span>
-                  <div className={`flex h-4 w-7 items-center rounded-full px-0.5 ${s.on ? "bg-emerald-500" : "bg-gray-300"}`}>
+                  <span className="text-[11px] text-ink">{s.name}</span>
+                  <div className={`flex h-4 w-7 items-center rounded-full px-0.5 ${s.on ? "bg-coral" : "bg-gray-300"}`}>
                     <div className={`h-3 w-3 rounded-full bg-white shadow-sm transition-all duration-200 ${s.on ? "ml-auto" : ""}`} />
                   </div>
                 </div>
@@ -750,23 +750,23 @@ export default function SocialPostsPage() {
 
             {/* Card 5: Quick upload */}
             <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <div className="mb-2 text-sm font-medium text-gray-900">Quick upload</div>
+              <div className="mb-2 text-sm font-medium text-ink">Quick upload</div>
               <div className="flex flex-col items-center rounded-xl border border-dashed border-gray-300 p-4">
-                <div className="text-[11px] text-gray-500">Drop video or photos</div>
-                <div className="text-[10px] text-gray-400">or WhatsApp forward</div>
+                <div className="text-[11px] text-text-muted">Drop video or photos</div>
+                <div className="text-[10px] text-text-muted">or WhatsApp forward</div>
               </div>
               <div className="mt-2 flex gap-1.5">
                 {["Upload video", "Upload photos", "WhatsApp import"].map((b) => (
-                  <button key={b} className="flex-1 cursor-pointer rounded-lg border border-gray-200 py-1.5 text-[9px] text-gray-600 transition-all duration-200 hover:bg-gray-50">{b}</button>
+                  <button key={b} className="flex-1 cursor-pointer rounded-lg border border-gray-200 py-1.5 text-[9px] text-text-dim transition-all duration-200 hover:bg-paper">{b}</button>
                 ))}
               </div>
             </div>
 
             {/* Card 6: AI content types */}
             <div className="mb-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <div className="mb-2 text-sm font-medium text-gray-900">AI content types</div>
+              <div className="mb-2 text-sm font-medium text-ink">AI content types</div>
               {[
-                { dot: "bg-emerald-500", name: "Health day posts" },
+                { dot: "bg-coral", name: "Health day posts" },
                 { dot: "bg-blue-500", name: "Patient education" },
                 { dot: "bg-purple-500", name: "Doctor videos" },
                 { dot: "bg-amber-500", name: "Milestones (HMS)" },
@@ -777,7 +777,7 @@ export default function SocialPostsPage() {
               ].map((t) => (
                 <div key={t.name} className="flex items-center gap-2 py-1">
                   <span className={`h-2 w-2 rounded-full ${t.dot}`} />
-                  <span className="text-[11px] text-gray-700">{t.name}</span>
+                  <span className="text-[11px] text-ink">{t.name}</span>
                 </div>
               ))}
             </div>

@@ -41,13 +41,13 @@ var channels = [
     bg: "#1a1a2e",
     stats: "Rank #4 for 'physiotherapy Hyderabad'",
     status: "green",
-    textColor: "text-emerald-500",
+    textColor: "text-coral",
     textSize: "text-[11px]",
   },
 ];
 
 var STATUS_COLORS: Record<string, string> = {
-  success: "bg-emerald-500",
+  success: "bg-coral",
   info: "bg-blue-500",
   warning: "bg-amber-500",
 };
@@ -101,7 +101,7 @@ export default function DashboardPage() {
         if (res.success && res.activities && res.activities.length > 0) {
           setActivities(
             res.activities.map((a: any) => ({
-              color: STATUS_COLORS[a.status] || "bg-emerald-500",
+              color: STATUS_COLORS[a.status] || "bg-coral",
               text: a.text || a.message || "",
               time: a.time || a.created_at || "",
             }))
@@ -199,20 +199,20 @@ export default function DashboardPage() {
       {/* Section A: Greeting */}
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-medium tracking-tight text-gray-900">
+          <h1 className="text-2xl font-medium tracking-tight text-ink">
             {getGreeting()}, {user?.business_name || "Partner"}!
           </h1>
-          <p className="mt-0.5 text-sm italic text-gray-500">
+          <p className="mt-0.5 text-sm italic text-text-muted">
             {totalPosts > 0 || totalReviews > 0
               ? "Your AI engine has created " + totalPosts + " posts and handled " + totalReviews + " reviews"
               : "Your AI engine is ready \u2014 log your first patient to start"}
           </p>
         </div>
         <div className="flex gap-2">
-          <button className="cursor-pointer rounded-md bg-emerald-500 px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md">
+          <button className="cursor-pointer rounded-md bg-coral px-4 py-2 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-coral-deep hover:shadow-md">
             + New post
           </button>
-          <button className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-xs text-gray-700 shadow-sm transition-all duration-200 hover:border-emerald-500 hover:text-emerald-600 hover:shadow-md">
+          <button className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-xs text-ink shadow-sm transition-all duration-200 hover:border-coral hover:text-coral-deep hover:shadow-md">
             View website
           </button>
         </div>
@@ -221,7 +221,7 @@ export default function DashboardPage() {
       {/* Patient Done — Layer 1 trigger */}
       <button
         onClick={() => setShowPatientDone(true)}
-        className="mb-5 flex w-full cursor-pointer items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-5 text-xl font-semibold text-white shadow-lg transition-all duration-200 hover:from-emerald-600 hover:to-emerald-700 hover:shadow-xl active:scale-[0.99]"
+        className="mb-5 flex w-full cursor-pointer items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-coral to-coral-deep px-6 py-5 text-xl font-semibold text-white shadow-lg transition-all duration-200 hover:from-coral-deep hover:to-coral-deep hover:shadow-xl active:scale-[0.99]"
       >
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
         Patient done
@@ -232,13 +232,13 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Log patient visit</h2>
-              <button onClick={() => { setShowPatientDone(false); setPdName(""); setPdPhone(""); }} className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600">&times;</button>
+              <h2 className="text-lg font-medium text-ink">Log patient visit</h2>
+              <button onClick={() => { setShowPatientDone(false); setPdName(""); setPdPhone(""); }} className="cursor-pointer text-text-muted transition-colors hover:text-text-dim">&times;</button>
             </div>
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">Patient name</label>
+              <label className="mb-1 block text-xs text-text-muted">Patient name</label>
               <input
-                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-ink transition-all duration-200 focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20"
                 placeholder="e.g. Rajesh Kumar"
                 value={pdName}
                 onChange={(e) => setPdName(e.target.value)}
@@ -246,9 +246,9 @@ export default function DashboardPage() {
               />
             </div>
             <div className="mb-4">
-              <label className="mb-1 block text-xs text-gray-500">Phone number</label>
+              <label className="mb-1 block text-xs text-text-muted">Phone number</label>
               <input
-                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-ink transition-all duration-200 focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20"
                 placeholder="e.g. 9553053446"
                 value={pdPhone}
                 onChange={(e) => setPdPhone(e.target.value)}
@@ -258,7 +258,7 @@ export default function DashboardPage() {
             <button
               onClick={handlePatientDone}
               disabled={pdSubmitting}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-coral py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-coral-deep disabled:cursor-not-allowed disabled:opacity-50"
             >
               {pdSubmitting ? "Logging..." : "Log patient"}
             </button>
@@ -280,14 +280,14 @@ export default function DashboardPage() {
             key={m.label}
             className={`rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md border-t-2 ${m.accent}`}
           >
-            <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">
+            <div className="text-[10px] font-medium uppercase tracking-wider text-text-muted">
               {m.label}
             </div>
-            <div className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+            <div className="mt-1 text-3xl font-semibold tracking-tight text-ink">
               {m.value}
             </div>
             <div className="mt-1.5">
-              <span className="inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
+              <span className="inline-block rounded-full bg-emerald-accent/10 px-2 py-0.5 text-[10px] font-medium text-coral-deep">
                 {m.change}
               </span>
             </div>
@@ -299,7 +299,7 @@ export default function DashboardPage() {
       <div className="mt-4 grid grid-cols-[1fr_280px] gap-4">
         {/* Left: Channel performance */}
         <div>
-          <h2 className="mb-3 text-sm font-medium tracking-tight text-gray-900">
+          <h2 className="mb-3 text-sm font-medium tracking-tight text-ink">
             Channel performance
           </h2>
           {renderedChannels.map((ch) => (
@@ -316,16 +316,16 @@ export default function DashboardPage() {
                 {ch.icon}
               </div>
               <div className="flex-1">
-                <div className="text-[13px] font-medium text-gray-900">
+                <div className="text-[13px] font-medium text-ink">
                   {ch.name}
                 </div>
-                <div className="text-[11px] text-gray-500">{ch.stats}</div>
+                <div className="text-[11px] text-text-muted">{ch.stats}</div>
               </div>
               <div
                 className={`h-2.5 w-2.5 rounded-full ${
                   ch.status === "amber"
                     ? "bg-amber-500"
-                    : "bg-emerald-500 animate-pulse"
+                    : "bg-coral animate-pulse"
                 }`}
               />
             </div>
@@ -335,44 +335,44 @@ export default function DashboardPage() {
         {/* Right column */}
         <div>
           {/* AI activity feed */}
-          <h2 className="mb-3 text-sm font-medium tracking-tight text-gray-900">
+          <h2 className="mb-3 text-sm font-medium tracking-tight text-ink">
             AI activity feed
           </h2>
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
             {activities.length === 0 ? (
-              <div className="py-4 text-center text-xs text-gray-400">
+              <div className="py-4 text-center text-xs text-text-muted">
                 AI activity will appear here as you use the platform
               </div>
             ) : (
               activities.map((a, i) => (
                 <div
                   key={i}
-                  className="flex gap-2.5 rounded-md px-2 py-2 transition-all duration-200 hover:bg-gray-50"
+                  className="flex gap-2.5 rounded-md px-2 py-2 transition-all duration-200 hover:bg-paper"
                 >
                   <div
                     className={`mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${a.color}`}
                   />
                   <div>
-                    <div className="text-xs text-gray-900">{a.text}</div>
+                    <div className="text-xs text-ink">{a.text}</div>
                     <div className="text-[11px] text-gray-300">{a.time}</div>
                   </div>
                 </div>
               ))
             )}
             <div className="mt-2 border-t border-gray-100 pt-2 text-center">
-              <span className="cursor-pointer text-[11px] text-emerald-600 transition-all duration-200 hover:text-emerald-700">
+              <span className="cursor-pointer text-[11px] text-coral-deep transition-all duration-200 hover:text-coral-deep">
                 View all →
               </span>
             </div>
           </div>
 
           {/* Today's appointments */}
-          <h2 className="mb-2.5 mt-4 text-sm font-medium tracking-tight text-gray-900">
+          <h2 className="mb-2.5 mt-4 text-sm font-medium tracking-tight text-ink">
             Today&apos;s appointments
           </h2>
           <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
             {apptList.length === 0 ? (
-              <div className="py-4 text-center text-xs text-gray-400">
+              <div className="py-4 text-center text-xs text-text-muted">
                 No appointments today — tap Patient Done to log visits
               </div>
             ) : (
@@ -386,13 +386,13 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between rounded-md px-1 py-2 transition-all duration-200 hover:bg-gray-50"
+                    className="flex items-center justify-between rounded-md px-1 py-2 transition-all duration-200 hover:bg-paper"
                   >
                     <div>
-                      <div className="text-xs font-medium text-gray-900">
+                      <div className="text-xs font-medium text-ink">
                         {a.patient_name || "Patient"}
                       </div>
-                      <div className="text-[11px] text-gray-400">
+                      <div className="text-[11px] text-text-muted">
                         {a.slot_time || ""}{a.reason ? " \u00B7 " + a.reason : ""}
                       </div>
                     </div>
@@ -404,7 +404,7 @@ export default function DashboardPage() {
               })
             )}
             <div className="mt-2 border-t border-gray-100 pt-2 text-center">
-              <span className="cursor-pointer text-[11px] text-emerald-600 transition-all duration-200 hover:text-emerald-700">
+              <span className="cursor-pointer text-[11px] text-coral-deep transition-all duration-200 hover:text-coral-deep">
                 View calendar →
               </span>
             </div>
