@@ -118,8 +118,8 @@ export default function SignupPage() {
     }
   }
 
-  var inputCls = "h-[42px] w-full rounded-lg border bg-[#111916] px-3 text-[14px] text-[#f0fdf4] placeholder-[#4b5563] outline-none transition";
-  var inputOk = "border-[#1f2e28] focus:border-emerald-500";
+  var inputCls = "h-[42px] w-full rounded-lg border bg-[#111916] px-3 text-[14px] text-ink placeholder-[#4b5563] outline-none transition";
+  var inputOk = "border-[#1f2e28] focus:border-coral";
   var inputErr = "border-red-400";
 
   var terminologyClinic = (localeV2 && localeV2.ai_content && localeV2.ai_content.terminology_style && localeV2.ai_content.terminology_style.clinic_word) || "clinic";
@@ -130,15 +130,15 @@ export default function SignupPage() {
     <div className="w-full max-w-[380px]">
       {/* Logo */}
       <div className="mb-4 flex items-center gap-2.5">
-        <div className="flex h-[38px] w-[38px] items-center justify-center rounded-lg bg-emerald-500">
+        <div className="flex h-[38px] w-[38px] items-center justify-center rounded-lg bg-coral">
           <span className="text-[11px] font-medium tracking-[0.5px] text-[#064e3b]">MHAI</span>
         </div>
         <div>
-          <div className="text-[17px] font-medium text-white">
-            Medi<span className="text-emerald-400">Host</span>{" "}
-            <span className="text-[13px] text-gray-500">AI</span>
+          <div className="text-[17px] font-medium text-ink">
+            Medi<span className="text-coral-deep">Host</span>{" "}
+            <span className="text-[13px] text-text-muted">AI</span>
           </div>
-          <div className="text-[11px] text-gray-500">AI marketing platform for healthcare</div>
+          <div className="text-[11px] text-text-muted">AI marketing platform for healthcare</div>
         </div>
       </div>
 
@@ -147,7 +147,7 @@ export default function SignupPage() {
         {channels.map((ch) => (
           <span
             key={ch.name}
-            className="flex h-[26px] items-center gap-1.5 rounded-full border border-[#1f2e28] bg-[#111916] px-2.5 text-[11px] text-gray-500"
+            className="flex h-[26px] items-center gap-1.5 rounded-full border border-[#1f2e28] bg-[#111916] px-2.5 text-[11px] text-text-muted"
           >
             <span className="h-[7px] w-[7px] rounded-full" style={{ background: ch.color }} />
             {ch.name}
@@ -156,8 +156,8 @@ export default function SignupPage() {
       </div>
 
       {/* Title */}
-      <h1 className="mb-1.5 text-[21px] font-medium text-[#f0fdf4]">Start free</h1>
-      <p className="mb-6 text-[12px] leading-relaxed text-gray-400">
+      <h1 className="mb-1.5 text-[28px] font-fraunces font-light tracking-tight text-ink">Start <em className="italic text-coral-deep font-normal">free</em></h1>
+      <p className="mb-6 text-[12px] leading-relaxed text-text-muted">
         AI runs your {terminologyClinic}&apos;s marketing across every channel. Website, social, reviews, WhatsApp — all on autopilot.
       </p>
 
@@ -171,7 +171,7 @@ export default function SignupPage() {
       <form onSubmit={onSubmit} className="space-y-4">
         {/* Clinic/Practice name */}
         <div>
-          <label className="mb-1 block text-[11px] uppercase tracking-wider text-gray-500">
+          <label className="mb-1 block text-[11px] uppercase tracking-wider text-text-muted">
             {terminologyClinic} name
           </label>
           <input
@@ -188,7 +188,7 @@ export default function SignupPage() {
 
         {/* Email */}
         <div>
-          <label className="mb-1 block text-[11px] uppercase tracking-wider text-gray-500">Email</label>
+          <label className="mb-1 block text-[11px] uppercase tracking-wider text-text-muted">Email</label>
           <input
             type="email"
             className={`${inputCls} ${errors.email && touched.email ? inputErr : inputOk}`}
@@ -204,13 +204,13 @@ export default function SignupPage() {
 
         {/* Phone with prefix picker */}
         <div>
-          <label className="mb-1 block text-[11px] uppercase tracking-wider text-gray-500">Phone</label>
+          <label className="mb-1 block text-[11px] uppercase tracking-wider text-text-muted">Phone</label>
           <div className="relative flex gap-2">
             <div ref={pickerRef} className="relative">
               <button
                 type="button"
                 onClick={() => setShowPrefixPicker(!showPrefixPicker)}
-                className="flex h-[42px] w-[72px] items-center justify-center gap-1 rounded-lg border border-[#1f2e28] bg-[#111916] text-[12px] text-gray-400 hover:border-emerald-500 transition"
+                className="flex h-[42px] w-[72px] items-center justify-center gap-1 rounded-lg border border-[#1f2e28] bg-[#111916] text-[12px] text-text-muted hover:border-coral transition"
               >
                 {phonePrefix}
                 <span className="text-[9px] text-gray-600">&#9662;</span>
@@ -227,10 +227,10 @@ export default function SignupPage() {
                         setShowPrefixPicker(false);
                       }}
                       className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px] transition hover:bg-[#1f2e28] ${
-                        phonePrefix === p.code ? "text-emerald-400" : "text-gray-400"
+                        phonePrefix === p.code ? "text-coral-deep" : "text-text-muted"
                       }`}
                     >
-                      <span className="flex h-5 w-5 items-center justify-center rounded bg-[#1f2e28] text-[9px] font-medium text-gray-500">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-[#1f2e28] text-[9px] font-medium text-text-muted">
                         {p.flag}
                       </span>
                       <span className="flex-1">{p.country}</span>
@@ -255,7 +255,7 @@ export default function SignupPage() {
 
         {/* Password */}
         <div>
-          <label className="mb-1 block text-[11px] uppercase tracking-wider text-gray-500">Password</label>
+          <label className="mb-1 block text-[11px] uppercase tracking-wider text-text-muted">Password</label>
           <div className="relative">
             <input
               type={showPw ? "text" : "password"}
@@ -282,7 +282,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          className="flex h-[46px] w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 text-[15px] font-medium text-[#064e3b] transition disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-[46px] w-full items-center justify-center gap-2 rounded-lg bg-coral text-[15px] font-medium text-[#064e3b] transition disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? (
             <>
@@ -305,21 +305,21 @@ export default function SignupPage() {
       {/* Google */}
       <button
         onClick={() => showToast("Google login coming soon", "info")}
-        className="relative flex h-[42px] w-full items-center justify-center gap-2 rounded-lg border border-[#1f2e28] bg-[#111916] text-[13px] text-gray-400 transition hover:border-[#2a3f35]"
+        className="relative flex h-[42px] w-full items-center justify-center gap-2 rounded-lg border border-[#1f2e28] bg-[#111916] text-[13px] text-text-muted transition hover:border-[#2a3f35]"
       >
-        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#1f2e28] text-[11px] font-bold text-gray-400">
+        <span className="flex h-5 w-5 items-center justify-center rounded-full border border-[#1f2e28] text-[11px] font-bold text-text-muted">
           G
         </span>
         Continue with Google
-        <span className="absolute -top-[7px] right-[10px] rounded bg-[#1f2e28] px-1.5 text-[9px] text-gray-500">
+        <span className="absolute -top-[7px] right-[10px] rounded bg-[#1f2e28] px-1.5 text-[9px] text-text-muted">
           soon
         </span>
       </button>
 
       {/* Footer link */}
-      <p className="mt-5 text-center text-[12px] text-gray-500">
+      <p className="mt-5 text-center text-[12px] text-text-muted">
         Already have an account?{" "}
-        <a href="/login" className="text-emerald-500 hover:underline">
+        <a href="/login" className="text-coral hover:underline">
           Log in
         </a>
       </p>
@@ -328,7 +328,7 @@ export default function SignupPage() {
       <div className="mt-4 flex items-center justify-center gap-4">
         {badges.map((t) => (
           <span key={t} className="flex items-center gap-1 text-[10px] text-gray-600">
-            <span className="h-1 w-1 rounded-full bg-emerald-500" />
+            <span className="h-1 w-1 rounded-full bg-coral" />
             {t}
           </span>
         ))}
