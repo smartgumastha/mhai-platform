@@ -49,6 +49,7 @@ var navGroups = [
       { name: "Brand DNA", href: "/dashboard/brand" },
       { name: "Connections", href: "/dashboard/connections" },
       { name: "Analytics", href: "/dashboard/analytics" },
+      { name: "Billing preferences", href: "/dashboard/settings/billing-preferences" },
     ],
   },
 ];
