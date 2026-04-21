@@ -211,7 +211,7 @@ export default function MhaiPayPage() {
   });
 
   var inputClass =
-    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
+    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-ink transition-all duration-200 focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20";
 
   /* ══════════════════════════════════════════════════
      STATE 2: Success — show payment link + share
@@ -221,28 +221,28 @@ export default function MhaiPayPage() {
       <div className="px-8 py-6">
         <div className="mx-auto max-w-lg">
           {/* Success card */}
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-sm">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 shadow-md">
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-accent/10 p-6 text-center shadow-sm">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-coral shadow-md">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
             </div>
-            <div className="mb-1 text-2xl font-semibold text-gray-900">
+            <div className="mb-1 text-2xl font-semibold text-ink">
               {currency.format(Number(created.amount))}
             </div>
-            <div className="text-sm text-gray-700">{created.patient_name}</div>
-            <div className="text-xs text-gray-500">{created.purpose}</div>
+            <div className="text-sm text-ink">{created.patient_name}</div>
+            <div className="text-xs text-text-muted">{created.purpose}</div>
           </div>
 
           {/* QR Code */}
           <div className="mt-5 rounded-2xl border border-gray-100 bg-white p-5 text-center shadow-sm">
-            <div className="mb-2 text-xs font-medium text-gray-500">Scan to pay</div>
+            <div className="mb-2 text-xs font-medium text-text-muted">Scan to pay</div>
             <QRCode url={created.short_url} />
           </div>
 
           {/* Payment link + copy */}
           <div className="mt-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            <div className="mb-1 text-xs text-gray-500">Payment link</div>
+            <div className="mb-1 text-xs text-text-muted">Payment link</div>
             <div className="flex items-center gap-2">
-              <div className="flex-1 truncate rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-700">
+              <div className="flex-1 truncate rounded-md bg-paper px-3 py-2 text-xs text-ink">
                 {created.short_url}
               </div>
               <button
@@ -260,37 +260,37 @@ export default function MhaiPayPage() {
               href={"https://wa.me/" + (created.patient_phone.startsWith("+") ? created.patient_phone.slice(1) : normalizePhone(created.patient_phone, ((localeV2 && localeV2.phone && localeV2.phone.country_code) || "+91")).replace("+", "")) + "?text=" + whatsappMsg}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-200 hover:border-emerald-300 hover:shadow-md"
+              className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-200 hover:border-coral hover:shadow-md"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#25D366] text-sm font-bold text-white">W</div>
-              <span className="text-[10px] text-gray-600">WhatsApp</span>
+              <span className="text-[10px] text-text-dim">WhatsApp</span>
             </a>
             <a
               href={"sms:" + created.patient_phone + "?body=" + smsBody}
               className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-200 hover:border-blue-300 hover:shadow-md"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500 text-sm font-bold text-white">S</div>
-              <span className="text-[10px] text-gray-600">SMS</span>
+              <span className="text-[10px] text-text-dim">SMS</span>
             </a>
             <a
               href={"mailto:?subject=" + emailSubject + "&body=" + emailBody}
               className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-200 hover:border-purple-300 hover:shadow-md"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-500 text-sm font-bold text-white">E</div>
-              <span className="text-[10px] text-gray-600">Email</span>
+              <span className="text-[10px] text-text-dim">Email</span>
             </a>
             <button
               onClick={function() { window.print(); }}
               className="flex cursor-pointer flex-col items-center gap-1 rounded-xl border border-gray-100 bg-white p-3 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md"
             >
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-700 text-sm font-bold text-white">P</div>
-              <span className="text-[10px] text-gray-600">Print</span>
+              <span className="text-[10px] text-text-dim">Print</span>
             </button>
           </div>
 
           {/* Payment details */}
           <div className="mt-3 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-            <div className="mb-2 text-xs font-medium text-gray-500">Payment details</div>
+            <div className="mb-2 text-xs font-medium text-text-muted">Payment details</div>
             {[
               { label: "Patient", value: created.patient_name },
               { label: "Phone", value: created.patient_phone },
@@ -301,8 +301,8 @@ export default function MhaiPayPage() {
             ].map(function(d) {
               return (
                 <div key={d.label} className="flex items-center justify-between border-b border-gray-50 py-1.5">
-                  <span className="text-[11px] text-gray-500">{d.label}</span>
-                  <span className="text-[11px] font-medium text-gray-900">{d.value}</span>
+                  <span className="text-[11px] text-text-muted">{d.label}</span>
+                  <span className="text-[11px] font-medium text-ink">{d.value}</span>
                 </div>
               );
             })}
@@ -311,7 +311,7 @@ export default function MhaiPayPage() {
           {/* Create another */}
           <button
             onClick={resetForm}
-            className="mt-4 w-full cursor-pointer rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-gray-700 shadow-sm transition-all duration-200 hover:border-emerald-500 hover:text-emerald-600"
+            className="mt-4 w-full cursor-pointer rounded-xl border border-gray-200 bg-white py-3 text-sm font-medium text-ink shadow-sm transition-all duration-200 hover:border-coral hover:text-coral-deep"
           >
             Create another payment link
           </button>
@@ -327,31 +327,31 @@ export default function MhaiPayPage() {
     <div className="px-8 py-6">
       {/* Header */}
       <div className="mb-5">
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">MHAI Pay</h1>
-        <p className="mt-0.5 text-sm text-gray-500">Send payment links to patients via WhatsApp, SMS, or QR code</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">MHAI Pay</h1>
+        <p className="mt-0.5 text-sm text-text-muted">Send payment links to patients via WhatsApp, SMS, or QR code</p>
       </div>
 
       {/* Stats bar */}
       <div className="mb-5 grid grid-cols-3 gap-3">
         <div className="rounded-2xl border border-gray-100 border-t-2 border-t-emerald-500 bg-white p-4 shadow-sm">
-          <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">Collected MTD</div>
-          <div className="mt-1 text-2xl font-semibold text-gray-900">
+          <div className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Collected MTD</div>
+          <div className="mt-1 text-2xl font-semibold text-ink">
             {currency.formatCompact(collectedMtd)}
           </div>
-          <span className="mt-1 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
+          <span className="mt-1 inline-block rounded-full bg-emerald-accent/10 px-2 py-0.5 text-[10px] font-medium text-coral-deep">
             {paidCount} paid
           </span>
         </div>
         <div className="rounded-2xl border border-gray-100 border-t-2 border-t-blue-500 bg-white p-4 shadow-sm">
-          <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">Links sent</div>
-          <div className="mt-1 text-2xl font-semibold text-gray-900">{linksSent}</div>
+          <div className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Links sent</div>
+          <div className="mt-1 text-2xl font-semibold text-ink">{linksSent}</div>
           <span className="mt-1 inline-block rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-600">
             this month
           </span>
         </div>
         <div className="rounded-2xl border border-gray-100 border-t-2 border-t-purple-500 bg-white p-4 shadow-sm">
-          <div className="text-[10px] font-medium uppercase tracking-wider text-gray-400">Collection rate</div>
-          <div className="mt-1 text-2xl font-semibold text-gray-900">{collectionRate}%</div>
+          <div className="text-[10px] font-medium uppercase tracking-wider text-text-muted">Collection rate</div>
+          <div className="mt-1 text-2xl font-semibold text-ink">{collectionRate}%</div>
           <span className="mt-1 inline-block rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-medium text-purple-600">
             {paidCount}/{linksSent} converted
           </span>
@@ -376,15 +376,15 @@ export default function MhaiPayPage() {
                   className={
                     "cursor-pointer pb-2 pr-5 text-sm transition-all duration-200 " +
                     (filter === t.id
-                      ? "border-b-2 border-emerald-500 font-medium text-gray-900"
-                      : "text-gray-400 hover:text-gray-600")
+                      ? "border-b-2 border-coral font-medium text-ink"
+                      : "text-text-muted hover:text-text-dim")
                   }
                 >
                   {t.label}
                   <span
                     className={
                       "ml-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-medium " +
-                      (t.id === "pending" && count > 0 ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-gray-500")
+                      (t.id === "pending" && count > 0 ? "bg-amber-50 text-amber-600" : "bg-gray-100 text-text-muted")
                     }
                   >
                     {count}
@@ -397,14 +397,14 @@ export default function MhaiPayPage() {
           {/* Payment list */}
           {loadingList ? (
             <div className="flex min-h-[20vh] items-center justify-center">
-              <div className="text-sm text-gray-400">Loading payments...</div>
+              <div className="text-sm text-text-muted">Loading payments...</div>
             </div>
           ) : filteredPayments.length === 0 ? (
-            <div className="flex min-h-[20vh] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 text-center">
-              <div className="mb-1 text-sm font-medium text-gray-700">
+            <div className="flex min-h-[20vh] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-paper text-center">
+              <div className="mb-1 text-sm font-medium text-ink">
                 {filter === "pending" ? "No pending payments" : filter === "paid" ? "No paid payments yet" : "No payment links yet"}
               </div>
-              <p className="text-xs text-gray-500">Create your first payment link to get started</p>
+              <p className="text-xs text-text-muted">Create your first payment link to get started</p>
             </div>
           ) : (
             filteredPayments.map(function(p) {
@@ -415,19 +415,19 @@ export default function MhaiPayPage() {
                   className="mb-2 flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md"
                 >
                   <div className="flex-1">
-                    <div className="text-[13px] font-medium text-gray-900">{p.patient_name}</div>
-                    <div className="mt-0.5 text-[11px] text-gray-500">
+                    <div className="text-[13px] font-medium text-ink">{p.patient_name}</div>
+                    <div className="mt-0.5 text-[11px] text-text-muted">
                       {p.purpose}{p.created_at ? " \u00B7 " + formatDate(p.created_at) : ""}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-semibold text-gray-900">
+                    <div className="text-sm font-semibold text-ink">
                       {currency.format(Number(p.amount))}
                     </div>
                     <span
                       className={
                         "mt-0.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-medium " +
-                        (isPaid ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600")
+                        (isPaid ? "bg-emerald-accent/10 text-coral-deep" : "bg-amber-50 text-amber-600")
                       }
                     >
                       {isPaid ? "Paid" : "Pending"}
@@ -442,11 +442,11 @@ export default function MhaiPayPage() {
         {/* RIGHT — Create payment link form */}
         <div>
           <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <div className="mb-1 text-sm font-medium text-gray-900">Create payment link</div>
-            <div className="mb-4 text-[11px] text-gray-500">Send via WhatsApp, SMS, or QR code</div>
+            <div className="mb-1 text-sm font-medium text-ink">Create payment link</div>
+            <div className="mb-4 text-[11px] text-text-muted">Send via WhatsApp, SMS, or QR code</div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">Patient name</label>
+              <label className="mb-1 block text-xs text-text-muted">Patient name</label>
               <input
                 className={inputClass}
                 placeholder="e.g. Rajesh Kumar"
@@ -456,7 +456,7 @@ export default function MhaiPayPage() {
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">Phone number</label>
+              <label className="mb-1 block text-xs text-text-muted">Phone number</label>
               <input
                 className={inputClass}
                 placeholder="e.g. 9553053446"
@@ -466,9 +466,9 @@ export default function MhaiPayPage() {
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">Amount</label>
+              <label className="mb-1 block text-xs text-text-muted">Amount</label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">{currency.symbol}</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-text-muted">{currency.symbol}</span>
                 <input
                   className={inputClass + " pl-7"}
                   type="number"
@@ -481,7 +481,7 @@ export default function MhaiPayPage() {
             </div>
 
             <div className="mb-4">
-              <label className="mb-1 block text-xs text-gray-500">Purpose</label>
+              <label className="mb-1 block text-xs text-text-muted">Purpose</label>
               <select
                 className={inputClass}
                 value={purpose}
@@ -494,7 +494,7 @@ export default function MhaiPayPage() {
             <button
               onClick={handleCreate}
               disabled={creating}
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-coral py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-coral-deep hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
             >
               {creating ? "Creating..." : "Create payment link"}
             </button>

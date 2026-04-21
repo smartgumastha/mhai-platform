@@ -171,8 +171,8 @@ function PillSelector({
             onClick={() => onToggle(item)}
             className={`cursor-pointer rounded-md px-3 py-1.5 text-xs transition-all duration-200 ${
               on
-                ? "bg-emerald-500 text-white shadow-sm"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-coral text-white shadow-sm"
+                : "bg-gray-100 text-ink hover:bg-gray-200"
             }`}
           >
             {item}
@@ -180,7 +180,7 @@ function PillSelector({
         );
       })}
       {addLabel && (
-        <button className="cursor-pointer rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs text-gray-500 transition-all duration-200 hover:border-gray-400 hover:text-gray-600">
+        <button className="cursor-pointer rounded-md border border-dashed border-gray-300 px-3 py-1.5 text-xs text-text-muted transition-all duration-200 hover:border-gray-400 hover:text-text-dim">
           {addLabel}
         </button>
       )}
@@ -266,17 +266,17 @@ export default function BrandDNAPage() {
   if (!loaded) return null;
 
   var inputClass =
-    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-900 transition-all duration-200 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20";
+    "w-full rounded-md border border-gray-200 px-3 py-2 text-sm text-ink transition-all duration-200 focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/20";
 
   return (
     <div className="px-8 py-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-medium tracking-tight text-gray-900">
+          <h1 className="text-xl font-medium tracking-tight text-ink">
             Brand DNA
           </h1>
-          <p className="mt-0.5 text-sm text-gray-500">
+          <p className="mt-0.5 text-sm text-text-muted">
             Teach your AI engine who you are — it uses this for every piece of
             content it creates
           </p>
@@ -284,24 +284,24 @@ export default function BrandDNAPage() {
         <button
           onClick={save}
           disabled={saving}
-          className="cursor-pointer rounded-md bg-emerald-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-emerald-600 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          className="cursor-pointer rounded-md bg-coral px-4 py-2 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-coral-deep hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? "Saving…" : "Save changes"}
         </button>
       </div>
 
       {/* Completeness banner */}
-      <div className="mt-4 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-3 shadow-sm">
+      <div className="mt-4 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-accent/10 p-3 shadow-sm">
         <div>
           <div className="text-xs font-medium text-emerald-800">
             Brand DNA completeness: {completeness}%
           </div>
-          <div className="text-[11px] text-emerald-700">
+          <div className="text-[11px] text-coral-deep">
             Complete all sections to unlock full AI personalization
           </div>
         </div>
         <div className="h-2 w-28 rounded-full bg-emerald-100">
-          <div className="h-full rounded-full bg-emerald-500" style={{ width: completeness + "%" }} />
+          <div className="h-full rounded-full bg-coral" style={{ width: completeness + "%" }} />
         </div>
       </div>
 
@@ -311,15 +311,15 @@ export default function BrandDNAPage() {
         <div className="flex flex-col gap-4">
           {/* Card 1: Clinic identity */}
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
-            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
+            <div className="mb-1 text-sm font-medium tracking-tight text-ink">
               Clinic identity
             </div>
-            <div className="mb-3 text-[11px] text-gray-500">
+            <div className="mb-3 text-[11px] text-text-muted">
               Core info used across all channels
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">
+              <label className="mb-1 block text-xs text-text-muted">
                 Clinic name
               </label>
               <input
@@ -329,7 +329,7 @@ export default function BrandDNAPage() {
               />
             </div>
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">
+              <label className="mb-1 block text-xs text-text-muted">
                 Tagline
               </label>
               <input
@@ -341,7 +341,7 @@ export default function BrandDNAPage() {
             </div>
             <div className="mb-3 grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs text-gray-500">
+                <label className="mb-1 block text-xs text-text-muted">
                   Phone
                 </label>
                 <input
@@ -351,7 +351,7 @@ export default function BrandDNAPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-500">
+                <label className="mb-1 block text-xs text-text-muted">
                   Email
                 </label>
                 <input
@@ -362,7 +362,7 @@ export default function BrandDNAPage() {
               </div>
             </div>
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">
+              <label className="mb-1 block text-xs text-text-muted">
                 Address
               </label>
               <textarea
@@ -373,16 +373,16 @@ export default function BrandDNAPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-gray-500">Logo</label>
+              <label className="mb-1 block text-xs text-text-muted">Logo</label>
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-[11px] text-gray-400">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-paper text-[11px] text-text-muted">
                   KP
                 </div>
-                <button className="cursor-pointer rounded border border-gray-300 px-3 py-1 text-[11px] text-gray-700 transition-all duration-200 hover:bg-gray-50">
+                <button className="cursor-pointer rounded border border-gray-300 px-3 py-1 text-[11px] text-ink transition-all duration-200 hover:bg-paper">
                   Upload logo
                 </button>
-                <span className="text-[11px] text-gray-400">or</span>
-                <button className="cursor-pointer rounded border border-emerald-500 bg-emerald-50 px-3 py-1 text-[11px] text-emerald-700 transition-all duration-200 hover:bg-emerald-100">
+                <span className="text-[11px] text-text-muted">or</span>
+                <button className="cursor-pointer rounded border border-coral bg-emerald-accent/10 px-3 py-1 text-[11px] text-coral-deep transition-all duration-200 hover:bg-emerald-100">
                   AI generate logo
                 </button>
               </div>
@@ -391,14 +391,14 @@ export default function BrandDNAPage() {
 
           {/* Card 2: Brand colors */}
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
-            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
+            <div className="mb-1 text-sm font-medium tracking-tight text-ink">
               Brand colors
             </div>
-            <div className="mb-3 text-[11px] text-gray-500">
+            <div className="mb-3 text-[11px] text-text-muted">
               Used in website, social posts, and print materials
             </div>
 
-            <label className="mb-1 block text-xs text-gray-500">
+            <label className="mb-1 block text-xs text-text-muted">
               Primary color
             </label>
             <div className="flex items-center gap-2">
@@ -414,7 +414,7 @@ export default function BrandDNAPage() {
                   style={{ background: c.hex }}
                 />
               ))}
-              <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-dashed border-gray-300 text-sm text-gray-400 transition-all duration-200 hover:border-gray-400">
+              <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-dashed border-gray-300 text-sm text-text-muted transition-all duration-200 hover:border-gray-400">
                 +
               </button>
             </div>
@@ -445,10 +445,10 @@ export default function BrandDNAPage() {
 
           {/* Card 3: Tone of voice */}
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
-            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
+            <div className="mb-1 text-sm font-medium tracking-tight text-ink">
               Tone of voice
             </div>
-            <div className="mb-3 text-[11px] text-gray-500">
+            <div className="mb-3 text-[11px] text-text-muted">
               How your AI sounds when it writes for you
             </div>
 
@@ -459,8 +459,8 @@ export default function BrandDNAPage() {
                   onClick={() => update("tone", t)}
                   className={`cursor-pointer rounded-md px-3 py-1.5 text-xs transition-all duration-200 ${
                     data.tone === t
-                      ? "bg-emerald-500 text-white shadow-sm"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-coral text-white shadow-sm"
+                      : "bg-gray-100 text-ink hover:bg-gray-200"
                   }`}
                 >
                   {t}
@@ -469,7 +469,7 @@ export default function BrandDNAPage() {
             </div>
 
             <div className="mt-3">
-              <label className="mb-1 block text-xs text-gray-500">
+              <label className="mb-1 block text-xs text-text-muted">
                 Custom voice notes
               </label>
               <textarea
@@ -481,11 +481,11 @@ export default function BrandDNAPage() {
               />
             </div>
 
-            <div className="mt-3 rounded-lg border-l-2 border-emerald-500 bg-gray-50 p-3">
-              <div className="mb-1 text-[11px] text-gray-500">
+            <div className="mt-3 rounded-lg border-l-2 border-coral bg-paper p-3">
+              <div className="mb-1 text-[11px] text-text-muted">
                 AI preview — Google review reply in your voice:
               </div>
-              <div className="text-xs leading-relaxed text-gray-900">
+              <div className="text-xs leading-relaxed text-ink">
                 &ldquo;Thank you for trusting Kamakya Physiotherapy, Priya!
                 We&apos;re glad the evidence-based approach helped with your
                 recovery. Looking forward to your next milestone. — Team
@@ -499,15 +499,15 @@ export default function BrandDNAPage() {
         <div className="flex flex-col gap-4">
           {/* Card 4: Specialties + services */}
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
-            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
+            <div className="mb-1 text-sm font-medium tracking-tight text-ink">
               Specialties + services
             </div>
-            <div className="mb-3 text-[11px] text-gray-500">
+            <div className="mb-3 text-[11px] text-text-muted">
               Used for SEO, ad targeting, and content generation
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-xs text-gray-500">
+              <label className="mb-1 block text-xs text-text-muted">
                 Primary specialty
               </label>
               <select
@@ -523,7 +523,7 @@ export default function BrandDNAPage() {
               </select>
             </div>
 
-            <label className="mb-1 block text-xs text-gray-500">
+            <label className="mb-1 block text-xs text-text-muted">
               Services
             </label>
             <PillSelector
@@ -533,11 +533,11 @@ export default function BrandDNAPage() {
               addLabel="＋ Add custom"
             />
 
-            <div className="mt-3 rounded-lg bg-gray-50 p-2">
-              <div className="text-[11px] text-gray-500">
+            <div className="mt-3 rounded-lg bg-paper p-2">
+              <div className="text-[11px] text-text-muted">
                 AI-generated SEO keywords (auto-updated)
               </div>
-              <div className="mt-1 text-[11px] leading-relaxed text-gray-500">
+              <div className="mt-1 text-[11px] leading-relaxed text-text-muted">
                 physiotherapy Hyderabad | sports physio Banjara Hills | back pain
                 specialist near me | knee rehab Hyderabad | post surgery
                 physiotherapy | best physio clinic Hyderabad
@@ -547,40 +547,40 @@ export default function BrandDNAPage() {
 
           {/* Card 5: Doctor profiles */}
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
-            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
+            <div className="mb-1 text-sm font-medium tracking-tight text-ink">
               Doctor profiles
             </div>
-            <div className="mb-3 text-[11px] text-gray-500">
+            <div className="mb-3 text-[11px] text-text-muted">
               Featured in website, social posts, and Google profile
             </div>
 
-            <div className="mb-2 flex items-center gap-3 rounded-lg bg-gray-50 p-2.5 transition-all duration-200 hover:shadow-sm">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-sm font-medium text-white shadow-sm">
+            <div className="mb-2 flex items-center gap-3 rounded-lg bg-paper p-2.5 transition-all duration-200 hover:shadow-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-coral text-sm font-medium text-white shadow-sm">
                 SK
               </div>
               <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900">
+                <div className="text-sm font-medium text-ink">
                   Dr. Sai Kumar
                 </div>
-                <div className="text-[11px] text-gray-500">
+                <div className="text-[11px] text-text-muted">
                   BPT, MPT Ortho | 8 years exp.
                 </div>
               </div>
-              <button className="cursor-pointer rounded border border-gray-300 px-2.5 py-1 text-[11px] text-gray-700 transition-all duration-200 hover:bg-gray-100">
+              <button className="cursor-pointer rounded border border-gray-300 px-2.5 py-1 text-[11px] text-ink transition-all duration-200 hover:bg-gray-100">
                 Edit
               </button>
             </div>
-            <button className="w-full cursor-pointer rounded-md border border-dashed border-gray-300 py-2 text-xs text-gray-500 transition-all duration-200 hover:border-gray-400 hover:text-gray-600">
+            <button className="w-full cursor-pointer rounded-md border border-dashed border-gray-300 py-2 text-xs text-text-muted transition-all duration-200 hover:border-gray-400 hover:text-text-dim">
               ＋ Add doctor profile
             </button>
           </div>
 
           {/* Card 6: Languages */}
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
-            <div className="mb-1 text-sm font-medium tracking-tight text-gray-900">
+            <div className="mb-1 text-sm font-medium tracking-tight text-ink">
               Languages
             </div>
-            <div className="mb-3 text-[11px] text-gray-500">
+            <div className="mb-3 text-[11px] text-text-muted">
               AI generates content in these languages
             </div>
             <PillSelector
@@ -593,18 +593,18 @@ export default function BrandDNAPage() {
           {/* Card 7: Compliance + accreditations */}
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
             <div className="mb-1 flex items-center gap-2">
-              <span className="text-sm font-medium tracking-tight text-gray-900">
+              <span className="text-sm font-medium tracking-tight text-ink">
                 Compliance + accreditations
               </span>
               <span className="rounded bg-purple-600 px-2 py-0.5 text-[9px] font-medium text-white">
                 Intelligence
               </span>
             </div>
-            <div className="mb-3 text-[11px] text-gray-500">
+            <div className="mb-3 text-[11px] text-text-muted">
               AI avoids prohibited claims and adds required disclaimers
             </div>
 
-            <label className="mb-1 block text-xs text-gray-500">
+            <label className="mb-1 block text-xs text-text-muted">
               Accreditations
             </label>
             <div className="flex flex-wrap gap-2">
@@ -616,8 +616,8 @@ export default function BrandDNAPage() {
                     onClick={() => toggleList("accreditations", a)}
                     className={`cursor-pointer rounded-md border px-3 py-1.5 text-xs transition-all duration-200 ${
                       on
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm"
-                        : "border-gray-200 bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "border-coral bg-emerald-accent/10 text-coral-deep shadow-sm"
+                        : "border-gray-200 bg-gray-100 text-ink hover:bg-gray-200"
                     }`}
                   >
                     {a}
@@ -627,7 +627,7 @@ export default function BrandDNAPage() {
             </div>
 
             <div className="mt-3">
-              <label className="mb-1 block text-xs text-gray-500">
+              <label className="mb-1 block text-xs text-text-muted">
                 Ad compliance ruleset
               </label>
               <select
@@ -647,14 +647,14 @@ export default function BrandDNAPage() {
           {/* Card 8: Insurance panels */}
           <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md">
             <div className="mb-1 flex items-center gap-2">
-              <span className="text-sm font-medium tracking-tight text-gray-900">
+              <span className="text-sm font-medium tracking-tight text-ink">
                 Insurance panels
               </span>
               <span className="rounded bg-blue-600 px-2 py-0.5 text-[9px] font-medium text-white">
                 HMS
               </span>
             </div>
-            <div className="mb-3 text-[11px] text-gray-500">
+            <div className="mb-3 text-[11px] text-text-muted">
               Displayed on website and used in patient communications
             </div>
             <PillSelector

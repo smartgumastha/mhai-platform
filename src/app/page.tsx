@@ -18,7 +18,7 @@ function WebPreview() {
       <div className="flex items-center gap-1"><span className="h-1 w-1 rounded-full bg-emerald-400" /> Home</div>
       <div className="flex items-center gap-1"><span className="h-1 w-1 rounded-full bg-emerald-400" /> About</div>
       <div className="flex items-center gap-1"><span className="h-1 w-1 rounded-full bg-emerald-400" /> Services</div>
-      <div className="mt-1 flex items-center gap-1 text-emerald-400"><GoogleIcon size={10} /> SEO: 94/100</div>
+      <div className="mt-1 flex items-center gap-1 text-coral"><GoogleIcon size={10} /> SEO: 94/100</div>
     </div>
   );
 }
@@ -27,7 +27,7 @@ function ChatPreview() {
   return (
     <div className="space-y-1.5">
       <div className="rounded bg-white/10 px-2 py-1 text-[10px]">Hi, I need an appointment</div>
-      <div className="rounded bg-emerald-500/30 px-2 py-1 text-[10px] text-emerald-200">Sure! Dr. Shah has slots tomorrow at 10 AM and 4 PM. Which works?</div>
+      <div className="rounded bg-coral/30 px-2 py-1 text-[10px] text-coral">Sure! Dr. Shah has slots tomorrow at 10 AM and 4 PM. Which works?</div>
       <div className="flex gap-1">{[0,1,2].map(i=><span key={i} className="h-1 w-1 rounded-full bg-emerald-400" style={{animation:`typeDots 1.4s infinite ${i*0.2}s`}}/>)}</div>
     </div>
   );
@@ -73,7 +73,7 @@ function VoicePreview() {
 function CoachPreview() {
   return (
     <div className="text-[10px]">
-      <div className="flex items-center justify-between"><span className="text-white/70">Priya</span><span className="text-emerald-400 font-bold">91</span></div>
+      <div className="flex items-center justify-between"><span className="text-white/70">Priya</span><span className="text-coral font-bold">91</span></div>
       <div className="h-1.5 rounded-full bg-white/10 mt-1"><div className="h-full rounded-full bg-emerald-400" style={{width:"91%"}}/></div>
     </div>
   );
@@ -92,7 +92,7 @@ function ReactivatePreview() {
   return (
     <div className="text-[10px] space-y-0.5">
       <div className="text-white/60">Dormant <span className="text-amber-400 font-bold">847</span></div>
-      <div className="text-white/60">Booked <span className="text-emerald-400 font-bold">+₹2.8L</span></div>
+      <div className="text-white/60">Booked <span className="text-coral font-bold">+₹2.8L</span></div>
     </div>
   );
 }
@@ -131,12 +131,12 @@ const W = {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0F1117]">
+    <div className="min-h-screen bg-paper">
       {/* ═══ ACT 1: HERO ═══ */}
       <CosmicStage className="px-6 py-20 md:py-24">
         <div className="mx-auto max-w-4xl text-center">
           {/* Badge */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/5 border border-line px-3 py-1">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-[11px] text-white/60">847 clinics launched this month</span>
           </div>
@@ -186,7 +186,7 @@ export default function LandingPage() {
       <CosmicStage className="px-6 py-16">
         <div className="mx-auto max-w-5xl">
           <div className="text-center mb-10">
-            <span className="inline-block rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] uppercase tracking-wider text-white/60 mb-4">Clara&apos;s arsenal</span>
+            <span className="inline-block rounded-full bg-white/10 border border-line px-3 py-1 text-[10px] uppercase tracking-wider text-white/60 mb-4">Clara&apos;s arsenal</span>
             <h2 className="text-3xl md:text-4xl font-medium text-white mb-2">Eleven weapons. One assistant.</h2>
             <p className="gradient-text-hero text-lg">Every weapon, officially integrated.</p>
           </div>
@@ -205,7 +205,7 @@ export default function LandingPage() {
             <WeaponCard number="11" label="Compliance" title="Auto DND + consent" accent="#E24B4A" accentDark="#501313" accentLight="#F7C1C1" icon={<Shield size={13}/>} preview={<CompliancePreview/>} footer="DND · Time · Consent" delay={10}/>
             {/* ALL ELEVEN card */}
             <WeaponCard number="" label="" title="ALL ELEVEN" accent="#5DCAA5" accentDark="#5DCAA5" accentLight="#AFA9EC" icon={<Zap size={13}/>} gradient
-              preview={<div className="text-center"><span className="gradient-text-hero text-2xl font-bold">{"₹"}2,999</span><p className="text-[10px] text-white/50 mt-1">per month</p><span className="inline-block mt-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] text-emerald-300">Save {"₹"}2.9L/mo</span></div>}
+              preview={<div className="text-center"><span className="gradient-text-hero text-2xl font-bold">{"₹"}2,999</span><p className="text-[10px] text-white/50 mt-1">per month</p><span className="inline-block mt-1 rounded-full bg-coral/20 px-2 py-0.5 text-[9px] text-coral">Save {"₹"}2.9L/mo</span></div>}
               footer="" delay={11}/>
           </div>
         </div>
@@ -215,8 +215,8 @@ export default function LandingPage() {
       <section className="bg-white px-6 py-16">
         <div className="mx-auto max-w-4xl text-center">
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-[10px] text-amber-700 font-semibold mb-4">{"⭐"} Trusted integrations</span>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">The technology behind Clara</h2>
-          <p className="text-gray-500 max-w-lg mx-auto mb-8">Not fake. Not scraped. Official APIs from the companies billions of people already trust.</p>
+          <h2 className="text-3xl font-bold text-ink mb-2">The technology behind Clara</h2>
+          <p className="text-text-muted max-w-lg mx-auto mb-8">Not fake. Not scraped. Official APIs from the companies billions of people already trust.</p>
           <BrandStrip variant="trust_strip" />
 
           {/* Claude card */}
@@ -230,7 +230,7 @@ export default function LandingPage() {
               <p className="text-sm text-white/50">Same AI used by Fortune 500 companies &mdash; now speaking your clinic&apos;s language.</p>
             </div>
           </div>
-          <p className="text-[10px] text-gray-400 mt-4">All trademarks belong to their respective owners. MHAI integrates via official public APIs.</p>
+          <p className="text-[10px] text-text-muted mt-4">All trademarks belong to their respective owners. MHAI integrates via official public APIs.</p>
         </div>
       </section>
 
@@ -238,8 +238,8 @@ export default function LandingPage() {
       <section className="bg-white px-6 py-16">
         <div className="mx-auto max-w-5xl text-center">
           <span className="text-[10px] uppercase tracking-wider text-purple-600 font-semibold">Pick Clara&apos;s powers</span>
-          <h2 className="text-3xl font-bold text-gray-900 mt-2 mb-2">Every plan unlocks more weapons</h2>
-          <p className="text-gray-500 mb-10">Start free. Upgrade when Clara earns you more than the cost.</p>
+          <h2 className="text-3xl font-bold text-ink mt-2 mb-2">Every plan unlocks more weapons</h2>
+          <p className="text-text-muted mb-10">Start free. Upgrade when Clara earns you more than the cost.</p>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <PlanCard name="Starter" subtitle="For new clinics" price={"₹999"} note="" roiNote="" weaponsUnlocked={3}
@@ -258,12 +258,12 @@ export default function LandingPage() {
 
           {/* Competitor bar */}
           <div className="mt-8 rounded-xl bg-[#F8FAFC] border border-gray-100 px-6 py-4">
-            <p className="text-xs text-gray-500 mb-3">What clinics pay for these tools separately today</p>
+            <p className="text-xs text-text-muted mb-3">What clinics pay for these tools separately today</p>
             <div className="flex flex-wrap justify-center gap-2">
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-400 line-through">Practo {"₹"}15k</span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-400 line-through">Runo {"₹"}5k</span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-400 line-through">Web dev {"₹"}30k</span>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-400 line-through">Social agency {"₹"}12k</span>
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-text-muted line-through">Practo {"₹"}15k</span>
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-text-muted line-through">Runo {"₹"}5k</span>
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-text-muted line-through">Web dev {"₹"}30k</span>
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-text-muted line-through">Social agency {"₹"}12k</span>
               <span className="rounded-full px-3 py-1 text-xs font-bold text-white" style={{background:"linear-gradient(90deg,#1D9E75,#5DCAA5)"}}>MHAI Growth {"₹"}2,999</span>
             </div>
           </div>
@@ -273,8 +273,8 @@ export default function LandingPage() {
       {/* ═══ ACT 6: ROI ═══ */}
       <section className="px-6 py-16" style={{background:"linear-gradient(135deg, #E6F1FB 0%, #EEEDFE 50%, #E1F5EE 100%)"}}>
         <div className="mx-auto max-w-4xl text-center">
-          <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">The money you leave on the table</span>
-          <h2 className="text-3xl font-bold text-gray-900 mt-2 mb-8">See what Clara earns for clinics like yours</h2>
+          <span className="text-[10px] uppercase tracking-wider text-text-muted font-semibold">The money you leave on the table</span>
+          <h2 className="text-3xl font-bold text-ink mt-2 mb-8">See what Clara earns for clinics like yours</h2>
           <ROICalculator />
         </div>
       </section>
@@ -285,16 +285,16 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-[auto_1fr] rounded-2xl border border-gray-100 p-8">
             <div className="text-center md:text-left">
               <div className="mx-auto md:mx-0 flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-white" style={{background:"linear-gradient(135deg,#378ADD,#7F77DD)"}}>AS</div>
-              <p className="mt-3 font-semibold text-gray-900">Dr. Anil Sharma</p>
-              <p className="text-xs text-gray-500">Sharma Dental, Hyderabad</p>
-              <div className="flex items-center justify-center md:justify-start gap-1 mt-1"><GoogleIcon size={12}/> <span className="text-[10px] text-gray-400">4.9 · 247 reviews</span></div>
+              <p className="mt-3 font-semibold text-ink">Dr. Anil Sharma</p>
+              <p className="text-xs text-text-muted">Sharma Dental, Hyderabad</p>
+              <div className="flex items-center justify-center md:justify-start gap-1 mt-1"><GoogleIcon size={12}/> <span className="text-[10px] text-text-muted">4.9 · 247 reviews</span></div>
             </div>
             <div>
-              <p className="text-gray-600 italic leading-relaxed">
+              <p className="text-text-dim italic leading-relaxed">
                 &ldquo;I fired my social media agency and my telecaller the week MHAI launched. Clara does both better. In 60 days I added 47 new patients worth {"₹"}12.4 lakh. Paying {"₹"}2,999 a month for what used to cost me 80,000? It felt like stealing.&rdquo;
               </p>
               <div className="flex flex-wrap gap-2 mt-4">
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">+47 patients in 60 days</span>
+                <span className="rounded-full bg-emerald-accent/10 px-3 py-1 text-xs font-medium text-coral-deep">+47 patients in 60 days</span>
                 <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">+{"₹"}12.4L new revenue</span>
                 <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600">-{"₹"}80k monthly costs</span>
               </div>
@@ -316,14 +316,14 @@ export default function LandingPage() {
           </Link>
           <div className="flex flex-wrap justify-center gap-2 mt-6">
             {["No credit card","Cancel anytime","Launch in 5 min","70+ languages","Global coming May 2026"].map(t=>(
-              <span key={t} className="rounded-full bg-white/5 border border-white/10 px-3 py-1 text-[10px] text-white/50">✓ {t}</span>
+              <span key={t} className="rounded-full bg-white/5 border border-line px-3 py-1 text-[10px] text-white/50">✓ {t}</span>
             ))}
           </div>
         </div>
       </CosmicStage>
 
       {/* ═══ FOOTER ═══ */}
-      <footer className="bg-[#111318] px-6 py-12 border-t border-white/5">
+      <footer className="bg-[#111318] px-6 py-12 border-t border-line-soft">
         <div className="mx-auto max-w-4xl">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-3 mb-8">
             <div>
@@ -339,7 +339,7 @@ export default function LandingPage() {
               <div className="space-y-2"><Link href="#" className="block text-sm text-white/50 hover:text-white/70">Privacy</Link><Link href="#" className="block text-sm text-white/50 hover:text-white/70">Terms</Link><p className="text-[10px] text-white/30">Patent pending (Application 202641047349)</p></div>
             </div>
           </div>
-          <div className="border-t border-white/5 pt-6">
+          <div className="border-t border-line-soft pt-6">
             <BrandStrip variant="footer" />
             <p className="text-center text-[10px] text-white/30 mt-4">&copy; 2026 MediHost AI Technologies Pvt Ltd &middot; Made with love in Hyderabad</p>
             <p className="text-center text-[10px] text-white/20 mt-1">Clara is powered by Claude &mdash; developed by Anthropic. All other trademarks belong to their respective owners.</p>
