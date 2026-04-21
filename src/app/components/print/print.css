@@ -1,0 +1,51 @@
+/* Paper size + @media print rules for B4 invoice components */
+
+.print-paper {
+  background: white;
+  color: #1a1a1a;
+  font-family: 'Inter', system-ui, sans-serif;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  margin: 0 auto;
+}
+
+.print-paper.size-a4 {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 24mm 20mm;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.print-paper.size-a5 {
+  width: 148mm;
+  min-height: 210mm;
+  padding: 15mm 14mm;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.print-paper.size-thermal {
+  width: 80mm;
+  min-height: auto;
+  padding: 5mm 4mm;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+@media print {
+  body * { visibility: hidden; }
+  .print-paper, .print-paper * { visibility: visible; }
+  .print-paper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    box-shadow: none;
+    margin: 0;
+  }
+  @page { margin: 0; }
+  .print-paper.size-a4 { size: A4 portrait; }
+  .print-paper.size-a5 { size: A5 portrait; }
+  .print-paper.size-thermal { size: 80mm auto; }
+}

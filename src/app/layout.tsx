@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import "./components/print/print.css";
 import { Providers } from "./providers";
 import { Toast } from "@/components/toast";
 
