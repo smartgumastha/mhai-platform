@@ -138,6 +138,8 @@ export function getCurrentSubscription() {
 export function onboardComplete(data: {
   clinic_info: { name: string; city?: string; phone?: string; type?: string };
   modules?: string[];
+  country_code?: string;  // ORetrofit-1
+  regulatory_ids?: Record<string, unknown>;  // OB1
 }) {
   return api("/api/presence/onboard/complete", {
     method: "POST",

@@ -218,6 +218,7 @@ export default function OnboardingPage() {
         },
         modules: [],
         regulatory_ids: skippedStep3 ? {} : regulatoryIds,
+        country_code: country,  // ORetrofit-1: thread country from LocaleProvider to backend
       };
       var res = await onboardComplete(payload);
       if (res && (res as any).success !== false) {
