@@ -390,7 +390,7 @@ export default function AiWebsitePage() {
               <BookingWidget
                 hospitalId={hospital.hospital_id}
                 clinicName={brand?.clinicName || brand?.clinic_name || hospital.business_name || undefined}
-                clinicAddress={brand?.address || brand?.city || undefined}
+                clinicSubtitle={brand?.address || brand?.city || undefined}
               />
             ) : (
               <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-xs text-gray-500">

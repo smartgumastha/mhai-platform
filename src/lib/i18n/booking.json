@@ -1,0 +1,239 @@
+{
+  "en-IN": {
+    "tab_in_person": "In-Person",
+    "tab_teleconsult": "Teleconsult",
+    "tab_followup": "Follow-up",
+    "tab_second_opinion": "Second Opinion",
+    "tab_home_visit": "Home Visit",
+    "tab_emergency": "Emergency",
+
+    "subtext_in_person": "In-person appointment at the clinic. Standard consultation.",
+    "subtext_teleconsult": "Video, audio, or chat consultation from anywhere.",
+    "subtext_followup": "Follow-up visit with your previous doctor.",
+    "subtext_second_opinion": "Second opinion from a specialist — usually via video.",
+    "subtext_home_visit": "Doctor visits your home. Available in select areas.",
+    "subtext_emergency": "Same-day emergency slot. Please call if no confirmation in 10 minutes.",
+
+    "label_name": "Full name",
+    "label_phone": "Phone",
+    "label_date": "Preferred date",
+    "label_time": "Preferred time",
+    "label_reason": "Reason for visit",
+    "label_urgency": "How urgent is this?",
+    "reason_placeholder": "Briefly describe your concern — helps the doctor prepare",
+
+    "urgency_scheduled": "Scheduled",
+    "urgency_scheduled_sub": "planned",
+    "urgency_routine": "Routine",
+    "urgency_routine_sub": "5+ days",
+    "urgency_soon": "Soon",
+    "urgency_soon_sub": "2-5 days",
+    "urgency_urgent": "Urgent",
+    "urgency_urgent_sub": "same-day",
+
+    "consent_title": "🔒 How we'll use your information",
+    "consent_summary": "To book this appointment, we need to share your details with the clinic. Please review each purpose and choose what you're comfortable with.",
+    "consent_purpose_1_title": "Share my details with the clinic",
+    "consent_purpose_1_desc": "Your name, phone, preferred date/time and reason will be shared with the clinic so they can confirm your appointment.",
+    "consent_purpose_2_title": "Send me appointment reminders",
+    "consent_purpose_2_desc": "SMS and WhatsApp reminders 24h and 1h before your appointment. You can turn these off anytime.",
+    "consent_purpose_3_title": "Health tips and clinic updates",
+    "consent_purpose_3_desc": "Occasional health tips from the clinic and news about their services. Marketing — fully optional.",
+    "consent_required_suffix": " · required",
+    "consent_read_full": "Read full privacy notice ↓",
+    "consent_manage": "Manage your consents anytime",
+
+    "submit_confirm": "Confirm booking",
+    "submit_emergency": "Request emergency slot",
+    "submit_disabled_msg": "Accept required purpose to continue",
+    "trust_line": "DPDPA 2023 compliant · Data stored in India · End-to-end encrypted"
+  },
+
+  "ar-AE": {
+    "tab_in_person": "حضوري",
+    "tab_teleconsult": "استشارة عن بعد",
+    "tab_followup": "متابعة",
+    "tab_second_opinion": "رأي ثان",
+    "tab_home_visit": "زيارة منزلية",
+    "tab_emergency": "طوارئ",
+
+    "subtext_in_person": "موعد حضوري في العيادة. استشارة عادية.",
+    "subtext_teleconsult": "استشارة بالفيديو أو الصوت أو الدردشة من أي مكان.",
+    "subtext_followup": "زيارة متابعة مع طبيبك السابق.",
+    "subtext_second_opinion": "رأي ثان من اختصاصي — عادةً عبر الفيديو.",
+    "subtext_home_visit": "يزور الطبيب منزلك. متوفرة في مناطق محددة.",
+    "subtext_emergency": "موعد طوارئ في نفس اليوم. يُرجى الاتصال إذا لم يصل التأكيد خلال 10 دقائق.",
+
+    "label_name": "الاسم الكامل",
+    "label_phone": "الهاتف",
+    "label_date": "التاريخ المفضل",
+    "label_time": "الوقت المفضل",
+    "label_reason": "سبب الزيارة",
+    "label_urgency": "ما مدى الاستعجال؟",
+    "reason_placeholder": "اشرح حالتك بإيجاز — يساعد الطبيب على التحضير",
+
+    "urgency_scheduled": "مجدول",
+    "urgency_scheduled_sub": "مخطط",
+    "urgency_routine": "عادي",
+    "urgency_routine_sub": "+5 أيام",
+    "urgency_soon": "قريب",
+    "urgency_soon_sub": "2-5 أيام",
+    "urgency_urgent": "عاجل",
+    "urgency_urgent_sub": "اليوم",
+
+    "consent_title": "🔒 كيف سنستخدم معلوماتك",
+    "consent_summary": "لحجز هذا الموعد، نحتاج إلى مشاركة بياناتك مع العيادة. يُرجى مراجعة كل غرض واختيار ما توافق عليه.",
+    "consent_purpose_1_title": "مشاركة بياناتي مع العيادة",
+    "consent_purpose_1_desc": "سيتم مشاركة الاسم والهاتف والموعد والسبب مع العيادة لتأكيد حجزك.",
+    "consent_purpose_2_title": "إرسال تذكيرات بالموعد",
+    "consent_purpose_2_desc": "رسائل نصية وواتساب قبل 24 و1 ساعة من الموعد. يمكن إيقافها في أي وقت.",
+    "consent_purpose_3_title": "نصائح صحية وعروض العيادة",
+    "consent_purpose_3_desc": "محتوى تسويقي اختياري تمامًا.",
+    "consent_required_suffix": " · مطلوب",
+    "consent_read_full": "↓ اقرأ إشعار الخصوصية الكامل",
+    "consent_manage": "إدارة موافقاتك في أي وقت",
+
+    "submit_confirm": "تأكيد الحجز",
+    "submit_emergency": "طلب موعد طوارئ",
+    "submit_disabled_msg": "يجب الموافقة على الغرض المطلوب للمتابعة",
+    "trust_line": "متوافق مع قانون PDPL · بيانات محفوظة محليًا · مشفّر بالكامل"
+  },
+
+  "en-AE": {
+    "TODO_TRANSLATION": "Full en-AE bundle — mirrors en-IN with clinic terminology swapped. Extend when AE clinic goes live with English-speaking patients.",
+    "tab_in_person": "In-Person",
+    "tab_teleconsult": "Teleconsult",
+    "tab_followup": "Follow-up",
+    "tab_second_opinion": "Second Opinion",
+    "tab_home_visit": "Home Visit",
+    "tab_emergency": "Emergency",
+    "trust_line": "PDPL 2021 compliant · Data in UAE · End-to-end encrypted"
+  },
+
+  "en-GB": {
+    "tab_in_person": "In-Person",
+    "tab_teleconsult": "Teleconsult",
+    "tab_followup": "Follow-up",
+    "tab_second_opinion": "Second Opinion",
+    "tab_home_visit": "Home Visit",
+    "tab_emergency": "Same-day",
+
+    "subtext_in_person": "In-person appointment at the surgery. Standard consultation.",
+    "subtext_teleconsult": "Video or audio consultation from anywhere.",
+    "subtext_followup": "Follow-up appointment with your previous GP.",
+    "subtext_second_opinion": "Second opinion from a specialist — usually by video.",
+    "subtext_home_visit": "Doctor visits your home. Available in select areas.",
+    "subtext_emergency": "Same-day urgent slot. If this is a medical emergency, call 999 or attend A&E.",
+
+    "label_name": "Full name",
+    "label_phone": "Phone",
+    "label_date": "Preferred date",
+    "label_time": "Preferred time",
+    "label_reason": "Reason for visit",
+    "label_urgency": "Clinical urgency (NHS 2026/27 triage)",
+    "reason_placeholder": "Briefly describe your concern — aids the GP's triage",
+
+    "urgency_scheduled": "Green",
+    "urgency_scheduled_sub": "Scheduled",
+    "urgency_routine": "Green",
+    "urgency_routine_sub": "Routine",
+    "urgency_soon": "Amber",
+    "urgency_soon_sub": "Within 5 days",
+    "urgency_urgent": "Red",
+    "urgency_urgent_sub": "Same-day",
+
+    "consent_title": "🔒 How we'll process your data",
+    "consent_summary": "Under UK GDPR, we need your consent for each purpose below. Choose what you agree to.",
+    "consent_purpose_1_title": "Share my details with the practice",
+    "consent_purpose_1_desc": "Name, phone, date/time and reason shared with the practice to confirm your booking.",
+    "consent_purpose_2_title": "Appointment reminders by SMS",
+    "consent_purpose_2_desc": "A reminder the day before your appointment. Unsubscribe anytime.",
+    "consent_purpose_3_title": "Health information from the practice",
+    "consent_purpose_3_desc": "Newsletters and health campaigns. Fully optional.",
+    "consent_required_suffix": " · required",
+    "consent_read_full": "Read full privacy notice ↓",
+    "consent_manage": "Manage consents · ICO rights",
+
+    "submit_confirm": "Confirm booking",
+    "submit_emergency": "Request same-day slot",
+    "submit_disabled_msg": "Accept required purpose to continue",
+    "trust_line": "UK GDPR compliant · ICO-registered · End-to-end encrypted"
+  },
+
+  "en-US": {
+    "tab_in_person": "In-Office",
+    "tab_teleconsult": "Telehealth",
+    "tab_followup": "Follow-up",
+    "tab_second_opinion": "Second Opinion",
+    "tab_home_visit": "House Call",
+    "tab_emergency": "Urgent Care",
+
+    "subtext_in_person": "In-office visit. Standard consultation.",
+    "subtext_teleconsult": "Video or phone visit from anywhere.",
+    "subtext_followup": "Follow-up with your previous provider.",
+    "subtext_second_opinion": "Second opinion from a specialist — usually by video.",
+    "subtext_home_visit": "Provider visits your home. Select areas only.",
+    "subtext_emergency": "Same-day urgent slot. If this is a medical emergency, call 911.",
+
+    "label_name": "Full name",
+    "label_phone": "Phone",
+    "label_date": "Preferred date",
+    "label_time": "Preferred time",
+    "label_reason": "Reason for visit",
+    "label_urgency": "How urgent is this?",
+    "reason_placeholder": "Brief description helps your provider prepare",
+
+    "urgency_scheduled": "Routine",
+    "urgency_scheduled_sub": "2+ weeks",
+    "urgency_routine": "Routine",
+    "urgency_routine_sub": "2+ weeks",
+    "urgency_soon": "Soon",
+    "urgency_soon_sub": "1-2 weeks",
+    "urgency_urgent": "Urgent",
+    "urgency_urgent_sub": "this week",
+
+    "npp_title": "🛡 Notice of Privacy Practices (NPP)",
+    "npp_summary": "Under HIPAA, the practice is required to protect the privacy of your health information. Their Notice of Privacy Practices describes how your information may be used and disclosed for treatment, payment, and healthcare operations — and your rights.",
+    "npp_acknowledgment_label": "I acknowledge that I have received and reviewed the practice's Notice of Privacy Practices.",
+    "npp_footer": "You may receive a paper copy of the NPP at the front desk. For complaints, contact the practice's Privacy Officer or the HHS Office for Civil Rights. Marketing communications require a separate written authorization (HIPAA §164.508).",
+
+    "submit_confirm": "Confirm booking",
+    "submit_emergency": "Request urgent slot",
+    "submit_disabled_msg": "Acknowledge NPP to continue",
+    "trust_line": "HIPAA compliant · PHI encrypted · TLS 1.3 in transit"
+  },
+
+  "es-US": {
+    "TODO_TRANSLATION": "Full es-US bundle — add when US clinic launches with Spanish-speaking patients.",
+    "tab_in_person": "En persona",
+    "tab_teleconsult": "Telesalud",
+    "submit_confirm": "Confirmar cita",
+    "trust_line": "Cumple con HIPAA · PHI encriptada"
+  },
+
+  "hi-IN": {
+    "TODO_TRANSLATION": "Hindi bundle — pending clinical-review translation before onboarding Hindi-preferring clinics.",
+    "tab_in_person": "क्लिनिक में",
+    "tab_teleconsult": "टेलीकंसल्ट",
+    "submit_confirm": "बुकिंग की पुष्टि करें"
+  },
+
+  "te-IN": {
+    "TODO_TRANSLATION": "Telugu bundle — pending clinical-review translation.",
+    "tab_in_person": "క్లినిక్‌లో",
+    "tab_teleconsult": "టెలీకన్సల్ట్",
+    "submit_confirm": "బుకింగ్‌ను నిర్ధారించండి"
+  },
+
+  "ta-IN": {
+    "TODO_TRANSLATION": "Tamil bundle — pending clinical-review translation."
+  },
+
+  "bn-IN": {
+    "TODO_TRANSLATION": "Bengali bundle — pending clinical-review translation."
+  },
+
+  "mr-IN": {
+    "TODO_TRANSLATION": "Marathi bundle — pending clinical-review translation."
+  }
+}

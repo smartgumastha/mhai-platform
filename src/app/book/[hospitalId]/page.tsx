@@ -15,6 +15,7 @@ type ClinicInfo = {
   address: string;
   phone: string;
   doctor: string;
+  country_code?: string; // ARetrofit-1 Step 6b: drives widget locale; falls back to IN in widget if absent
   clinic_lat?: string;
   clinic_lng?: string;
 };
@@ -72,8 +73,9 @@ function BookingPageInner({ hospitalId }: { hospitalId: string }) {
       <div className="mx-auto max-w-lg px-4 py-6">
         <BookingWidget
           hospitalId={hospitalId}
+          countryCode={clinic?.country_code || 'IN'}
           clinicName={clinicName}
-          clinicAddress={clinicAddress}
+          clinicSubtitle={clinicAddress}
         />
       </div>
 
