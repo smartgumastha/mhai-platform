@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getAppointments, createAppointment, updateAppointment } from "@/lib/api";
+import type { MhaiAppointment, AppointmentStatus } from "@/lib/types/MhaiAppointment";
 import { useNotification } from "@/app/providers/NotificationProvider";
 
 var STATUS_BADGES: Record<string, { label: string; cls: string }> = {
@@ -18,16 +19,8 @@ var FILTER_TABS = [
   { id: "all", label: "All" },
 ];
 
-type Appointment = {
-  id: string;
-  patient_name: string;
-  patient_phone: string;
-  slot_date: string;
-  slot_time: string;
-  status: string;
-  source?: string;
-  notes?: string;
-};
+// ARetrofit-1 Step 5c-frontend: use canonical MhaiAppointment type
+type Appointment = MhaiAppointment;
 
 export default function AppointmentsPage() {
   var notify = useNotification();
@@ -108,7 +101,7 @@ export default function AppointmentsPage() {
   }
 
   /* ── update status ── */
-  async function handleStatusChange(id: string, newStatus: string) {
+  async function handleStatusChange(id: string, newStatus: AppointmentStatus) {
     setUpdatingId(id);
     try {
       var res = await updateAppointment(id, { status: newStatus });

@@ -1,6 +1,15 @@
 // API calls go through Next.js rewrites (/api/* → Railway backend)
 // This avoids CORS — browser sees same-origin requests.
 
+import type {
+  MhaiAppointment,
+  AppointmentFilter,
+  CreateAppointmentInput,
+  UpdateAppointmentInput,
+  CreateAppointmentResponse,
+  UpdateAppointmentResponse,
+} from "./types/MhaiAppointment";
+
 // ── Token management ──
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -305,22 +314,27 @@ export function updateReviewResponse(
 }
 
 // ── Appointments ──
+// Re-export type aliases so callers can `import type { AppointmentFilter, ... } from "@/lib/api"` if preferred.
+export type {
+  MhaiAppointment,
+  AppointmentFilter,
+  CreateAppointmentInput,
+  UpdateAppointmentInput,
+  CreateAppointmentResponse,
+  UpdateAppointmentResponse,
+};
+
+// ARetrofit-1 Step 5c-frontend: filter kept as string for impl backward-compat.
+// Structured AppointmentFilter type is exported for future use when the backend
+// endpoint contract supports multi-field filtering.
 export function getAppointments(filter?: string) {
   var url = "/api/mhai/appointments";
   if (filter) url += "?filter=" + encodeURIComponent(filter);
-  return api<{ success: boolean; appointments?: any[]; error?: string }>(url);
+  return api<{ success: boolean; appointments?: MhaiAppointment[]; error?: string }>(url);
 }
 
-export function createAppointment(data: {
-  patient_name: string;
-  patient_phone: string;
-  slot_date: string;
-  slot_time: string;
-  status?: string;
-  source?: string;
-  notes?: string;
-}) {
-  return api<{ success: boolean; appointment?: any; error?: string; message?: string }>(
+export function createAppointment(data: CreateAppointmentInput) {
+  return api<CreateAppointmentResponse>(
     "/api/mhai/appointments",
     { method: "POST", body: JSON.stringify(data) }
   );
@@ -328,9 +342,9 @@ export function createAppointment(data: {
 
 export function updateAppointment(
   appointmentId: string,
-  data: { status?: string; notes?: string }
+  data: UpdateAppointmentInput
 ) {
-  return api<{ success: boolean; appointment?: any; error?: string; message?: string }>(
+  return api<UpdateAppointmentResponse>(
     "/api/mhai/appointments/" + encodeURIComponent(appointmentId),
     { method: "PUT", body: JSON.stringify(data) }
   );
