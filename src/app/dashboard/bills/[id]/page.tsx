@@ -166,8 +166,24 @@ export default function BillDetailPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="rounded-lg border border-line bg-white px-4 py-2.5 text-sm">Edit</button>
-            <button className="rounded-lg border border-line bg-white px-4 py-2.5 text-sm">Resend WhatsApp</button>
+            <button
+              onClick={function () { router.push("/dashboard/billing/opd?edit=" + billId); }}
+              className="rounded-lg border border-line bg-white px-4 py-2.5 text-sm"
+            >Edit</button>
+            <button
+              onClick={async function () {
+                try {
+                  var token = getToken();
+                  var r = await fetch("/api/hospitals/" + user?.hospital_id + "/rcm/billing/bills/" + billId + "/whatsapp-receipt", {
+                    method: "POST",
+                    headers: token ? { Authorization: "Bearer " + token } : {},
+                  });
+                  var d = await r.json();
+                  if (d.success) { alert("Receipt sent via WhatsApp"); } else { alert(d.error || "Could not send receipt"); }
+                } catch { alert("Could not send receipt"); }
+              }}
+              className="rounded-lg border border-line bg-white px-4 py-2.5 text-sm"
+            >Resend WhatsApp</button>
             <button
               onClick={handleQuickPrint}
               className="rounded-lg bg-coral px-5 py-2.5 text-sm font-medium text-white hover:bg-coral-deep"
