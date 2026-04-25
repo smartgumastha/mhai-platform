@@ -132,6 +132,96 @@ export default function NewPatientPage() {
     setNhsError(/^\d{10}$/.test(v) ? "" : "NHS number must be 10 digits");
   }
 
+  function validatePhone(ph: string): string {
+    var digits = ph.replace(/[^0-9]/g, "");
+    if (!digits) return "Phone number is required";
+    if (/^(.)\1+$/.test(digits)) return "Enter a valid phone number";
+    if (cc === "IN" && !/^[6-9]\d{9}$/.test(digits)) return "Enter a valid 10-digit Indian mobile number";
+    if (cc === "AE" && !/^(05\d{7}|971\d{9})$/.test(digits)) return "Enter a valid UAE phone number";
+    if (cc === "US" && !/^\d{10}$/.test(digits)) return "Enter a valid 10-digit US phone number";
+    if (cc === "GB" && !/^\d{10,11}$/.test(digits)) return "Enter a valid UK phone number";
+    if (digits.length < 7 || digits.length > 15) return "Enter a valid phone number";
+    return "";
+  }
+
+  function validateName(v: string): string {
+    var t = v.trim();
+    if (!t) return "Patient name is required";
+    if (t.length < 2) return "Name must be at least 2 characters";
+    if (/^\d+$/.test(t)) return "Name cannot be a number";
+    if (!/^[a-zA-Z\s.\-']+$/.test(t)) return "Patient name must contain only letters";
+    return "";
+  }
+
+  function validateForm(): Record<string, string> {
+    var e: Record<string, string> = {};
+
+    var nameErr = validateName(name);
+    if (nameErr) e.name = nameErr;
+
+    if (!dob) {
+      e.date_of_birth = "Date of birth is required";
+    } else {
+      var d = new Date(dob);
+      if (isNaN(d.getTime())) e.date_of_birth = "Invalid date of birth";
+      else if (d >= new Date()) e.date_of_birth = "Date of birth must be a past date";
+      else if (d < new Date("1900-01-01")) e.date_of_birth = "Date of birth must be after 1900";
+    }
+
+    if (age) {
+      var ageN = parseInt(age, 10);
+      if (isNaN(ageN) || ageN < 0 || ageN > 120) e.age = "Age must be between 0 and 120";
+    }
+
+    if (!gender) e.gender = "Please select a gender";
+
+    var phoneErr = validatePhone(phone);
+    if (phoneErr) e.phone = phoneErr;
+
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      e.email = "Enter a valid email address";
+
+    if (pincode) {
+      if (cc === "IN" && !/^\d{6}$/.test(pincode)) e.pincode = "Enter a valid 6-digit PIN code";
+      else if (cc === "US" && !/^\d{5}(-\d{4})?$/.test(pincode)) e.pincode = "Enter a valid ZIP code";
+      else if (cc === "GB" && !/^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i.test(pincode)) e.pincode = "Enter a valid UK postcode";
+    }
+
+    var ecNameErr = validateName(ecName);
+    if (ecNameErr) e.emergency_contact_name = ecNameErr.replace("Patient name", "Emergency contact name");
+
+    var ecPhoneErr = validatePhone(ecPhone);
+    if (ecPhoneErr) e.emergency_contact_phone = ecPhoneErr;
+
+    if (cc === "IN" && abhaId) {
+      if (!/^\d{14}$/.test(abhaId.replace(/-/g, ""))) e.abha_id = "ABHA number must be exactly 14 digits";
+    }
+    if (cc === "IN" && abhaAddress && !/^[a-zA-Z0-9._]+@[a-zA-Z]+$/.test(abhaAddress))
+      e.abha_address = "ABHA address format: yourname@abdm";
+
+    if (cc === "AE" && emiratesId && !/^784-\d{4}-\d{7}-\d$/.test(emiratesId))
+      e.emirates_id = "Emirates ID format: 784-XXXX-XXXXXXX-X";
+    if (cc === "AE" && nationalityCode && !/^[A-Z]{3}$/.test(nationalityCode))
+      e.nationality_code = "Enter 3-letter ISO code (e.g. ARE, IND)";
+
+    if (cc === "GB" && nhsNumber && !/^\d{10}$/.test(nhsNumber))
+      e.nhs_number = "NHS number must be 10 digits";
+
+    if (cc === "US" && ssnLast4 && !/^\d{4}$/.test(ssnLast4))
+      e.ssn_last4 = "Enter last 4 digits of SSN";
+
+    if (insuranceExpiry) {
+      var exp = new Date(insuranceExpiry);
+      if (!isNaN(exp.getTime()) && exp < new Date())
+        e.insurance_card_expiry = "Insurance card is expired";
+    }
+
+    if (!consentTreatment) e.consent_treatment = "Consent to treatment is required";
+    if (!consentData) e.consent_data_processing = "Consent to data processing is required";
+
+    return e;
+  }
+
   // Completeness checklist
   var checks = [
     { label: "Basic Info",       done: Boolean(name && dob && gender) },
@@ -147,7 +237,12 @@ export default function NewPatientPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSubmit) { notify.error("Please check required consents"); return; }
+    var errs = validateForm();
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      notify.error("Please fix the highlighted fields");
+      return;
+    }
     setSaving(true);
     setFieldErrors({});
     try {
@@ -265,21 +360,24 @@ export default function NewPatientPage() {
                 </div>
                 <div>
                   <label className={L}>Date of Birth *</label>
-                  <input type="date" className={I} max={TODAY} value={dob} onChange={function(e) { setDob(e.target.value); }} />
+                  <input type="date" className={I + (fieldErrors.date_of_birth ? " border-red-400" : "")} max={TODAY} value={dob} onChange={function(e) { setDob(e.target.value); }} />
+                  {fieldErrors.date_of_birth && <p className="mt-1 text-xs text-red-600">{fieldErrors.date_of_birth}</p>}
                 </div>
                 <div>
                   <label className={L}>Age (auto-calc from DOB)</label>
-                  <input type="number" className={I + " bg-gray-50"} value={age} readOnly placeholder="Auto-calculated from DOB" />
+                  <input type="number" className={I + " bg-gray-50" + (fieldErrors.age ? " border-red-400" : "")} value={age} readOnly placeholder="Auto-calculated from DOB" />
+                  {fieldErrors.age && <p className="mt-1 text-xs text-red-600">{fieldErrors.age}</p>}
                 </div>
                 <div>
                   <label className={L}>Gender *</label>
-                  <select className={I} value={gender} onChange={function(e) { setGender(e.target.value); }} required>
+                  <select className={I + (fieldErrors.gender ? " border-red-400" : "")} value={gender} onChange={function(e) { setGender(e.target.value); }} required>
                     <option value="">Select…</option>
                     <option value="MALE">Male</option>
                     <option value="FEMALE">Female</option>
                     <option value="OTHER">Other</option>
                     <option value="PREFER_NOT_TO_SAY">Prefer not to say</option>
                   </select>
+                  {fieldErrors.gender && <p className="mt-1 text-xs text-red-600">{fieldErrors.gender}</p>}
                 </div>
                 <div>
                   <label className={L}>Blood Group</label>
@@ -338,7 +436,8 @@ export default function NewPatientPage() {
                 </div>
                 <div>
                   <label className={L}>Email</label>
-                  <input type="email" className={I} value={email} onChange={function(e) { setEmail(e.target.value); }} />
+                  <input type="email" className={I + (fieldErrors.email ? " border-red-400" : "")} value={email} onChange={function(e) { setEmail(e.target.value); }} />
+                  {fieldErrors.email && <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>}
                 </div>
                 <div className="col-span-2">
                   <label className={L}>Address Line 1</label>
@@ -358,7 +457,8 @@ export default function NewPatientPage() {
                 </div>
                 <div>
                   <label className={L}>{cc === "IN" ? "Pincode" : "Postal Code"}</label>
-                  <input className={I} value={pincode} onChange={function(e) { setPincode(e.target.value); }} />
+                  <input className={I + (fieldErrors.pincode ? " border-red-400" : "")} value={pincode} onChange={function(e) { setPincode(e.target.value); }} />
+                  {fieldErrors.pincode && <p className="mt-1 text-xs text-red-600">{fieldErrors.pincode}</p>}
                 </div>
               </div>
             </div>
@@ -369,11 +469,13 @@ export default function NewPatientPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={L}>Name *</label>
-                  <input className={I} value={ecName} onChange={function(e) { setEcName(e.target.value); }} />
+                  <input className={I + (fieldErrors.emergency_contact_name ? " border-red-400" : "")} value={ecName} onChange={function(e) { setEcName(e.target.value); }} />
+                  {fieldErrors.emergency_contact_name && <p className="mt-1 text-xs text-red-600">{fieldErrors.emergency_contact_name}</p>}
                 </div>
                 <div>
                   <label className={L}>Phone *</label>
-                  <input type="tel" className={I} value={ecPhone} onChange={function(e) { setEcPhone(e.target.value); }} />
+                  <input type="tel" className={I + (fieldErrors.emergency_contact_phone ? " border-red-400" : "")} value={ecPhone} onChange={function(e) { setEcPhone(e.target.value); }} />
+                  {fieldErrors.emergency_contact_phone && <p className="mt-1 text-xs text-red-600">{fieldErrors.emergency_contact_phone}</p>}
                 </div>
                 <div>
                   <label className={L}>Relationship *</label>
@@ -406,7 +508,8 @@ export default function NewPatientPage() {
                   </div>
                   <div>
                     <label className={L}>ABHA Address</label>
-                    <input className={I} placeholder="yourname@abdm" value={abhaAddress} onChange={function(e) { setAbhaAddress(e.target.value); }} />
+                    <input className={I + (fieldErrors.abha_address ? " border-red-400" : "")} placeholder="yourname@abdm" value={abhaAddress} onChange={function(e) { setAbhaAddress(e.target.value); }} />
+                    {fieldErrors.abha_address && <p className="mt-1 text-xs text-red-600">{fieldErrors.abha_address}</p>}
                   </div>
                 </div>
               )}
@@ -423,13 +526,14 @@ export default function NewPatientPage() {
                   </div>
                   <div>
                     <label className={L}>Nationality Code</label>
-                    <select className={I} value={nationalityCode} onChange={function(e) { setNationalityCode(e.target.value); }}>
+                    <select className={I + (fieldErrors.nationality_code ? " border-red-400" : "")} value={nationalityCode} onChange={function(e) { setNationalityCode(e.target.value); }}>
                       <option value="">Select…</option>
                       {["ARE","IND","GBR","USA","PAK","BGD","EGY","PHL","NPL","LKA"].map(function(c) {
                         return <option key={c} value={c}>{c}</option>;
                       })}
                       <option value="OTH">Other</option>
                     </select>
+                    {fieldErrors.nationality_code && <p className="mt-1 text-xs text-red-600">{fieldErrors.nationality_code}</p>}
                   </div>
                   {!emiratesId && (
                     <div>
@@ -458,7 +562,8 @@ export default function NewPatientPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className={L}>SSN — last 4 digits only</label>
-                    <input className={I} maxLength={4} placeholder="XXXX" value={ssnLast4} onChange={function(e) { setSsnLast4(e.target.value); }} />
+                    <input className={I + (fieldErrors.ssn_last4 ? " border-red-400" : "")} maxLength={4} placeholder="XXXX" value={ssnLast4} onChange={function(e) { setSsnLast4(e.target.value); }} />
+                    {fieldErrors.ssn_last4 && <p className="mt-1 text-xs text-red-600">{fieldErrors.ssn_last4}</p>}
                   </div>
                 </div>
               )}
@@ -495,7 +600,13 @@ export default function NewPatientPage() {
                     </div>
                     <div>
                       <label className={L}>Card Expiry</label>
-                      <input type="date" className={I} value={insuranceExpiry} onChange={function(e) { setInsuranceExpiry(e.target.value); }} />
+                      <input type="date" className={I + (fieldErrors.insurance_card_expiry ? " border-red-400" : "")} value={insuranceExpiry} onChange={function(e) { setInsuranceExpiry(e.target.value); }} />
+                      {fieldErrors.insurance_card_expiry && <p className="mt-1 text-xs text-red-600">{fieldErrors.insurance_card_expiry}</p>}
+                      {!fieldErrors.insurance_card_expiry && insuranceExpiry &&
+                        new Date(insuranceExpiry) >= new Date() &&
+                        new Date(insuranceExpiry) < new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) && (
+                        <p className="mt-1 text-xs font-semibold text-amber-600">Card expires soon</p>
+                      )}
                     </div>
                   </>
                 )}
@@ -536,14 +647,26 @@ export default function NewPatientPage() {
               <h2 className="mb-1 text-sm font-bold uppercase tracking-wide text-gray-700">Patient Consents</h2>
               <p className="mb-4 text-xs text-gray-500">Required before registration</p>
               <div className="space-y-3">
-                <label className="flex cursor-pointer items-start gap-3">
-                  <input type="checkbox" className="mt-0.5" checked={consentTreatment} onChange={function(e) { setConsentTreatment(e.target.checked); }} />
-                  <span className="text-sm font-semibold text-gray-800">I consent to receive medical examination and treatment at this clinic</span>
-                </label>
-                <label className="flex cursor-pointer items-start gap-3">
-                  <input type="checkbox" className="mt-0.5" checked={consentData} onChange={function(e) { setConsentData(e.target.checked); }} />
-                  <span className="text-sm font-semibold text-gray-800">{dataConsentLabel}</span>
-                </label>
+                <div>
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input type="checkbox"
+                      className={"mt-0.5" + (fieldErrors.consent_treatment ? " accent-red-600 outline outline-1 outline-red-400" : "")}
+                      checked={consentTreatment}
+                      onChange={function(e) { setConsentTreatment(e.target.checked); if (e.target.checked) setFieldErrors(function(fe) { var n = { ...fe }; delete n.consent_treatment; return n; }); }} />
+                    <span className="text-sm font-semibold text-gray-800">I consent to receive medical examination and treatment at this clinic</span>
+                  </label>
+                  {fieldErrors.consent_treatment && <p className="mt-1 ml-6 text-xs text-red-600">{fieldErrors.consent_treatment}</p>}
+                </div>
+                <div>
+                  <label className="flex cursor-pointer items-start gap-3">
+                    <input type="checkbox"
+                      className={"mt-0.5" + (fieldErrors.consent_data_processing ? " accent-red-600 outline outline-1 outline-red-400" : "")}
+                      checked={consentData}
+                      onChange={function(e) { setConsentData(e.target.checked); if (e.target.checked) setFieldErrors(function(fe) { var n = { ...fe }; delete n.consent_data_processing; return n; }); }} />
+                    <span className="text-sm font-semibold text-gray-800">{dataConsentLabel}</span>
+                  </label>
+                  {fieldErrors.consent_data_processing && <p className="mt-1 ml-6 text-xs text-red-600">{fieldErrors.consent_data_processing}</p>}
+                </div>
                 {cc === "IN" && (
                   <label className="flex cursor-pointer items-start gap-3">
                     <input type="checkbox" className="mt-0.5" checked={consentAbha} onChange={function(e) { setConsentAbha(e.target.checked); }} />
