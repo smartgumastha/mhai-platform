@@ -375,7 +375,7 @@ export default function OPDBillingPage() {
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
           body: JSON.stringify({ status: targetStatus, ...(approvalNote ? { approval_note: approvalNote } : {}) }),
         })
-        if (!pRes.ok) { var pe = await pRes.json(); throw new Error(pe.error || 'Status update failed') }
+        if (!pRes.ok) { var pe = await pRes.json(); throw new Error(typeof pe.error === 'string' ? pe.error : pe.message || 'Status update failed') }
         var pd = await pRes.json()
         setSavedBillStatus(targetStatus)
         if (targetStatus === 'FINAL') {
@@ -442,7 +442,7 @@ export default function OPDBillingPage() {
         patient_copay:     form.patientCopay || null,
         preauth_number:    form.preAuthNumber || null,
         payment_mode:      form.paymentMode,
-        bill_status:       targetStatus,
+        bill_status:       targetStatus === 'FINAL' ? 'DRAFT' : targetStatus,
         line_items: form.billType !== 'IPD' ? form.lineItems.map(li => ({
           description: li.description, hsn_sac: li.hsnSac, service_date: li.serviceDate,
           quantity: li.quantity, unit_price: li.unitPrice, discount: li.discount,
@@ -469,18 +469,26 @@ export default function OPDBillingPage() {
           notify.error('Please fix the highlighted fields')
           return
         }
-        throw new Error(err.error || err.message || 'Save failed')
+        throw new Error(typeof err.error === 'string' ? err.error : err.message || 'Save failed')
       }
       var saved = await res.json()
       var newBillId = String(saved.bill_id || saved.bill?.id || saved.id || '')
       setSavedBillId(newBillId)
-      setSavedBillStatus(targetStatus)
-      if (targetStatus === 'DRAFT') {
-        notify.success('Draft saved')
-      } else if (targetStatus === 'FINAL') {
+      if (targetStatus === 'FINAL' && newBillId) {
+        var pRes2 = await fetch(`/api/hospitals/${hospitalId}/rcm/billing/bills/${newBillId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ status: 'FINAL' }),
+        })
+        if (!pRes2.ok) { var pe2 = await pRes2.json(); throw new Error(typeof pe2.error === 'string' ? pe2.error : pe2.message || 'Finalize failed') }
+        setSavedBillStatus('FINAL')
         notify.success('Bill finalized — ' + (saved.bill_number || billNumber))
-        if (newBillId) router.push('/dashboard/bills/' + newBillId)
+        router.push('/dashboard/bills/' + newBillId)
+      } else if (targetStatus === 'DRAFT') {
+        setSavedBillStatus('DRAFT')
+        notify.success('Draft saved')
       } else {
+        setSavedBillStatus(targetStatus)
         notify.success('Sent for approval — awaiting supervisor')
       }
     } catch (err: any) {
@@ -701,7 +709,7 @@ export default function OPDBillingPage() {
                     })}
                     {searchResults.length === 0 && patientSearch.trim().length >= 2 && !searching && (
                       <div className="px-4 py-3 text-sm text-gray-500">
-                        No results —{' '}
+                        No patients found. Try searching by UHID or phone number.{' '}
                         <a href="/dashboard/patients/new" className="font-semibold text-orange-600 hover:underline">
                           Register new patient →
                         </a>
