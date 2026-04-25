@@ -73,6 +73,10 @@ var DEFAULT_FORM: OPDBillForm = {
   paymentMode: 'CASH', amountPaid: 0, notes: ''
 }
 
+var INPUT = 'w-full border border-gray-300 bg-white text-gray-900 rounded-lg px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral/20'
+var LABEL = 'block text-xs font-bold uppercase tracking-wide text-gray-600 mb-1.5'
+var CARD  = 'bg-white rounded-2xl border border-gray-200 p-5 shadow-sm'
+
 export default function OPDBillingPage() {
   var { user } = useAuth()
   var { localeV2 } = useLocale()
@@ -269,24 +273,26 @@ export default function OPDBillingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f3ef]">
+    <div className="min-h-screen bg-gray-50">
       <form onSubmit={saveBill}>
         {/* HEADER */}
-        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b-2 border-[#e5e1d6] shadow-sm px-6 py-3 flex justify-between items-center">
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur border-b border-gray-200 shadow-sm px-6 py-3 flex justify-between items-center">
           <div>
-            <div className="text-xs font-mono uppercase tracking-widest text-text-muted">BILLING / OPD</div>
+            <div className="text-xs font-mono uppercase tracking-widest text-gray-500">BILLING / OPD</div>
             <h1 className="font-display text-2xl font-semibold mt-0.5 tracking-tight">
               Quick <em className="italic text-coral-deep">OPD Bill</em>
             </h1>
           </div>
           <div className="flex gap-3 items-center">
-            <span className={`text-xs font-mono font-bold px-2 py-1 rounded-md ${docType === 'BILL_OF_SUPPLY' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+            <span className={`text-xs font-bold px-2 py-1 rounded-md ${docType === 'BILL_OF_SUPPLY' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
               {docTypeLabel}
             </span>
-            <button type="button" onClick={() => router.back()} className="px-4 py-[9px] text-sm font-semibold border-2 border-[#d0ccc4] rounded-lg text-[#555] hover:border-[#aaa] transition-colors bg-white">
+            <button type="button" onClick={() => router.back()}
+              className="px-4 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-600 bg-white hover:border-gray-400 transition-colors">
               Cancel
             </button>
-            <button type="submit" disabled={saving} className="px-5 py-[9px] text-sm font-bold bg-coral text-white rounded-lg disabled:opacity-60 shadow-[0_1px_8px_rgba(255,107,74,0.3)] hover:bg-coral-deep transition-colors tracking-wide">
+            <button type="submit" disabled={saving}
+              className="px-5 py-2 text-sm font-bold bg-coral text-white rounded-lg disabled:opacity-60 hover:opacity-90 transition-opacity">
               {saving ? 'Saving…' : 'Save & Print'}
             </button>
           </div>
@@ -298,59 +304,59 @@ export default function OPDBillingPage() {
           <div className="col-span-2 space-y-5">
 
             {/* PATIENT */}
-            <div className="bg-white rounded-2xl border-2 border-[#e2dfd8] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-              <h2 className="font-display text-lg font-medium mb-4">Patient <em className="italic text-coral-deep">details</em></h2>
+            <div className={CARD}>
+              <h2 className="font-display text-lg font-semibold mb-4">Patient <em className="italic text-coral-deep">details</em></h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Patient Name *</label>
+                  <label className={LABEL}>Patient Name *</label>
                   <input value={form.patientName} onChange={e => updateField('patientName', e.target.value)}
-                    className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white transition-colors" placeholder="Full name" required />
+                    className={INPUT} placeholder="Full name" required />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Phone</label>
+                  <label className={LABEL}>Phone</label>
                   <input value={form.patientPhone} onChange={e => updateField('patientPhone', e.target.value)}
-                    className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white"
+                    className={INPUT}
                     placeholder={cc === 'IN' ? '+91 XXXXX XXXXX' : cc === 'AE' ? '+971 XX XXX XXXX' : 'Phone'} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Age</label>
+                  <label className={LABEL}>Age</label>
                   <input value={form.patientAge} onChange={e => updateField('patientAge', e.target.value)}
-                    className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white transition-colors" placeholder="e.g. 35Y" />
+                    className={INPUT} placeholder="e.g. 35Y" />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Gender</label>
+                  <label className={LABEL}>Gender</label>
                   <select value={form.patientGender} onChange={e => updateField('patientGender', e.target.value)}
-                    className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white">
+                    className={INPUT}>
                     <option value="M">Male</option>
                     <option value="F">Female</option>
                     <option value="O">Other</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">UHID</label>
+                  <label className={LABEL}>UHID</label>
                   <input value={form.uhid} onChange={e => updateField('uhid', e.target.value)}
-                    className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white transition-colors" placeholder="Auto-assigned if blank" />
+                    className={INPUT} placeholder="Auto-assigned if blank" />
                 </div>
                 {cc === 'IN' && (
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">ABHA Number</label>
+                    <label className={LABEL}>ABHA Number</label>
                     <input value={form.abhaNumber} onChange={e => updateField('abhaNumber', e.target.value)}
-                      className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white transition-colors" placeholder="14-digit ABHA (optional)" />
+                      className={INPUT} placeholder="14-digit ABHA (optional)" />
                   </div>
                 )}
                 {cc === 'AE' && (
                   <>
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">
-                        Emirates ID{form.supplyType === 'B2B' && <span className="ml-1 text-rose-500 text-xs">(Required for insured)</span>}
+                      <label className={LABEL}>
+                        Emirates ID{form.supplyType === 'B2B' && <span className="ml-1 text-rose-500 normal-case font-normal">(Required for insured)</span>}
                       </label>
                       <input value={form.emiratesId} onChange={e => updateField('emiratesId', e.target.value)}
-                        className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white transition-colors" placeholder="784-XXXX-XXXXXXX-X" />
+                        className={INPUT} placeholder="784-XXXX-XXXXXXX-X" />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Nationality (ISO)</label>
+                      <label className={LABEL}>Nationality (ISO)</label>
                       <input value={form.nationalityCode} onChange={e => updateField('nationalityCode', e.target.value.toUpperCase())}
-                        className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white transition-colors" placeholder="ARE / IND / GBR / USA" maxLength={3} />
+                        className={INPUT + ' font-mono uppercase tracking-widest'} placeholder="ARE / IND / GBR / USA" maxLength={3} />
                     </div>
                   </>
                 )}
@@ -358,18 +364,18 @@ export default function OPDBillingPage() {
             </div>
 
             {/* VISIT + BILL TYPE */}
-            <div className="bg-white rounded-2xl border-2 border-[#e2dfd8] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-              <h2 className="font-display text-lg font-medium mb-4">Visit <em className="italic text-coral-deep">details</em></h2>
+            <div className={CARD}>
+              <h2 className="font-display text-lg font-semibold mb-4">Visit <em className="italic text-coral-deep">details</em></h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Attending Doctor</label>
+                  <label className={LABEL}>Attending Doctor</label>
                   <input value={form.doctorName} onChange={e => updateField('doctorName', e.target.value)}
-                    className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white transition-colors" placeholder="Dr. Name" />
+                    className={INPUT} placeholder="Dr. Name" />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Visit Type</label>
+                  <label className={LABEL}>Visit Type</label>
                   <select value={form.visitType} onChange={e => updateField('visitType', e.target.value)}
-                    className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white">
+                    className={INPUT}>
                     <option value="WALK_IN">Walk-In</option>
                     <option value="APPOINTMENT">Appointment</option>
                     <option value="FOLLOW_UP">Follow-Up</option>
@@ -377,30 +383,30 @@ export default function OPDBillingPage() {
                   </select>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-text-muted mb-2">Bill Category</label>
-                  <div className="flex gap-2 flex-wrap">
+                  <label className={LABEL}>Bill Category</label>
+                  <div className="flex gap-2 flex-wrap mt-0.5">
                     {(['CONSULTATION','DIAGNOSTIC_LAB','PHARMACY','PROCEDURE','PACKAGE'] as BillCategory[]).map(cat => (
                       <button key={cat} type="button"
                         onClick={() => updateField('billCategory', cat)}
-                        className={`px-3 py-[7px] rounded-lg text-[12.5px] font-bold border-2 transition-all ${form.billCategory === cat ? 'bg-[#111] text-white border-[#111]' : 'bg-white border-[#d0ccc4] text-[#555] hover:border-coral hover:text-coral'}`}>
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${form.billCategory === cat ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:border-coral hover:text-coral'}`}>
                         {cat.replace(/_/g, ' ')}
                       </button>
                     ))}
                   </div>
-                  <div className="mt-2 text-xs text-text-muted">
+                  <div className="mt-2 text-xs text-gray-500">
                     Document type: <span className={`font-bold ${docType === 'BILL_OF_SUPPLY' ? 'text-emerald-700' : 'text-amber-600'}`}>{docTypeLabel}</span>
-                    {cc === 'IN' && <span className="ml-2 font-mono">{HSN_SAC_MAP[form.billCategory]}</span>}
+                    {cc === 'IN' && <span className="ml-2 font-mono text-gray-500">{HSN_SAC_MAP[form.billCategory]}</span>}
                   </div>
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-text-muted mb-2">Payment Type</label>
-                  <div className="flex gap-3">
+                  <label className={LABEL}>Payment Type</label>
+                  <div className="flex gap-3 mt-0.5">
                     <button type="button" onClick={() => { updateField('supplyType', 'B2C'); setShowInsurance(false) }}
-                      className={`flex-1 px-4 py-[10px] rounded-xl text-sm font-bold border-2 text-center transition-all ${form.supplyType === 'B2C' ? 'bg-[#111] text-white border-[#111]' : 'bg-white text-[#666] border-[#d0ccc4] hover:border-coral'}`}>
+                      className={`flex-1 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${form.supplyType === 'B2C' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:border-coral'}`}>
                       B2C — Patient pays
                     </button>
                     <button type="button" onClick={() => { updateField('supplyType', 'B2B'); setShowInsurance(true) }}
-                      className={`flex-1 px-4 py-[10px] rounded-xl text-sm font-bold border-2 text-center transition-all ${form.supplyType === 'B2B' ? 'bg-[#111] text-white border-[#111]' : 'bg-white text-[#666] border-[#d0ccc4] hover:border-coral'}`}>
+                      className={`flex-1 px-4 py-2 rounded-lg text-sm font-bold border transition-all ${form.supplyType === 'B2B' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:border-coral'}`}>
                       B2B — Insurance / TPA
                     </button>
                   </div>
@@ -410,123 +416,125 @@ export default function OPDBillingPage() {
 
             {/* INSURANCE — shown when B2B */}
             {showInsurance && (
-              <div className="bg-white rounded-2xl border-2 border-[#e2dfd8] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-                <h2 className="font-display text-lg font-medium mb-1">Insurance <em className="italic text-coral-deep">details</em></h2>
+              <div className={CARD}>
+                <h2 className="font-display text-lg font-semibold mb-1">Insurance <em className="italic text-coral-deep">details</em></h2>
                 {cc === 'AE' && (
-                  <p className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">DHA mandate: Pre-auth within 1 hour of physician order (PD-05-2025)</p>
+                  <p className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2 mb-4">
+                    DHA mandate: Pre-auth within 1 hour of physician order (PD-05-2025)
+                  </p>
                 )}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 mt-3">
                   <div className="col-span-2">
-                    <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">
+                    <label className={LABEL}>
                       {cc === 'IN' ? 'TPA / Insurer' : 'Insurance Company'} *
                     </label>
                     <select value={form.payerId} onChange={e => updateField('payerId', e.target.value)}
-                      className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white">
+                      className={INPUT}>
                       <option value="">Select payer…</option>
                       {payers.map(p => <option key={p.id} value={p.id}>{p.payer_name || p.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Member Card No. *</label>
+                    <label className={LABEL}>Member Card No. *</label>
                     <input value={form.memberCardNumber} onChange={e => updateField('memberCardNumber', e.target.value)}
-                      className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white transition-colors" placeholder="From insurance card" />
+                      className={INPUT} placeholder="From insurance card" />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Policy Number</label>
+                    <label className={LABEL}>Policy Number</label>
                     <input value={form.policyNumber} onChange={e => updateField('policyNumber', e.target.value)}
-                      className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white transition-colors" placeholder="Policy number" />
+                      className={INPUT} placeholder="Policy number" />
                   </div>
                   {cc === 'AE' && (
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">
-                        Card Expiry Date <span className="text-rose-500 text-xs">(DHA rejects expired instantly)</span>
+                      <label className={LABEL}>
+                        Card Expiry Date <span className="text-rose-500 normal-case font-normal">(DHA rejects expired instantly)</span>
                       </label>
                       <input type="date" value={form.cardExpiryDate} onChange={e => updateField('cardExpiryDate', e.target.value)}
-                        className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white" />
+                        className={INPUT} />
                     </div>
                   )}
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">
+                    <label className={LABEL}>
                       {cc === 'AE' ? 'Diagnosis (ICD-10-CM) *' : 'Diagnosis Code (ICD-10-CM)'}
                     </label>
                     <input value={form.icd10Primary} onChange={e => updateField('icd10Primary', e.target.value.toUpperCase())}
-                      className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-mono font-bold text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white"
+                      className={INPUT + ' font-mono'}
                       placeholder={cc === 'AE' ? 'e.g. J00 — mandatory for eClaimLink' : 'e.g. K21.0'} />
-                    {cc === 'AE' && <p className="text-[11px] text-[#888] mt-1 leading-relaxed">ICD-10-CM only — NOT ICD-10-AM (DHA mandate)</p>}
+                    {cc === 'AE' && <p className="text-xs text-gray-500 mt-1">ICD-10-CM only — NOT ICD-10-AM (DHA mandate)</p>}
                   </div>
                   {cc === 'AE' && (
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Presenting Complaint <span className="text-xs text-amber-600">(required for consult codes)</span></label>
+                      <label className={LABEL}>Presenting Complaint <span className="text-amber-600 normal-case font-normal">(required for consult codes)</span></label>
                       <input value={form.presentingComplaint} onChange={e => updateField('presentingComplaint', e.target.value)}
-                        className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white transition-colors" placeholder="Chief complaint in plain language" />
+                        className={INPUT} placeholder="Chief complaint in plain language" />
                     </div>
                   )}
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Cashless / Reimbursement</label>
+                    <label className={LABEL}>Cashless / Reimbursement</label>
                     <select value={form.cashlessOrReimbursement} onChange={e => updateField('cashlessOrReimbursement', e.target.value)}
-                      className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-medium text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white">
+                      className={INPUT}>
                       <option value="CASHLESS">Cashless — Direct billing to insurer</option>
                       <option value="REIMBURSEMENT">Reimbursement — Patient pays, insurer refunds</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Pre-Auth Number (if obtained)</label>
+                    <label className={LABEL}>Pre-Auth Number (if obtained)</label>
                     <input value={form.preAuthNumber} onChange={e => updateField('preAuthNumber', e.target.value)}
-                      className="w-full border-2 border-[#d8d5ce] rounded-lg px-3 py-[10px] text-sm font-mono font-bold text-ink focus:border-coral focus:outline-none focus:ring-2 focus:ring-coral/10 bg-white" placeholder="Pre-authorization reference" />
+                      className={INPUT + ' font-mono'} placeholder="Pre-authorization reference" />
                   </div>
                 </div>
               </div>
             )}
 
             {/* LINE ITEMS */}
-            <div className="bg-white rounded-2xl border-2 border-[#e2dfd8] p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+            <div className={CARD}>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="font-display text-lg font-medium">Line <em className="italic text-coral-deep">items</em></h2>
-                <button type="button" onClick={addLineItem} className="text-sm text-coral font-semibold">+ Add item</button>
+                <h2 className="font-display text-lg font-semibold">Line <em className="italic text-coral-deep">items</em></h2>
+                <button type="button" onClick={addLineItem} className="text-sm text-coral font-bold">+ Add item</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-xs font-mono uppercase tracking-wider text-text-muted border-b border-line">
-                      <th className="pb-2 text-left">Description</th>
-                      {cc === 'IN' && <th className="pb-2 text-left w-24">HSN/SAC</th>}
-                      <th className="pb-2 text-right w-16">Qty</th>
-                      <th className="pb-2 text-right w-24">Rate</th>
-                      <th className="pb-2 text-right w-20">Discount</th>
-                      {docType === 'TAX_INVOICE' && <th className="pb-2 text-right w-16">Tax%</th>}
-                      <th className="pb-2 text-right w-24">Amount</th>
+                    <tr className="text-xs font-bold uppercase tracking-wide text-gray-500 border-b border-gray-200">
+                      <th className="pb-2 text-left font-bold">Description</th>
+                      {cc === 'IN' && <th className="pb-2 text-left w-24 font-bold">HSN/SAC</th>}
+                      <th className="pb-2 text-right w-16 font-bold">Qty</th>
+                      <th className="pb-2 text-right w-24 font-bold">Rate</th>
+                      <th className="pb-2 text-right w-20 font-bold">Discount</th>
+                      {docType === 'TAX_INVOICE' && <th className="pb-2 text-right w-16 font-bold">Tax%</th>}
+                      <th className="pb-2 text-right w-24 font-bold">Amount</th>
                       <th className="pb-2 w-8"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {form.lineItems.map((li, idx) => (
-                      <tr key={li.id} className="border-b border-line-soft">
+                      <tr key={li.id} className="border-b border-gray-100">
                         <td className="py-2 pr-2">
                           <input value={li.description} onChange={e => updateLineItem(idx, 'description', e.target.value)}
-                            className="w-full border-0 bg-[#f5f3ef] rounded-md px-2 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-coral/20" placeholder="Service description" />
+                            className="w-full border border-gray-300 bg-white text-gray-900 rounded px-2 py-1 text-sm focus:outline-none focus:border-coral focus:ring-1 focus:ring-coral/20" placeholder="Service description" />
                         </td>
                         {cc === 'IN' && (
                           <td className="py-2 pr-2">
                             <input value={li.hsnSac} onChange={e => updateLineItem(idx, 'hsnSac', e.target.value)}
-                              className="w-full border-0 bg-paper-soft rounded px-2 py-1 text-xs font-mono focus:outline-none" />
+                              className="w-full border border-gray-300 bg-white text-gray-900 rounded px-2 py-1 text-xs font-mono focus:outline-none focus:border-coral" />
                           </td>
                         )}
                         <td className="py-2 pr-2">
                           <input type="number" min="1" value={li.quantity} onChange={e => updateLineItem(idx, 'quantity', parseFloat(e.target.value) || 1)}
-                            className="w-full border-0 bg-paper-soft rounded px-2 py-1 text-sm text-right focus:outline-none" />
+                            className="w-full border border-gray-300 bg-white text-gray-900 rounded px-2 py-1 text-sm text-right focus:outline-none focus:border-coral" />
                         </td>
                         <td className="py-2 pr-2">
                           <input type="number" min="0" value={li.unitPrice} onChange={e => updateLineItem(idx, 'unitPrice', parseFloat(e.target.value) || 0)}
-                            className="w-full border-0 bg-paper-soft rounded px-2 py-1 text-sm text-right focus:outline-none" />
+                            className="w-full border border-gray-300 bg-white text-gray-900 rounded px-2 py-1 text-sm text-right focus:outline-none focus:border-coral" />
                         </td>
                         <td className="py-2 pr-2">
                           <input type="number" min="0" value={li.discount} onChange={e => updateLineItem(idx, 'discount', parseFloat(e.target.value) || 0)}
-                            className="w-full border-0 bg-paper-soft rounded px-2 py-1 text-sm text-right focus:outline-none" />
+                            className="w-full border border-gray-300 bg-white text-gray-900 rounded px-2 py-1 text-sm text-right focus:outline-none focus:border-coral" />
                         </td>
                         {docType === 'TAX_INVOICE' && (
                           <td className="py-2 pr-2">
                             <select value={li.taxRate} onChange={e => updateLineItem(idx, 'taxRate', parseFloat(e.target.value))}
-                              className="w-full border-0 bg-paper-soft rounded px-1 py-1 text-xs focus:outline-none">
+                              className="w-full border border-gray-300 bg-white text-gray-900 rounded px-1 py-1 text-xs focus:outline-none focus:border-coral">
                               <option value={0}>0%</option>
                               <option value={5}>5%</option>
                               <option value={12}>12%</option>
@@ -534,12 +542,12 @@ export default function OPDBillingPage() {
                             </select>
                           </td>
                         )}
-                        <td className="py-2 pr-2 text-right font-mono font-semibold">
+                        <td className="py-2 pr-2 text-right font-mono font-semibold text-gray-900">
                           {fmtCurrency(li.amount)}
                         </td>
                         <td>
                           {form.lineItems.length > 1 && (
-                            <button type="button" onClick={() => removeLineItem(idx)} className="text-text-muted hover:text-rose-500 text-lg leading-none">×</button>
+                            <button type="button" onClick={() => removeLineItem(idx)} className="text-gray-400 hover:text-rose-500 text-lg leading-none">×</button>
                           )}
                         </td>
                       </tr>
@@ -553,22 +561,22 @@ export default function OPDBillingPage() {
 
           {/* RIGHT: Summary + Payment */}
           <div className="space-y-4">
-            <div className="bg-white rounded-2xl border-2 border-[#e2dfd8] p-5 sticky top-20 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-              <h3 className="text-[11px] font-black uppercase tracking-widest text-[#888] mb-4 flex items-center gap-2"><span className="w-0.5 h-3.5 bg-coral rounded-full inline-block"></span>Bill Summary</h3>
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sticky top-20">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Bill Summary</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-text-dim">Subtotal</span>
-                  <span className="font-mono">{fmtCurrency(subtotal)}</span>
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-mono text-gray-900">{fmtCurrency(subtotal)}</span>
                 </div>
                 {totalTax > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-text-dim">{cc === 'IN' ? 'CGST + SGST' : cc === 'AE' ? 'VAT (5%)' : 'Tax'}</span>
-                    <span className="font-mono">{fmtCurrency(totalTax)}</span>
+                    <span className="text-gray-600">{cc === 'IN' ? 'CGST + SGST' : cc === 'AE' ? 'VAT (5%)' : 'Tax'}</span>
+                    <span className="font-mono text-gray-900">{fmtCurrency(totalTax)}</span>
                   </div>
                 )}
-                <div className="border-t-2 border-[#e2dfd8] pt-3 mt-1 flex justify-between items-baseline">
-                  <span>Total</span>
-                  <span className="font-mono text-3xl font-black tracking-tight text-ink">{fmtCurrency(total)}</span>
+                <div className="border-t border-gray-200 pt-2 flex justify-between font-bold text-base">
+                  <span className="text-gray-900">Total</span>
+                  <span className="font-mono text-2xl text-gray-900">{fmtCurrency(total)}</span>
                 </div>
                 {form.amountPaid > 0 && (
                   <div className="flex justify-between text-emerald-700 font-semibold">
@@ -577,7 +585,7 @@ export default function OPDBillingPage() {
                   </div>
                 )}
                 {balance > 0 && (
-                  <div className="flex justify-between text-rose-600 font-black text-base">
+                  <div className="flex justify-between text-rose-600 font-bold">
                     <span>Balance Due</span>
                     <span className="font-mono">{fmtCurrency(balance)}</span>
                   </div>
@@ -585,40 +593,40 @@ export default function OPDBillingPage() {
               </div>
 
               {/* PAYMENT COLLECTION */}
-              <div className="mt-4 pt-4 border-t border-line-soft">
-                <p className="text-[11px] font-black uppercase tracking-[0.07em] text-[#555] mb-3">Collect Payment</p>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-600 mb-3">Collect Payment</p>
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => { updateField('paymentMode', 'CASH'); updateField('amountPaid', total) }}
-                    className={`py-[10px] rounded-xl text-xs font-bold border-2 transition-all ${form.paymentMode === 'CASH' ? 'bg-emerald-50 border-emerald-400 text-emerald-700' : 'bg-white border-[#d0ccc4] text-[#666] hover:border-coral hover:text-coral'}`}>
+                    className={`py-2 rounded-lg text-xs font-bold border transition-all ${form.paymentMode === 'CASH' ? 'bg-emerald-50 border-emerald-400 text-emerald-700' : 'bg-white border-gray-300 text-gray-600 hover:border-coral hover:text-coral'}`}>
                     Cash
                   </button>
                   <button type="button" onClick={handleUpiPayment}
-                    className={`py-[10px] rounded-xl text-xs font-bold border-2 transition-all ${form.paymentMode === 'UPI' ? 'bg-blue-50 border-blue-400 text-blue-700' : 'bg-white border-[#d0ccc4] text-[#666] hover:border-coral hover:text-coral'}`}>
+                    className={`py-2 rounded-lg text-xs font-bold border transition-all ${form.paymentMode === 'UPI' ? 'bg-blue-50 border-blue-400 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:border-coral hover:text-coral'}`}>
                     UPI / QR
                   </button>
                   <button type="button" onClick={() => { updateField('paymentMode', 'CARD'); updateField('amountPaid', total) }}
-                    className={`py-[10px] rounded-xl text-xs font-bold border-2 transition-all ${form.paymentMode === 'CARD' ? 'bg-purple-50 border-purple-400 text-purple-700' : 'bg-white border-[#d0ccc4] text-[#666] hover:border-coral hover:text-coral'}`}>
+                    className={`py-2 rounded-lg text-xs font-bold border transition-all ${form.paymentMode === 'CARD' ? 'bg-purple-50 border-purple-400 text-purple-700' : 'bg-white border-gray-300 text-gray-600 hover:border-coral hover:text-coral'}`}>
                     Card
                   </button>
                   <button type="button" onClick={handleWhatsAppLink}
-                    className={`py-[10px] rounded-xl text-xs font-bold border-2 transition-all ${form.paymentMode === 'ONLINE_LINK' ? 'bg-emerald-50 border-emerald-400 text-emerald-700' : 'bg-white border-[#d0ccc4] text-[#666] hover:border-coral hover:text-coral'}`}>
+                    className={`py-2 rounded-lg text-xs font-bold border transition-all ${form.paymentMode === 'ONLINE_LINK' ? 'bg-emerald-50 border-emerald-400 text-emerald-700' : 'bg-white border-gray-300 text-gray-600 hover:border-coral hover:text-coral'}`}>
                     WA Link
                   </button>
                 </div>
                 {form.supplyType === 'B2B' && (
                   <button type="button" onClick={() => updateField('paymentMode', 'TPA')}
-                    className={`w-full mt-2 py-[10px] rounded-xl text-xs font-bold border-2 transition-all ${form.paymentMode === 'TPA' ? 'bg-amber-50 border-amber-400 text-amber-700' : 'bg-white border-[#d0ccc4] text-[#666] hover:border-coral hover:text-coral'}`}>
+                    className={`w-full mt-2 py-2 rounded-lg text-xs font-bold border transition-all ${form.paymentMode === 'TPA' ? 'bg-amber-50 border-amber-400 text-amber-700' : 'bg-white border-gray-300 text-gray-600 hover:border-coral hover:text-coral'}`}>
                     TPA / Insurance pays
                   </button>
                 )}
               </div>
 
               {form.supplyType === 'B2B' && form.payerId && (
-                <div className="mt-4 pt-4 border-t border-line-soft">
-                  <p className="text-xs font-mono text-text-muted mb-2">
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-xs text-gray-500 font-mono mb-2">
                     {cc === 'IN' ? 'Pre-auth SLA: 1 hour (IRDAI)' : 'Pre-auth SLA: 1 hour (DHA PD-05-2025)'}
                   </p>
-                  <button type="submit" className="w-full py-3 bg-coral text-white rounded-xl text-[14px] font-black tracking-wide shadow-[0_2px_12px_rgba(255,107,74,0.35)] hover:bg-coral-deep transition-colors">
+                  <button type="submit" className="w-full py-2.5 bg-coral text-white rounded-xl text-sm font-bold hover:opacity-90 transition-opacity">
                     Save Bill + Submit Claim
                   </button>
                 </div>
@@ -626,16 +634,16 @@ export default function OPDBillingPage() {
 
               {form.supplyType === 'B2C' && (
                 <div className="mt-4">
-                  <button type="submit" className="w-full py-3 bg-coral text-white rounded-xl text-[14px] font-black tracking-wide shadow-[0_2px_12px_rgba(255,107,74,0.35)] hover:bg-coral-deep transition-colors">
+                  <button type="submit" className="w-full py-2.5 bg-coral text-white rounded-xl text-sm font-bold hover:opacity-90 transition-opacity">
                     Save & Print Bill
                   </button>
                 </div>
               )}
 
               <div className="mt-4">
-                <label className="block text-[11px] font-bold uppercase tracking-[0.07em] text-[#555] mb-1.5">Notes to Patient</label>
+                <label className={LABEL}>Notes to Patient</label>
                 <textarea value={form.notes} onChange={e => updateField('notes', e.target.value)}
-                  className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:border-coral focus:outline-none resize-none" rows={2} />
+                  className="w-full border border-gray-300 bg-white text-gray-900 rounded-lg px-3 py-2 text-sm focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral/20 resize-none" rows={2} />
               </div>
             </div>
           </div>
