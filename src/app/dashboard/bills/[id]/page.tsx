@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/auth-context";
 import { getToken } from "@/lib/api";
@@ -20,6 +20,7 @@ type ProfileStatus = {
 
 export default function BillDetailPage() {
   var params = useParams();
+  var router = useRouter();
   var billId = String(params?.id || "");
   var { user } = useAuth();
 
@@ -179,6 +180,37 @@ export default function BillDetailPage() {
             >
               Change format...
             </button>
+            {/* Stage 5: Collect Payment for unpaid cash bills */}
+            {(bill as any)?.supply_type !== "TPA" && Number((bill as any)?.balance_amount || 0) > 0 && (
+              <button
+                onClick={function () { router.push("/dashboard/billing/opd?collect=" + billId); }}
+                className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+              >
+                Collect Payment
+              </button>
+            )}
+            {/* Stage 5: Submit to NHCX / eClaimLink for insurance bills */}
+            {(bill as any)?.supply_type === "B2B" && !(bill as any)?.claim_submitted_at && (
+              <button
+                onClick={function () { router.push("/dashboard/claims?bill=" + billId); }}
+                className="rounded-lg border border-blue-300 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+              >
+                Submit to {(bill as any)?.country_code === "AE" ? "eClaimLink" : "NHCX"}
+              </button>
+            )}
+            {/* Stage 5: WhatsApp receipt */}
+            {(bill as any)?.patient_phone && (
+              <button
+                onClick={function () {
+                  fetch("/api/hospitals/" + user?.hospital_id + "/rcm/billing/bills/" + billId + "/whatsapp-receipt", { method: "POST" })
+                    .then(function () { alert("Receipt sent via WhatsApp"); })
+                    .catch(function () { alert("Could not send receipt"); });
+                }}
+                className="rounded-lg border border-line bg-white px-4 py-2.5 text-sm hover:bg-paper-soft"
+              >
+                WhatsApp Receipt
+              </button>
+            )}
           </div>
         </div>
       </div>

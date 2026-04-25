@@ -42,6 +42,7 @@ export default function BillsListPage() {
   var [filter, setFilter] = useState<FilterKey>("all");
   var [search, setSearch] = useState("");
   var [page, setPage] = useState(1);
+  var [activeTab, setActiveTab] = useState<"all" | "insurance" | "pending">("all");
 
   useEffect(function () {
     if (!user?.hospital_id) return;
@@ -89,14 +90,22 @@ export default function BillsListPage() {
 
   var filtered = useMemo(function () {
     var q = search.trim().toLowerCase();
-    if (!q) return bills;
-    return bills.filter(function (b) {
+    var base = bills.filter(function (b) {
+      if (activeTab === "insurance") return b.supply_type === "B2B";
+      if (activeTab === "pending") {
+        var s = statusOf(b);
+        return s === "sent" || s === "partial" || s === "overdue";
+      }
+      return true;
+    });
+    if (!q) return base;
+    return base.filter(function (b) {
       var p = patientOf(b).toLowerCase();
       var ph = (b.patient_phone || "").toLowerCase();
       var bn = (b.bill_number || "").toLowerCase();
       return p.includes(q) || ph.includes(q) || bn.includes(q);
     });
-  }, [bills, search]);
+  }, [bills, search, activeTab]);
 
   var totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   var pageStart = (page - 1) * PAGE_SIZE;
@@ -157,6 +166,18 @@ export default function BillsListPage() {
               + New bill
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Stage 5: 3-tab navigation */}
+      <div className="px-8 pt-5 pb-0">
+        <div className="flex gap-1 bg-paper-soft border border-line rounded-xl p-1 w-fit">
+          {([ ["all", "All Bills"], ["insurance", "Insurance Claims"], ["pending", "Pending Payment"] ] as const).map(([tab, label]) => (
+            <button key={tab} onClick={function () { setActiveTab(tab); setPage(1); }}
+              className={"px-4 py-2 rounded-lg text-sm font-medium transition-all " + (activeTab === tab ? "bg-white text-ink shadow-sm font-semibold" : "text-text-dim hover:text-ink")}>
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
