@@ -222,7 +222,7 @@ export default function NewBillPage() {
                   type="text"
                   value={patientName}
                   onChange={function (e) { setPatientName(e.target.value); }}
-                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm focus:border-coral focus:bg-white focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink focus:border-coral focus:bg-white focus:outline-none"
                 />
               </div>
               <div>
@@ -232,7 +232,7 @@ export default function NewBillPage() {
                   value={patientPhone}
                   onChange={function (e) { setPatientPhone(e.target.value); }}
                   placeholder={(localeV2 as any)?.phone?.placeholder || "+91 98765 43210"}
-                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm focus:border-coral focus:bg-white focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink focus:border-coral focus:bg-white focus:outline-none"
                 />
               </div>
               <div>
@@ -242,7 +242,7 @@ export default function NewBillPage() {
                   value={doctorName}
                   onChange={function (e) { setDoctorName(e.target.value); }}
                   placeholder="e.g. Dr. Priya Sharma"
-                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm focus:border-coral focus:bg-white focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink focus:border-coral focus:bg-white focus:outline-none"
                 />
               </div>
               <div>
@@ -282,7 +282,7 @@ export default function NewBillPage() {
                     type="text"
                     value={buyerName}
                     onChange={function (e) { setBuyerName(e.target.value); }}
-                    className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm"
+                    className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink"
                   />
                 </div>
                 <div>
@@ -291,7 +291,7 @@ export default function NewBillPage() {
                     type="text"
                     value={buyerGstin}
                     onChange={function (e) { setBuyerGstin(e.target.value); }}
-                    className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 font-mono text-sm"
+                    className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 font-mono text-sm text-ink"
                   />
                 </div>
               </div>
@@ -324,32 +324,32 @@ export default function NewBillPage() {
                       value={i.description}
                       onChange={function (e) { updateItem(i.id, { description: e.target.value }); }}
                       placeholder="Service description"
-                      className="rounded-lg border border-line bg-paper px-3 py-2 text-sm"
+                      className="rounded-lg border border-line bg-paper px-3 py-2 text-sm text-ink"
                     />
                     <input
                       type="text"
                       value={i.code}
                       onChange={function (e) { updateItem(i.id, { code: e.target.value }); }}
                       placeholder="HSN/CPT"
-                      className="rounded-lg border border-line bg-paper px-3 py-2 font-mono text-sm"
+                      className="rounded-lg border border-line bg-paper px-3 py-2 font-mono text-sm text-ink"
                     />
                     <input
                       type="number"
                       value={i.qty}
                       onChange={function (e) { updateItem(i.id, { qty: Number(e.target.value) || 0 }); }}
-                      className="rounded-lg border border-line bg-paper px-3 py-2 text-right font-mono text-sm"
+                      className="rounded-lg border border-line bg-paper px-3 py-2 text-right font-mono text-sm text-ink"
                     />
                     <input
                       type="number"
                       value={i.rate}
                       onChange={function (e) { updateItem(i.id, { rate: Number(e.target.value) || 0 }); }}
                       placeholder="Rate"
-                      className="rounded-lg border border-line bg-paper px-3 py-2 text-right font-mono text-sm"
+                      className="rounded-lg border border-line bg-paper px-3 py-2 text-right font-mono text-sm text-ink"
                     />
                     <select
                       value={i.gst_rate}
                       onChange={function (e) { updateItem(i.id, { gst_rate: Number(e.target.value) }); }}
-                      className="rounded-lg border border-line bg-paper px-2 py-2 font-mono text-sm"
+                      className="rounded-lg border border-line bg-paper px-2 py-2 font-mono text-sm text-ink"
                     >
                       <option value={0}>0%</option>
                       <option value={5}>5%</option>
@@ -383,7 +383,7 @@ export default function NewBillPage() {
                   onChange={function (e) { setNotes(e.target.value); }}
                   rows={3}
                   placeholder="e.g. Next review in 7 days"
-                  className="w-full resize-none rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm"
+                  className="w-full resize-none rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink"
                 />
               </div>
               <div>
@@ -392,7 +392,7 @@ export default function NewBillPage() {
                   type="date"
                   value={dueDate}
                   onChange={function (e) { setDueDate(e.target.value); }}
-                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm"
+                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink"
                 />
               </div>
             </div>
