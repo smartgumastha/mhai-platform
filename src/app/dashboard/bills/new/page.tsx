@@ -43,6 +43,7 @@ export default function NewBillPage() {
   var [patientName, setPatientName] = useState("");
   var [patientPhone, setPatientPhone] = useState("");
   var [doctorName, setDoctorName] = useState("");
+  var [billType, setBillType] = useState("consultation");
   var [supplyType, setSupplyType] = useState<"B2C" | "B2B">("B2C");
   var [buyerGstin, setBuyerGstin] = useState("");
   var [buyerName, setBuyerName] = useState("");
@@ -121,11 +122,32 @@ export default function NewBillPage() {
 
     setSaving(true);
     try {
+      // 1. Fetch next bill number (does not consume the sequence)
+      var bnRes = await fetch("/api/hospitals/" + hospitalId + "/rcm/billing/next-bill-number", {
+        headers: { Authorization: "Bearer " + token },
+      });
+      var bnData = await bnRes.json();
+      var billNumber = (bnData && bnData.next_bill_number) || ("DRAFT-" + Date.now());
+
+      // 2. Derive currency from locale
+      var cc = (localeV2 as any)?.country_code || "IN";
+      var currencyCode = cc === "AE" ? "AED" : cc === "GB" ? "GBP" : cc === "US" ? "USD" : "INR";
+
+      // 3. Today as YYYY-MM-DD
+      var today = new Date().toISOString().split("T")[0];
+
+      // 4. Map supply_type to bill_category (B2C → self_pay, B2B → insurance)
+      var billCategory = supplyType === "B2B" ? "insurance" : "self_pay";
+
       var body = {
         patient_name: patientName.trim(),
         patient_phone: patientPhone.trim() || null,
-        doctor_name: doctorName.trim() || null,
-        supply_type: supplyType,
+        attending_doctor: doctorName.trim() || null,
+        bill_number: billNumber,
+        bill_date: today,
+        bill_type: billType,
+        bill_category: billCategory,
+        currency: currencyCode,
         buyer_gstin: supplyType === "B2B" ? buyerGstin.trim() || null : null,
         buyer_name: supplyType === "B2B" ? buyerName.trim() || null : null,
         items: items
@@ -140,7 +162,7 @@ export default function NewBillPage() {
               amount: i.qty * i.rate * (1 + i.gst_rate / 100),
             };
           }),
-        subtotal: subtotal,
+        subtotal_amount: subtotal,
         tax_amount: totalGst,
         total_amount: total,
         notes: notes.trim() || null,
@@ -153,9 +175,9 @@ export default function NewBillPage() {
       });
       var data = await res.json();
       if (data && data.success) {
-        var bill = data.bill || data.data;
-        notify.success("Bill created", bill?.bill_number ? "Bill " + bill.bill_number : undefined);
-        if (bill?.id) router.push("/dashboard/bills/" + bill.id);
+        var newBillId = data.bill_id || (data.bill && data.bill.id) || (data.data && data.data.id);
+        notify.success("Bill created — " + billNumber);
+        if (newBillId) router.push("/dashboard/bills/" + newBillId);
         else router.push("/dashboard/bills");
       } else {
         notify.error("Could not save bill", (data && data.error) || (data && data.message) || "Try again");
@@ -244,6 +266,20 @@ export default function NewBillPage() {
                   placeholder="e.g. Dr. Priya Sharma"
                   className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink focus:border-coral focus:bg-white focus:outline-none"
                 />
+              </div>
+              <div>
+                <Label>Bill type</Label>
+                <select
+                  value={billType}
+                  onChange={function (e) { setBillType(e.target.value); }}
+                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-sm text-ink focus:border-coral focus:bg-white focus:outline-none"
+                >
+                  <option value="consultation">Consultation (OPD)</option>
+                  <option value="procedure">Procedure</option>
+                  <option value="inpatient">Inpatient (IPD)</option>
+                  <option value="diagnostic">Diagnostic / Lab</option>
+                  <option value="pharmacy">Pharmacy</option>
+                </select>
               </div>
               <div>
                 <Label>Supply type</Label>
