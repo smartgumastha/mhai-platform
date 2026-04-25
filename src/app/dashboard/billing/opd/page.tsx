@@ -1,8 +1,4 @@
 'use client'
-// /dashboard/billing/opd — Billing Suite P2
-// All fields from Apollo Hospital bills + DHA eClaimLink provider manual.
-// Standard Tailwind only. No custom design tokens.
-
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/providers/auth-context'
@@ -20,12 +16,10 @@ import type {
   PaymentMode, SupplyType, LineItem, OPDBillForm, PayerOption
 } from '@/lib/billing/billingTypes'
 
-// ── Style constants ────────────────────────────────────────────────────────────
 var I = 'w-full border border-gray-300 bg-white text-gray-900 rounded-lg px-3 py-2.5 text-sm font-medium focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500/20'
 var L = 'block text-xs font-bold uppercase tracking-wide text-gray-600 mb-1.5'
 var C = 'bg-white rounded-xl border border-gray-200 shadow-sm p-5 mb-4'
 
-// ── Defaults ───────────────────────────────────────────────────────────────────
 var TODAY_DATE = new Date().toISOString().split('T')[0]
 var TODAY_DT   = new Date().toISOString().slice(0, 16)
 
@@ -92,31 +86,79 @@ var IPD_CHARGE_ROWS = [
   { key: 'miscellaneous',       label: 'Miscellaneous' },
 ] as const
 
-// ── Component ──────────────────────────────────────────────────────────────────
+var ICD10_FALLBACK: Partial<Record<BillCategory, Array<{ code: string; desc: string }>>> = {
+  CONSULTATION: [
+    { code: 'Z00.00', desc: 'General adult medical exam, without abnormal findings' },
+    { code: 'R50.9',  desc: 'Fever, unspecified' },
+    { code: 'J00',    desc: 'Acute nasopharyngitis (Common cold)' },
+    { code: 'R05',    desc: 'Cough' },
+    { code: 'R51',    desc: 'Headache' },
+  ],
+  PROCEDURE: [
+    { code: 'Z48.89', desc: 'Encounter for other specified surgical aftercare' },
+    { code: 'Z51.11', desc: 'Encounter for antineoplastic chemotherapy' },
+  ],
+  DIAGNOSTIC_LAB: [
+    { code: 'R68.89', desc: 'Other specified symptoms and signs' },
+    { code: 'Z13.9',  desc: 'Encounter for screening, unspecified' },
+  ],
+  PHYSIOTHERAPY: [
+    { code: 'M54.5',  desc: 'Low back pain' },
+    { code: 'M79.3',  desc: 'Panniculitis, unspecified' },
+  ],
+  DENTAL: [
+    { code: 'K02.9',  desc: 'Dental caries, unspecified' },
+    { code: 'K08.9',  desc: 'Disorder of teeth, unspecified' },
+  ],
+}
+
+type DepositRecord = { amount: number; date: string; ref: string; advance_type?: string }
+
 export default function OPDBillingPage() {
-  var { user }       = useAuth()
-  var { localeV2 }   = useLocale()
+  var { user }        = useAuth()
+  var { localeV2 }    = useLocale()
   var { format: fmt } = useCurrency()
   var notify          = useNotification()
   var router          = useRouter()
   var cc              = localeV2?.country_code || 'IN'
   var hospitalId      = user?.hospital_id
 
-  var [form, setForm]           = useState<OPDBillForm>(DEFAULT_FORM)
-  var [billNumber, setBillNumber] = useState<string>('')
-  var [payers, setPayers]       = useState<PayerOption[]>([])
-  var [saving, setSaving]       = useState(false)
-  var [errors, setErrors]       = useState<Record<string, string>>({})
-  var [patientSearch, setPatientSearch] = useState('')
-  var [searchResults, setSearchResults] = useState<any[]>([])
-  var [searching, setSearching] = useState(false)
-  var [savedBillId, setSavedBillId]     = useState('')
-  var [savedBillStatus, setSavedBillStatus] = useState<WorkflowBillStatus>('DRAFT')
+  var [form, setForm]                 = useState<OPDBillForm>(DEFAULT_FORM)
+  var [billNumber, setBillNumber]     = useState<string>('')
+  var [payers, setPayers]             = useState<PayerOption[]>([])
+  var [saving, setSaving]             = useState(false)
+  var [errors, setErrors]             = useState<Record<string, string>>({})
+  var [patientSearch, setPatientSearch]       = useState('')
+  var [searchResults, setSearchResults]       = useState<any[]>([])
+  var [searching, setSearching]               = useState(false)
+  var [savedBillId, setSavedBillId]           = useState('')
+  var [savedBillStatus, setSavedBillStatus]   = useState<WorkflowBillStatus>('DRAFT')
+
+  // Fix 4: ICD-10 search state
+  var [icd10Query, setIcd10Query]             = useState('')
+  var [icd10Options, setIcd10Options]         = useState<Array<{ code: string; desc: string }>>([])
+  var [icd10Searching, setIcd10Searching]     = useState(false)
+  var [icd10Description, setIcd10Description] = useState('')
+
+  // Fix 5: approval note
+  var [approvalNote, setApprovalNote] = useState('')
+
+  // Fix 7: existing deposits
+  var [existingDeposits, setExistingDeposits]   = useState<DepositRecord[]>([])
+  var [depositsLoading, setDepositsLoading]     = useState(false)
 
   var docType      = getDocType(form.billCategory, cc)
   var docTypeLabel = getDocTypeLabel(docType, cc)
   var los          = getLengthOfStay(form.admissionDate, form.dischargeDate)
   var summary      = calcBillSummary(form)
+
+  // Fix 2: derived — patient was selected from search
+  var patientSelected = Boolean(form.patientId)
+
+  // Fix 6: needs approval
+  var discPct       = form.discountType === 'PERCENT' ? form.discountValue : (summary.subtotal > 0 ? form.discountValue / summary.subtotal * 100 : 0)
+  var needsApproval = discPct >= 10
+  var discLevel     = discPct < 10 ? { label: 'Self-approve', color: 'text-green-600' } : discPct < 25 ? { label: 'Supervisor required', color: 'text-amber-600' } : { label: 'Doctor / HOD required', color: 'text-red-600' }
 
   // Fetch bill number on mount
   useEffect(() => {
@@ -130,7 +172,7 @@ export default function OPDBillingPage() {
       .catch(() => {})
   }, [hospitalId])
 
-  // Fetch payers when country changes
+  // Fetch payers
   useEffect(() => {
     if (!hospitalId) return
     var token = getToken()
@@ -141,6 +183,20 @@ export default function OPDBillingPage() {
       .then(d => setPayers(d.payers || []))
       .catch(() => {})
   }, [cc, hospitalId])
+
+  // Fix 7: Fetch existing deposits when patient is selected
+  useEffect(() => {
+    if (!form.patientId || !hospitalId) { setExistingDeposits([]); return }
+    setDepositsLoading(true)
+    var token = getToken()
+    fetch(`/api/hospitals/${hospitalId}/rcm/patients/${form.patientId}/deposits`, {
+      headers: token ? { Authorization: 'Bearer ' + token } : {}
+    })
+      .then(r => r.ok ? r.json() : Promise.resolve({ deposits: [] }))
+      .then(d => setExistingDeposits(d.deposits || []))
+      .catch(() => setExistingDeposits([]))
+      .finally(() => setDepositsLoading(false))
+  }, [form.patientId, hospitalId])
 
   function updateField<K extends keyof OPDBillForm>(key: K, val: OPDBillForm[K]) {
     setForm(f => ({ ...f, [key]: val }))
@@ -191,20 +247,71 @@ export default function OPDBillingPage() {
     finally { setSearching(false) }
   }, [hospitalId])
 
+  // Fix 2 + 3: populate address and lock fields after patient selection
   function selectPatient(p: any) {
     setForm(f => ({
       ...f,
-      patientId: String(p.patient_id || p.id || ''),
-      uhid: p.uhid || p.patient_uhid || '',
-      patientName: p.name || p.patient_name || '',
-      patientPhone: p.phone || p.mobile || p.patient_phone || '',
-      patientAge: p.age || '',
+      patientId:     String(p.patient_id || p.id || ''),
+      uhid:          p.uhid || p.patient_uhid || '',
+      patientName:   p.name || p.patient_name || '',
+      patientPhone:  p.phone || p.mobile || p.patient_phone || '',
+      patientAddress: p.address || p.patient_address || '',
+      patientAge:    p.age || '',
       patientGender: (p.gender === 'M' ? 'MALE' : p.gender === 'F' ? 'FEMALE' : p.gender) || '',
-      abhaNumber: p.abha_number || '',
-      emiratesId: p.emirates_id || '',
+      abhaNumber:    p.abha_number || '',
+      emiratesId:    p.emirates_id || '',
     }))
     setPatientSearch(p.name || p.patient_name || '')
     setSearchResults([])
+  }
+
+  function clearPatient() {
+    setForm(f => ({
+      ...f,
+      patientId: '', uhid: '', patientName: '', patientPhone: '',
+      patientAddress: '', patientAge: '', patientGender: '', abhaNumber: '', emiratesId: '',
+    }))
+    setPatientSearch('')
+    setExistingDeposits([])
+  }
+
+  // Fix 4: ICD-10 search
+  var searchIcd10 = useCallback(async (q: string) => {
+    setIcd10Query(q)
+    if (!q.trim()) { setIcd10Options([]); return }
+    setIcd10Searching(true)
+    try {
+      var token = getToken()
+      var res = await fetch(`/api/rcm/icd10?q=${encodeURIComponent(q)}`, {
+        headers: token ? { Authorization: 'Bearer ' + token } : {}
+      })
+      if (res.ok) {
+        var data = await res.json()
+        setIcd10Options(data.results || [])
+        return
+      }
+      throw new Error('not ok')
+    } catch {
+      var fb: Array<{ code: string; desc: string }> = (ICD10_FALLBACK as any)[form.billCategory] || []
+      var ql = q.toLowerCase()
+      setIcd10Options(fb.filter(x => x.code.toLowerCase().includes(ql) || x.desc.toLowerCase().includes(ql)).slice(0, 8))
+    } finally {
+      setIcd10Searching(false)
+    }
+  }, [form.billCategory])
+
+  function selectIcd10(code: string, desc: string) {
+    updateField('icd10Primary', code)
+    setIcd10Description(desc)
+    setIcd10Query(code + ' — ' + desc)
+    setIcd10Options([])
+  }
+
+  function clearIcd10() {
+    updateField('icd10Primary', '')
+    setIcd10Description('')
+    setIcd10Query('')
+    setIcd10Options([])
   }
 
   async function handleUpiPayment() {
@@ -231,66 +338,95 @@ export default function OPDBillingPage() {
     } catch { notify.error('WhatsApp link error') }
   }
 
-  async function saveBill(e: React.FormEvent) {
-    e.preventDefault()
+  // Fix 8: submitBill replaces saveBill — accepts target status
+  async function submitBill(targetStatus: WorkflowBillStatus) {
     var { valid, errors: errs } = validateBillForm(form, cc)
     if (!valid) { setErrors(errs); notify.error('Please fix the highlighted fields'); return }
     if (!hospitalId) { notify.error('Not signed in'); return }
+    if (needsApproval && targetStatus === 'PENDING_APPROVAL' && !approvalNote.trim()) {
+      setErrors(e => ({ ...e, approvalNote: 'Notes to approver are required when sending for approval' }))
+      notify.error('Please add notes to approver')
+      return
+    }
     setSaving(true)
     try {
       var token = getToken()
+
+      // Status transition on an already-saved bill
+      if (savedBillId && (targetStatus === 'FINAL' || targetStatus === 'PENDING_APPROVAL')) {
+        var pRes = await fetch(`/api/hospitals/${hospitalId}/rcm/billing/bills/${savedBillId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ status: targetStatus, ...(approvalNote ? { approval_note: approvalNote } : {}) }),
+        })
+        if (!pRes.ok) { var pe = await pRes.json(); throw new Error(pe.error || 'Status update failed') }
+        var pd = await pRes.json()
+        setSavedBillStatus(targetStatus)
+        if (targetStatus === 'FINAL') {
+          notify.success('Bill finalized — ' + (pd.bill_number || billNumber))
+          router.push('/dashboard/bills/' + savedBillId)
+        } else {
+          notify.success('Sent for approval — awaiting supervisor')
+        }
+        return
+      }
+
+      // Create bill
       var payload = {
-        bill_number: billNumber || ('DRAFT-' + Date.now()),
-        bill_date: form.billDate || new Date().toISOString(),
-        service_date: form.serviceDate,
-        admission_date: form.admissionDate || null,
-        discharge_date: form.dischargeDate || null,
-        ward_category: form.wardCategory || null,
-        patient_id: form.patientId || null,
-        patient_name: form.patientName,
-        patient_phone: form.patientPhone || null,
-        patient_address: form.patientAddress || null,
-        patient_age: form.patientAge || null,
-        patient_gender: form.patientGender || null,
-        patient_uhid: form.uhid || null,
-        abha_number: form.abhaNumber || null,
-        emirates_id: form.emiratesId || null,
-        nationality_code: form.nationalityCode || null,
-        passport_number: form.passportNumber || null,
-        attending_doctor: form.attendingDoctor || null,
-        doctor_specialty: form.doctorSpecialty || null,
-        referring_doctor: form.referringDoctor || null,
-        visit_type: form.visitType,
-        icd10_primary: form.icd10Primary || null,
-        cpt_code: form.cptCode || null,
+        bill_number:       billNumber || ('DRAFT-' + Date.now()),
+        bill_date:         new Date().toISOString(),
+        service_date:      form.serviceDate,
+        admission_date:    form.admissionDate || null,
+        discharge_date:    form.dischargeDate || null,
+        ward_category:     form.wardCategory || null,
+        patient_id:        form.patientId || null,
+        patient_name:      form.patientName,
+        patient_phone:     form.patientPhone || null,
+        patient_address:   form.patientAddress || null,
+        patient_age:       form.patientAge || null,
+        patient_gender:    form.patientGender || null,
+        patient_uhid:      form.uhid || null,
+        abha_number:       form.abhaNumber || null,
+        emirates_id:       form.emiratesId || null,
+        nationality_code:  form.nationalityCode || null,
+        passport_number:   form.passportNumber || null,
+        attending_doctor:  form.attendingDoctor || null,
+        doctor_specialty:  form.doctorSpecialty || null,
+        referring_doctor:  form.referringDoctor || null,
+        visit_type:        form.visitType,
+        icd10_primary:     form.icd10Primary || null,
+        icd10_description: icd10Description || null,
+        cpt_code:          form.cptCode || null,
         presenting_complaint: form.presentingComplaint || null,
-        bill_type: apiBillType(form.billType),
-        bill_category: apiBillCategory(form.supplyType),
-        doc_type: docType,
-        encounter_type: form.billType,
-        supply_type: form.supplyType,
-        currency: getCurrency(cc),
-        subtotal_amount: summary.subtotal,
-        tax_amount: summary.taxAmount,
-        discount_amount: summary.discountAmount,
-        total_amount: summary.netAmount,
-        paid_amount: form.amountPaid,
-        balance_amount: summary.balanceDue,
-        bill_discount_type: form.discountType,
-        bill_discount_value: form.discountValue,
+        bill_type:         apiBillType(form.billType),
+        bill_category:     apiBillCategory(form.supplyType),
+        doc_type:          docType,
+        encounter_type:    form.billType,
+        supply_type:       form.supplyType,
+        currency:          getCurrency(cc),
+        subtotal_amount:   summary.subtotal,
+        tax_amount:        summary.taxAmount,
+        discount_amount:   summary.discountAmount,
+        total_amount:      summary.netAmount,
+        paid_amount:       form.amountPaid,
+        balance_amount:    summary.balanceDue,
+        bill_discount_type:   form.discountType,
+        bill_discount_value:  form.discountValue,
         bill_discount_reason: form.discountReason || null,
-        advance_amount: form.advanceAmount,
-        advance_date: form.advanceDate || null,
-        advance_ref: form.advanceRef || null,
-        payer_id: form.payerId || null,
+        approval_note:     approvalNote || null,
+        advance_amount:    form.advanceAmount,
+        advance_date:      form.advanceDate || null,
+        advance_ref:       form.advanceRef || null,
+        payer_id:          form.payerId || null,
         member_card_number: form.memberCardNumber || null,
-        policy_number: form.policyNumber || null,
-        card_expiry_date: form.cardExpiryDate || null,
+        policy_number:     form.policyNumber || null,
+        card_expiry_date:  form.cardExpiryDate || null,
         cashless_or_reimbursement: form.cashlessOrReimbursement,
         insurance_approved_amount: form.insuranceApprovedAmount || null,
-        patient_copay: form.patientCopay || null,
-        preauth_number: form.preAuthNumber || null,
-        payment_mode: form.paymentMode,
+        patient_copay:     form.patientCopay || null,
+        preauth_number:    form.preAuthNumber || null,
+        payment_mode:      form.paymentMode,
+        bill_status:       targetStatus,
         line_items: form.billType !== 'IPD' ? form.lineItems.map(li => ({
           description: li.description, hsn_sac: li.hsnSac, service_date: li.serviceDate,
           quantity: li.quantity, unit_price: li.unitPrice, discount: li.discount,
@@ -322,8 +458,15 @@ export default function OPDBillingPage() {
       var saved = await res.json()
       var newBillId = String(saved.bill_id || saved.bill?.id || saved.id || '')
       setSavedBillId(newBillId)
-      setSavedBillStatus('DRAFT')
-      notify.success('Bill saved — ' + (billNumber || 'DRAFT'))
+      setSavedBillStatus(targetStatus)
+      if (targetStatus === 'DRAFT') {
+        notify.success('Draft saved')
+      } else if (targetStatus === 'FINAL') {
+        notify.success('Bill finalized — ' + (saved.bill_number || billNumber))
+        if (newBillId) router.push('/dashboard/bills/' + newBillId)
+      } else {
+        notify.success('Sent for approval — awaiting supervisor')
+      }
     } catch (err: any) {
       notify.error(err.message || 'Save failed')
     } finally {
@@ -331,7 +474,6 @@ export default function OPDBillingPage() {
     }
   }
 
-  // ── Status banner ──────────────────────────────────────────────────────────
   var statusBanner = {
     DRAFT:            { bg: 'bg-amber-50 border-amber-200',  text: 'text-amber-800', msg: 'Draft — editable, not sent to patient' },
     PENDING_APPROVAL: { bg: 'bg-blue-50 border-blue-200',    text: 'text-blue-800',  msg: 'Pending approval — awaiting supervisor' },
@@ -340,15 +482,13 @@ export default function OPDBillingPage() {
     CANCELLED:        { bg: 'bg-gray-50 border-gray-200',    text: 'text-gray-700',  msg: 'Cancelled' },
   }[form.billStatus]
 
-  // ── Discount approval level ────────────────────────────────────────────────
-  var discPct = form.discountType === 'PERCENT' ? form.discountValue : (summary.subtotal > 0 ? form.discountValue / summary.subtotal * 100 : 0)
-  var discLevel = discPct < 10 ? { label: 'Self-approve', color: 'text-green-600' } : discPct < 25 ? { label: 'Supervisor required', color: 'text-amber-600' } : { label: 'Doctor / HOD required', color: 'text-red-600' }
-
   var E = (k: string) => errors[k] ? <p className="text-xs text-red-600 mt-1">{errors[k]}</p> : null
+
+  var existingDepositTotal = existingDeposits.reduce((s, d) => s + (d.amount || 0), 0)
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <form onSubmit={saveBill} noValidate>
+      <form onSubmit={e => e.preventDefault()} noValidate>
 
         {/* ── HEADER ─────────────────────────────────────────────────────── */}
         <div className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm px-6 py-3">
@@ -366,18 +506,51 @@ export default function OPDBillingPage() {
                 </div>
               </div>
             </div>
+
+            {/* Fix 8: Status-aware topbar buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className={`hidden sm:inline text-xs font-bold px-2 py-1 rounded border ${docType === 'BILL_OF_SUPPLY' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                 {docTypeLabel}
               </span>
-              <button type="button" onClick={() => router.back()}
-                className="px-4 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-600 bg-white hover:bg-gray-50">
-                Cancel
-              </button>
-              <button type="submit" disabled={saving}
-                className="px-5 py-2 text-sm font-bold bg-orange-600 text-white rounded-lg disabled:opacity-60 hover:bg-orange-700">
-                {saving ? 'Saving…' : 'Save Bill'}
-              </button>
+
+              {savedBillStatus === 'FINAL' && savedBillId ? (
+                <button type="button" onClick={() => router.push('/dashboard/billing/print?billId=' + savedBillId)}
+                  className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  Print Bill
+                </button>
+              ) : savedBillStatus === 'VOID' ? (
+                <span className="px-3 py-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg font-medium">Voided</span>
+              ) : (
+                <>
+                  <button type="button" onClick={() => router.back()}
+                    className="px-4 py-2 text-sm font-semibold border border-gray-300 rounded-lg text-gray-600 bg-white hover:bg-gray-50">
+                    Cancel
+                  </button>
+                  {savedBillStatus === 'PENDING_APPROVAL' ? (
+                    <span className="px-3 py-2 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg font-medium">
+                      Awaiting approval…
+                    </span>
+                  ) : (
+                    <>
+                      <button type="button" onClick={() => submitBill('DRAFT')} disabled={saving}
+                        className="px-4 py-2 text-sm font-semibold border border-gray-300 bg-white text-gray-700 rounded-lg disabled:opacity-60 hover:bg-gray-50">
+                        {saving ? 'Saving…' : 'Save Draft'}
+                      </button>
+                      {savedBillId && needsApproval ? (
+                        <button type="button" onClick={() => submitBill('PENDING_APPROVAL')} disabled={saving}
+                          className="px-5 py-2 text-sm font-bold bg-orange-500 text-white rounded-lg disabled:opacity-60 hover:bg-orange-600">
+                          {saving ? 'Sending…' : 'Send for Approval'}
+                        </button>
+                      ) : (
+                        <button type="button" onClick={() => submitBill('FINAL')} disabled={saving}
+                          className="px-5 py-2 text-sm font-bold bg-green-600 text-white rounded-lg disabled:opacity-60 hover:bg-green-700">
+                          {saving ? 'Finalizing…' : 'Finalize Bill'}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -399,25 +572,33 @@ export default function OPDBillingPage() {
         <div className="max-w-6xl mx-auto px-6 py-6 grid grid-cols-3 gap-6">
           <div className="col-span-2">
 
-            {/* §3 STATUS BANNER */}
+            {/* Status banner */}
             <div className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border mb-4 ${statusBanner.bg}`}>
               <span className={`text-xs font-bold ${statusBanner.text}`}>{statusBanner.msg}</span>
             </div>
 
-            {/* §1 BILL IDENTITY */}
+            {/* §1 BILL IDENTITY — Fix 1 */}
             <div className={C}>
               <h2 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Bill Identity</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className={L}>Bill Date *</label>
-                  <input type="datetime-local" value={form.billDate} onChange={e => updateField('billDate', e.target.value)}
-                    className={I + (errors.billDate ? ' border-red-400' : '')} required />
-                  {E('billDate')}
+                  <label className={L}>Bill Date</label>
+                  {/* Fix 1: readonly — set by backend on save */}
+                  <input
+                    readOnly
+                    value={new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    title="Bill date is set automatically when bill is saved"
+                    className={I + ' bg-gray-50 text-gray-500 cursor-not-allowed'}
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">Set automatically when bill is saved</p>
                 </div>
                 <div>
+                  {/* Fix 1: min=today — no backdating */}
                   <label className={L}>Service Date *</label>
-                  <input type="date" value={form.serviceDate} onChange={e => updateField('serviceDate', e.target.value)}
+                  <input type="date" value={form.serviceDate} min={TODAY_DATE}
+                    onChange={e => updateField('serviceDate', e.target.value)}
                     className={I + (errors.serviceDate ? ' border-red-400' : '')} required />
+                  <p className="text-[10px] text-gray-400 mt-1">Date patient was seen — cannot be before today</p>
                   {E('serviceDate')}
                 </div>
                 {form.billType === 'IPD' && (
@@ -454,17 +635,27 @@ export default function OPDBillingPage() {
               </div>
             </div>
 
-            {/* §4 PATIENT DETAILS */}
+            {/* §4 PATIENT DETAILS — Fix 2 + 3 */}
             <div className={C}>
               <h2 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Patient Details</h2>
 
               {/* Patient search */}
               <div className="mb-4 relative">
-                <label className={L}>Search Patient (UHID / Phone / Name)</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className={L + ' mb-0'}>Search Patient (UHID / Phone / Name)</label>
+                  {patientSelected && (
+                    <button type="button" onClick={clearPatient}
+                      className="text-xs text-gray-400 hover:text-red-500 font-medium">
+                      Clear selection ×
+                    </button>
+                  )}
+                </div>
                 <div className="relative">
                   <input value={patientSearch}
                     onChange={e => { setPatientSearch(e.target.value); searchPatients(e.target.value) }}
-                    className={I + ' pr-10'} placeholder="Type UHID, phone, or name to search…" />
+                    disabled={patientSelected}
+                    className={I + ' pr-10' + (patientSelected ? ' bg-gray-50 text-gray-500 cursor-not-allowed' : '')}
+                    placeholder={patientSelected ? 'Patient selected — clear to search again' : 'Type UHID, phone, or name to search…'} />
                   <span className="absolute right-3 top-3 text-gray-400 text-sm">{searching ? '⟳' : '🔍'}</span>
                 </div>
                 {searchResults.length > 0 && (
@@ -481,27 +672,50 @@ export default function OPDBillingPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                {/* Fix 2: Patient name readonly when selected */}
                 <div>
-                  <label className={L}>Patient Name *</label>
-                  <input value={form.patientName} onChange={e => updateField('patientName', e.target.value)}
-                    className={I + (errors.patientName ? ' border-red-400' : '')} placeholder="Full name" />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className={L + ' mb-0'}>Patient Name *</label>
+                    {patientSelected && (
+                      <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                        From patient record
+                      </span>
+                    )}
+                  </div>
+                  <input value={form.patientName}
+                    readOnly={patientSelected}
+                    onChange={patientSelected ? undefined : e => updateField('patientName', e.target.value)}
+                    className={I + (errors.patientName ? ' border-red-400' : '') + (patientSelected ? ' bg-gray-50 text-gray-700 cursor-default' : '')}
+                    placeholder="Full name" />
                   {E('patientName')}
                 </div>
+
                 <div>
                   <label className={L}>Phone</label>
                   <input value={form.patientPhone} onChange={e => updateField('patientPhone', e.target.value)}
                     className={I} placeholder={cc === 'AE' ? '+971 XX XXX XXXX' : '+91 XXXXX XXXXX'} />
                 </div>
+
+                {/* Fix 2: UHID — never manually editable */}
                 <div>
                   <label className={L}>UHID</label>
-                  <input value={form.uhid} onChange={e => updateField('uhid', e.target.value)}
-                    className={I} placeholder="Auto-assigned if blank" />
+                  <input
+                    readOnly
+                    value={form.uhid}
+                    className={I + ' bg-gray-50 text-gray-600 cursor-not-allowed font-mono'}
+                    placeholder={patientSelected ? 'No UHID on record' : 'Auto-assigned after patient search'}
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    {patientSelected ? 'From patient registration — not editable' : 'Assigned when patient is registered'}
+                  </p>
                 </div>
+
                 <div>
                   <label className={L}>Age</label>
                   <input value={form.patientAge} onChange={e => updateField('patientAge', e.target.value)}
                     className={I} placeholder="e.g. 35Y / 6M" />
                 </div>
+
                 <div>
                   <label className={L}>Gender *</label>
                   <select value={form.patientGender} onChange={e => updateField('patientGender', e.target.value as any)}
@@ -513,23 +727,58 @@ export default function OPDBillingPage() {
                   </select>
                   {E('patientGender')}
                 </div>
+
+                {/* Fix 3: Address — always readonly, auto-filled from patient record */}
                 <div>
                   <label className={L}>Address</label>
-                  <input value={form.patientAddress} onChange={e => updateField('patientAddress', e.target.value)}
-                    className={I} placeholder="Patient address" />
+                  <input
+                    readOnly
+                    value={form.patientAddress}
+                    className={I + ' bg-gray-50 text-gray-600 cursor-default'}
+                    placeholder="No address on file"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    Pulled from patient registration.{' '}
+                    {patientSelected && form.patientId && (
+                      <a href={`/dashboard/patients/${form.patientId}`} className="text-orange-500 hover:underline">
+                        Update in patient profile →
+                      </a>
+                    )}
+                  </p>
                 </div>
+
                 <div>
                   <label className={L}>Referring Doctor</label>
                   <input value={form.referringDoctor} onChange={e => updateField('referringDoctor', e.target.value)}
                     className={I} placeholder="Referred by" />
                 </div>
+
+                {/* Fix 2: ABHA — always readonly */}
                 {cc === 'IN' && (
                   <div>
                     <label className={L}>ABHA Number</label>
-                    <input value={form.abhaNumber} onChange={e => updateField('abhaNumber', e.target.value)}
-                      className={I} placeholder="14-digit ABHA (optional)" />
+                    {patientSelected ? (
+                      form.abhaNumber ? (
+                        <input readOnly value={form.abhaNumber}
+                          className={I + ' bg-gray-50 text-emerald-700 cursor-default font-mono'} />
+                      ) : (
+                        <div className={I + ' bg-gray-50 text-gray-400 cursor-default'}>No ABHA on record</div>
+                      )
+                    ) : (
+                      <input readOnly value=""
+                        className={I + ' bg-gray-50 text-gray-400 cursor-not-allowed'}
+                        placeholder="Populated from patient record" />
+                    )}
+                    {patientSelected && form.patientId && (
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        <a href={`/dashboard/patients/${form.patientId}`} className="text-orange-500 hover:underline">
+                          Update ABHA in patient profile →
+                        </a>
+                      </p>
+                    )}
                   </div>
                 )}
+
                 {cc === 'AE' && (
                   <>
                     <div>
@@ -554,7 +803,7 @@ export default function OPDBillingPage() {
               </div>
             </div>
 
-            {/* §5 VISIT & CLINICAL */}
+            {/* §5 VISIT & CLINICAL — Fix 4 (ICD-10 searchable) */}
             <div className={C}>
               <h2 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Visit & Clinical</h2>
               <div className="grid grid-cols-2 gap-4">
@@ -578,13 +827,51 @@ export default function OPDBillingPage() {
                     <option value="TELECONSULT">Teleconsult</option>
                   </select>
                 </div>
-                <div>
-                  <label className={L}>ICD-10-CM Diagnosis{cc === 'AE' && form.supplyType === 'B2B' && <span className="ml-1 text-red-500 normal-case font-normal"> *</span>}</label>
-                  <input value={form.icd10Primary} onChange={e => updateField('icd10Primary', e.target.value.toUpperCase())}
-                    className={I + ' font-mono' + (errors.icd10Primary ? ' border-red-400' : '')}
-                    placeholder={cc === 'AE' ? 'e.g. J00 (mandatory)' : 'e.g. K21.0'} />
+
+                {/* Fix 4: ICD-10-CM searchable dropdown */}
+                <div className="relative">
+                  <label className={L}>
+                    ICD-10-CM Diagnosis{cc === 'AE' && form.supplyType === 'B2B' && <span className="ml-1 text-red-500 normal-case font-normal"> *</span>}
+                  </label>
+                  {form.icd10Primary ? (
+                    <div className="flex gap-2">
+                      <div className={I + ' flex-1 bg-gray-50 text-gray-700 cursor-default flex items-center gap-1.5'}>
+                        <span className="font-mono font-bold text-orange-700">{form.icd10Primary}</span>
+                        {icd10Description && <span className="text-gray-500 text-xs truncate">— {icd10Description}</span>}
+                      </div>
+                      <button type="button" onClick={clearIcd10}
+                        className="px-3 py-2.5 text-xs border border-gray-300 rounded-lg text-gray-500 hover:border-red-400 hover:text-red-500 flex-shrink-0">
+                        Clear
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="relative">
+                        <input value={icd10Query}
+                          onChange={e => searchIcd10(e.target.value)}
+                          className={I + ' pr-8' + (errors.icd10Primary ? ' border-red-400' : '')}
+                          placeholder={cc === 'AE' ? 'Search ICD-10-CM code (DHA mandatory)' : 'Search ICD-10-CM — type code or keyword'} />
+                        <span className="absolute right-3 top-3 text-gray-400 text-sm">{icd10Searching ? '⟳' : '🔍'}</span>
+                      </div>
+                      {icd10Options.length > 0 && (
+                        <div className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                          {icd10Options.map(opt => (
+                            <button key={opt.code} type="button" onClick={() => selectIcd10(opt.code, opt.desc)}
+                              className="w-full text-left px-4 py-2.5 hover:bg-orange-50 text-sm border-b border-gray-100 last:border-0">
+                              <span className="font-mono font-bold text-orange-700">{opt.code}</span>
+                              <span className="ml-2 text-gray-600 text-xs">{opt.desc}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {cc === 'AE' && (
+                    <p className="text-[10px] text-amber-600 mt-1">ICD-10-CM only — NOT ICD-10-AM (DHA mandate)</p>
+                  )}
                   {E('icd10Primary')}
                 </div>
+
                 {cc === 'AE' && (
                   <>
                     <div>
@@ -609,16 +896,13 @@ export default function OPDBillingPage() {
                       </button>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1.5">
-                    {docTypeLabel} · {form.billCategory.replace(/_/g, ' ')}
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1.5">{docTypeLabel} · {form.billCategory.replace(/_/g, ' ')}</p>
                 </div>
                 <div className="col-span-2">
                   <label className={L}>Payment Type</label>
                   <div className="flex gap-3 mt-1">
                     {(['B2C', 'B2B'] as SupplyType[]).map(s => (
-                      <button key={s} type="button"
-                        onClick={() => updateField('supplyType', s)}
+                      <button key={s} type="button" onClick={() => updateField('supplyType', s)}
                         className={`flex-1 py-2.5 rounded-lg text-sm font-bold border transition-all ${form.supplyType === s ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-300 hover:border-orange-500'}`}>
                         {s === 'B2C' ? 'B2C — Patient pays' : 'B2B — Insurance / TPA'}
                       </button>
@@ -812,7 +1096,7 @@ export default function OPDBillingPage() {
               </div>
             )}
 
-            {/* §9 DISCOUNT */}
+            {/* §9 DISCOUNT — Fix 5 + 6 */}
             <div className={C}>
               <h2 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Discount</h2>
               <div className="grid grid-cols-2 gap-4">
@@ -859,12 +1143,82 @@ export default function OPDBillingPage() {
                     <input readOnly value={form.approvedBy} className={I + ' bg-gray-50 cursor-default'} />
                   </div>
                 )}
+
+                {/* Fix 5: Approval note — required when discount >= 10% */}
+                {needsApproval && (
+                  <div className="col-span-2">
+                    <label className={L}>
+                      Notes to Approver <span className="text-red-500 normal-case font-normal">*</span>
+                    </label>
+                    <textarea
+                      value={approvalNote}
+                      onChange={e => { setApprovalNote(e.target.value); if (errors.approvalNote) setErrors(e2 => { var n = { ...e2 }; delete n.approvalNote; return n }) }}
+                      rows={2}
+                      placeholder="Explain the reason for this discount — e.g. Daily wage worker, doctor recommended 30% concession"
+                      className={'w-full border border-gray-300 bg-white text-gray-900 rounded-lg px-3 py-2 text-sm focus:border-orange-500 focus:outline-none resize-none' + (errors.approvalNote ? ' border-red-400' : '')}
+                    />
+                    {E('approvalNote')}
+                  </div>
+                )}
               </div>
+
+              {/* Fix 6: Inline approval required banner while editing */}
+              {needsApproval && (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-amber-500 text-lg leading-none">⚠</span>
+                    <div>
+                      <div className="text-sm font-bold text-amber-800">This discount requires approval before finalizing</div>
+                      <div className="text-xs text-amber-700 mt-0.5">
+                        Approver: {discPct < 25 ? 'Supervisor' : 'HOD / Department Head'} ({discPct.toFixed(1)}% discount)
+                      </div>
+                      {!savedBillId && (
+                        <div className="text-xs text-amber-600 mt-1 font-medium">
+                          Save as draft first, then use "Send for Approval" button.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* §10 ADVANCE / DEPOSIT */}
+            {/* §10 ADVANCE / DEPOSIT — Fix 7 */}
             <div className={C}>
               <h2 className="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Advance / Deposit</h2>
+
+              {/* Existing deposits from patient record */}
+              {patientSelected && depositsLoading && (
+                <div className="text-xs text-gray-400 mb-3">Loading deposit history…</div>
+              )}
+              {existingDeposits.length > 0 && (
+                <div className="mb-5">
+                  <div className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Existing Deposits on Record</div>
+                  {existingDeposits.map((dep, i) => (
+                    <div key={i} className="flex justify-between items-center px-3 py-2.5 bg-emerald-50 border border-emerald-200 rounded-lg mb-2">
+                      <div>
+                        <span className="font-semibold text-emerald-800 text-sm">{fmt(dep.amount)}</span>
+                        {dep.date && (
+                          <span className="text-emerald-600 ml-2 text-xs">
+                            received {new Date(dep.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </span>
+                        )}
+                        {dep.ref && <span className="text-emerald-500 ml-2 text-xs font-mono">(Ref: {dep.ref})</span>}
+                      </div>
+                      <span className="text-xs text-emerald-600 font-medium bg-emerald-100 px-2 py-0.5 rounded">Auto-adjusted</span>
+                    </div>
+                  ))}
+                  {existingDepositTotal > 0 && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Total existing advance: <strong className="text-emerald-700">{fmt(existingDepositTotal)}</strong> — will be auto-adjusted against the final bill.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">
+                {existingDeposits.length > 0 ? 'New Deposit Collected Today' : 'Record Advance / Deposit'}
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className={L}>Advance Amount</label>
@@ -928,6 +1282,12 @@ export default function OPDBillingPage() {
                       <span className="font-mono">− {fmt(summary.advancePaid)}</span>
                     </div>
                   )}
+                  {existingDepositTotal > 0 && (
+                    <div className="flex justify-between text-emerald-400 font-semibold text-sm">
+                      <span>Existing Deposits</span>
+                      <span className="font-mono">− {fmt(existingDepositTotal)}</span>
+                    </div>
+                  )}
                   {summary.balanceDue > 0 && (
                     <div className="flex justify-between text-red-400 font-black text-base">
                       <span>Balance Due</span>
@@ -942,8 +1302,8 @@ export default function OPDBillingPage() {
                 </div>
               </div>
 
-              {/* APPROVAL WORKFLOW — shows after bill is saved */}
-              {savedBillId && hospitalId && (
+              {/* Fix 6: APPROVAL WORKFLOW — visible for DRAFT + PENDING, not FINAL/VOID */}
+              {savedBillId && hospitalId && savedBillStatus !== 'FINAL' && savedBillStatus !== 'VOID' && savedBillStatus !== 'CANCELLED' && (
                 <ApprovalWorkflow
                   billId={savedBillId}
                   hospitalId={String(hospitalId)}
@@ -992,24 +1352,6 @@ export default function OPDBillingPage() {
                     placeholder="Discharge instructions, follow-up notes…" />
                 </div>
               </div>
-
-              {/* CTA */}
-              {form.supplyType === 'B2B' && form.payerId ? (
-                <div>
-                  <p className="text-xs text-gray-500 font-mono mb-2 text-center">
-                    {cc === 'IN' ? 'Pre-auth SLA: 1 hr (IRDAI)' : 'Pre-auth SLA: 1 hr (DHA PD-05-2025)'}
-                  </p>
-                  <button type="submit" disabled={saving}
-                    className="w-full py-3 bg-orange-600 text-white rounded-xl text-sm font-black tracking-wide disabled:opacity-60 hover:bg-orange-700">
-                    {saving ? 'Saving…' : 'Save & Submit Claim'}
-                  </button>
-                </div>
-              ) : (
-                <button type="submit" disabled={saving}
-                  className="w-full py-3 bg-orange-600 text-white rounded-xl text-sm font-black tracking-wide disabled:opacity-60 hover:bg-orange-700">
-                  {saving ? 'Saving…' : 'Save & Print Bill'}
-                </button>
-              )}
 
             </div>
           </div>

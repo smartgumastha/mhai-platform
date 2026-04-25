@@ -13,6 +13,9 @@ type ClinicPrefs = {
   clinic_default_paper_size?: string;
   paper_size_per_format?: Record<string, string>;
   invoice_number_template?: string;
+  default_label_size?: string;
+  default_labels_per_sheet?: number;
+  default_label_paper_size?: string;
 };
 
 type UserPrefs = {
@@ -162,6 +165,9 @@ export default function BillingPreferencesPage() {
           clinicPrefs.paper_size_per_format ||
           { standard: "a4", b2b: "a4", einvoice: "a4", scheme: "a4", receipt: "thermal" },
         invoice_number_template: clinicPrefs.invoice_number_template || "INV/{YY}-{YY2}/{SEQ:6}",
+        default_label_size: clinicPrefs.default_label_size || "2x1",
+        default_labels_per_sheet: clinicPrefs.default_labels_per_sheet || 12,
+        default_label_paper_size: clinicPrefs.default_label_paper_size || "a4",
         default_print_format: userPrefs.default_print_format || null,
         default_paper_size: userPrefs.default_paper_size || null,
       };
@@ -360,7 +366,7 @@ export default function BillingPreferencesPage() {
         </div>
 
         {/* Section 4: Invoice numbering */}
-        <div className="rounded-2xl border border-line bg-white">
+        <div className="mb-5 rounded-2xl border border-line bg-white">
           <div className="border-b border-line-soft px-6 py-5">
             <div className="font-fraunces text-lg text-ink">
               Invoice <em className="italic text-coral-deep">numbering</em>
@@ -380,6 +386,79 @@ export default function BillingPreferencesPage() {
                 <option value="INV-{YYYY}-{SEQ:5}">INV-2026-00053 (calendar)</option>
                 <option value="INV-{YYYY}/{SEQ:3}">INV-2026/053 (UK style)</option>
               </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 5: Barcode Label Defaults (Fix 9) */}
+        <div className="rounded-2xl border border-line bg-white">
+          <div className="flex items-center justify-between border-b border-line-soft px-6 py-5">
+            <div className="font-fraunces text-lg text-ink">
+              Barcode Label <em className="italic text-coral-deep">defaults</em>
+            </div>
+            <span className="rounded-full bg-paper-soft px-2 py-0.5 font-mono text-[10px] text-text-muted">
+              Clinic-wide
+            </span>
+          </div>
+          <div className="px-6 py-5">
+            <p className="mb-5 text-xs text-text-dim">
+              These defaults apply when printing UHID barcode labels from patient records.
+              Override at print time.
+            </p>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+              <div>
+                <label className="mb-2 block font-mono text-xs font-semibold uppercase tracking-wider text-coral-deep">
+                  Default label size
+                </label>
+                <select
+                  value={clinicPrefs.default_label_size || "2x1"}
+                  onChange={function (e) { updateClinicField("default_label_size", e.target.value); }}
+                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-ink focus:border-coral focus:outline-none"
+                >
+                  <option value="2x1">2×1 inch ★ (standard wristband)</option>
+                  <option value="3x1">3×1 inch (wide label)</option>
+                  <option value="1x0.5">1×0.5 inch (small sample)</option>
+                  <option value="2.5x1">2.5×1 inch</option>
+                  <option value="1x1">1×1 inch (square)</option>
+                  <option value="4x6">4×6 inch (shipping)</option>
+                  <option value="infant">Infant wristband</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block font-mono text-xs font-semibold uppercase tracking-wider text-coral-deep">
+                  Default labels per sheet
+                </label>
+                <select
+                  value={String(clinicPrefs.default_labels_per_sheet || 12)}
+                  onChange={function (e) { updateClinicField("default_labels_per_sheet", Number(e.target.value)); }}
+                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-ink focus:border-coral focus:outline-none"
+                >
+                  <option value="1">1 per sheet</option>
+                  <option value="6">6 per sheet</option>
+                  <option value="12">12 per sheet ★</option>
+                  <option value="28">28 per sheet</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block font-mono text-xs font-semibold uppercase tracking-wider text-coral-deep">
+                  Default paper size
+                </label>
+                <select
+                  value={clinicPrefs.default_label_paper_size || "a4"}
+                  onChange={function (e) { updateClinicField("default_label_paper_size", e.target.value); }}
+                  className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-ink focus:border-coral focus:outline-none"
+                >
+                  <option value="a4">A4 ★</option>
+                  <option value="letter">US Letter</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-4 rounded-lg border border-dashed border-line bg-paper-soft px-4 py-3 text-xs text-text-muted">
+              To print labels for a specific patient, go to{" "}
+              <a href="/dashboard/billing/print" className="font-medium text-coral-deep hover:underline">
+                Print Manager → Barcode Labels
+              </a>
+              {" "}and search for the patient.
             </div>
           </div>
         </div>

@@ -143,9 +143,18 @@ export default function PrintManagementPage() {
   )
 }
 
-// ── Tab 1: Barcode Labels ─────────────────────────────────────────────────────
+// ── Tab 1: Barcode Labels — Fix 10: patient-search-first ─────────────────────
 
 function BarcodeLabelsTab({ cc }: { cc: CountryCode }) {
+  var { user } = useAuth()
+  var hospitalId = (user as any)?.hospital_id
+
+  // Fix 10: patient search state
+  var [patientQuery, setPatientQuery]   = useState('')
+  var [patientResults, setPatientResults] = useState<any[]>([])
+  var [patientSearching, setPatientSearching] = useState(false)
+  var [selectedPatient, setSelectedPatient]   = useState<LabelPatient | null>(null)
+
   var [selectedSize, setSelectedSize] = useState<LabelSize>('2x1')
   var [customW, setCustomW]   = useState(50)
   var [customH, setCustomH]   = useState(25)
@@ -154,7 +163,42 @@ function BarcodeLabelsTab({ cc }: { cc: CountryCode }) {
   var previewRef = useRef<HTMLDivElement>(null)
 
   var sheets = Math.ceil(quantity / perSheet)
-  var totalCells = sheets * perSheet
+
+  async function searchPatients(q: string) {
+    setPatientQuery(q)
+    if (!q.trim() || !hospitalId) { setPatientResults([]); return }
+    setPatientSearching(true)
+    try {
+      var { getToken } = await import('@/lib/api')
+      var token = getToken()
+      var r = await fetch(`/api/hospitals/${hospitalId}/patients?q=${encodeURIComponent(q)}&limit=6`, {
+        headers: token ? { Authorization: 'Bearer ' + token } : {}
+      })
+      var d = await r.json()
+      setPatientResults(d.patients || d.data || [])
+    } catch { setPatientResults([]) }
+    finally { setPatientSearching(false) }
+  }
+
+  function pickPatient(p: any) {
+    setSelectedPatient({
+      uhid:         p.uhid || p.patient_uhid || 'UHID-UNKNOWN',
+      name:         p.name || p.patient_name || '',
+      age:          p.age || undefined,
+      gender:       p.gender || undefined,
+      doctor:       p.attending_doctor || undefined,
+      ward:         p.ward || undefined,
+      hospitalName: (user as any)?.clinic_name || 'MediHost Clinic',
+    })
+    setPatientQuery(p.name || p.patient_name || '')
+    setPatientResults([])
+  }
+
+  function clearPatient() {
+    setSelectedPatient(null)
+    setPatientQuery('')
+    setPatientResults([])
+  }
 
   function handlePrint() {
     if (typeof window !== 'undefined') window.print()
@@ -171,175 +215,203 @@ function BarcodeLabelsTab({ cc }: { cc: CountryCode }) {
       var pW = pdf.internal.pageSize.getWidth()
       var pH = pdf.internal.pageSize.getHeight()
       pdf.addImage(img, 'PNG', 0, 0, pW, pH)
-      pdf.save('barcode-labels.pdf')
+      pdf.save('barcode-labels-' + (selectedPatient?.uhid || 'patient') + '.pdf')
     } catch (e) {
-      alert('PDF download requires html2canvas + jsPDF. Error: ' + e)
+      alert('PDF download error: ' + e)
     }
   }
 
   var labelKeys = Object.keys(LABEL_SIZES) as LabelSize[]
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr]">
-      {/* Settings panel */}
-      <div className="space-y-5">
-        {/* Size selector */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-500">Label size</div>
-          <div className="grid grid-cols-2 gap-2">
-            {labelKeys.map(function (k) {
-              var d = LABEL_SIZES[k]
-              var active = selectedSize === k
-              return (
-                <button
-                  key={k}
-                  onClick={function () { setSelectedSize(k) }}
-                  className={
-                    'rounded-lg border p-2.5 text-left transition-colors ' +
-                    (active
-                      ? 'border-orange-500 bg-orange-50'
-                      : 'border-gray-200 bg-white hover:border-orange-300')
-                  }
-                >
-                  <div className={'text-xs font-bold ' + (active ? 'text-orange-700' : 'text-gray-800')}>
-                    {d.label}
-                    {d.default && <span className="ml-1 text-[9px] font-normal text-orange-500">★ default</span>}
-                  </div>
-                  <div className="text-[10px] text-gray-500">{d.wMm}×{d.hMm}mm</div>
-                  <div className="text-[10px] text-gray-400">{d.desc}</div>
-                </button>
-              )
-            })}
-          </div>
-          {selectedSize === 'custom' && (
-            <div className="mt-3 flex gap-3">
-              <div className="flex-1">
-                <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">Width (mm)</label>
-                <input
-                  type="number"
-                  value={customW}
-                  onChange={function (e) { setCustomW(Number(e.target.value)) }}
-                  min={10} max={200}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                />
-              </div>
-              <div className="flex-1">
-                <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">Height (mm)</label>
-                <input
-                  type="number"
-                  value={customH}
-                  onChange={function (e) { setCustomH(Number(e.target.value)) }}
-                  min={10} max={300}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                />
+    <div className="max-w-4xl">
+      {/* Header */}
+      <div className="mb-6 rounded-xl border border-blue-100 bg-blue-50 px-5 py-4">
+        <div className="text-sm font-bold text-blue-900">Print UHID Barcode Labels for a Registered Patient</div>
+        <div className="mt-0.5 text-xs text-blue-700">
+          Barcodes are generated at patient registration. Search a patient below to print their labels.
+        </div>
+      </div>
+
+      {/* Patient search */}
+      <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-500">Search Patient</div>
+        {selectedPatient ? (
+          <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <div>
+              <div className="font-semibold text-emerald-900">{selectedPatient.name}</div>
+              <div className="mt-0.5 font-mono text-xs text-emerald-700">
+                {selectedPatient.uhid}
+                {selectedPatient.age && <span className="ml-2">{selectedPatient.age}</span>}
+                {selectedPatient.gender && <span className="ml-1">{selectedPatient.gender}</span>}
               </div>
             </div>
-          )}
-        </div>
-
-        {/* Layout */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-500">Labels per A4 sheet</div>
-          <div className="flex flex-wrap gap-2">
-            {LAYOUTS.map(function (n) {
-              var active = perSheet === n
-              return (
-                <button
-                  key={n}
-                  onClick={function () { setPerSheet(n) }}
-                  className={
-                    'rounded-lg border px-3 py-1.5 text-sm font-semibold ' +
-                    (active
-                      ? 'border-orange-500 bg-orange-500 text-white'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-orange-400')
-                  }
-                >
-                  {n}{n === DEFAULT_LAYOUT ? '★' : ''}
-                </button>
-              )
-            })}
+            <button
+              onClick={clearPatient}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-600 hover:border-red-400 hover:text-red-500"
+            >
+              Clear ×
+            </button>
           </div>
-        </div>
-
-        {/* Quantity */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-500">Quantity</div>
-          <input
-            type="number"
-            value={quantity}
-            onChange={function (e) { setQuantity(Math.max(1, Number(e.target.value))) }}
-            min={1} max={1000}
-            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-          />
-          <div className="mt-2 flex justify-between text-xs text-gray-500">
-            <span>{quantity} labels</span>
-            <span className="font-semibold text-gray-800">{sheets} sheet{sheets !== 1 ? 's' : ''} needed</span>
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            onClick={handlePrint}
-            className="flex-1 rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600"
-          >
-            🖨 Print labels
-          </button>
-          <button
-            onClick={handlePdfDownload}
-            className="flex-1 rounded-xl border border-gray-300 bg-white py-3 text-sm font-semibold text-gray-700 hover:border-gray-400"
-          >
-            ⬇ Download PDF
-          </button>
-        </div>
-      </div>
-
-      {/* Live preview */}
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Sheet preview</span>
-          <span className="text-xs text-gray-400">{perSheet} per sheet · {sheets} sheet{sheets !== 1 ? 's' : ''}</span>
-        </div>
-        <div
-          ref={previewRef}
-          className="overflow-auto rounded-xl border border-gray-200 bg-gray-100 p-4"
-          style={{ maxHeight: '70vh' }}
-        >
-          {Array.from({ length: sheets }).map(function (_, sheetIdx) {
-            return (
-              <div key={sheetIdx} className="mb-4 bg-white shadow">
-                {/* Sheet (A4 aspect ratio) */}
-                <div
-                  style={{ aspectRatio: '210 / 297', padding: '8px', display: 'grid', gap: '4px',
-                    gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(perSheet))}, 1fr)` }}
-                >
-                  {Array.from({ length: perSheet }).map(function (_, cellIdx) {
-                    var labelNum = sheetIdx * perSheet + cellIdx + 1
-                    var isUsed = labelNum <= quantity
-                    return (
-                      <div
-                        key={cellIdx}
-                        className={'flex items-center justify-center ' + (isUsed ? '' : 'opacity-20')}
-                      >
-                        <BarcodeLabel
-                          patient={DEMO_PATIENT}
-                          size={selectedSize}
-                          customW={customW}
-                          customH={customH}
-                          scale={0.45}
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
-                <div className="border-t border-gray-100 px-3 py-1.5 text-[10px] text-gray-400">
-                  Sheet {sheetIdx + 1} of {sheets}
-                </div>
+        ) : (
+          <div className="relative">
+            <input
+              value={patientQuery}
+              onChange={function (e) { searchPatients(e.target.value) }}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 pr-8 text-sm focus:border-orange-500 focus:outline-none"
+              placeholder="Type UHID, name, or phone number to search…"
+            />
+            <span className="absolute right-3 top-3 text-gray-400 text-sm">{patientSearching ? '⟳' : '🔍'}</span>
+            {patientResults.length > 0 && (
+              <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
+                {patientResults.map(function (p: any) {
+                  return (
+                    <button
+                      key={p.patient_id || p.id}
+                      onClick={function () { pickPatient(p) }}
+                      className="block w-full border-b border-gray-100 px-4 py-2.5 text-left text-sm last:border-0 hover:bg-orange-50"
+                    >
+                      <span className="font-semibold text-gray-900">{p.name || p.patient_name}</span>
+                      <span className="ml-2 text-xs text-gray-500">{p.uhid || p.patient_uhid}</span>
+                      {(p.phone || p.mobile) && <span className="ml-2 text-xs text-gray-400">{p.phone || p.mobile}</span>}
+                    </button>
+                  )
+                })}
               </div>
-            )
-          })}
-        </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Empty state — no patient selected */}
+      {!selectedPatient && (
+        <div className="rounded-xl border border-dashed border-gray-200 bg-white py-16 text-center">
+          <div className="mb-2 text-3xl">🏷</div>
+          <div className="text-sm font-semibold text-gray-600">Search a patient to print their UHID barcode labels</div>
+          <div className="mt-1 text-xs text-gray-400">UHID barcodes are assigned at patient registration</div>
+        </div>
+      )}
+
+      {/* Label options + preview — only when patient selected */}
+      {selectedPatient && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
+          {/* Settings */}
+          <div className="space-y-5">
+            {/* Size selector */}
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-500">Label size</div>
+              <div className="grid grid-cols-2 gap-2">
+                {labelKeys.map(function (k) {
+                  var d = LABEL_SIZES[k]
+                  var active = selectedSize === k
+                  return (
+                    <button
+                      key={k}
+                      onClick={function () { setSelectedSize(k) }}
+                      className={
+                        'rounded-lg border p-2.5 text-left transition-colors ' +
+                        (active ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:border-orange-300')
+                      }
+                    >
+                      <div className={'text-xs font-bold ' + (active ? 'text-orange-700' : 'text-gray-800')}>
+                        {d.label}
+                        {d.default && <span className="ml-1 text-[9px] font-normal text-orange-500">★ default</span>}
+                      </div>
+                      <div className="text-[10px] text-gray-500">{d.wMm}×{d.hMm}mm</div>
+                      <div className="text-[10px] text-gray-400">{d.desc}</div>
+                    </button>
+                  )
+                })}
+              </div>
+              {selectedSize === 'custom' && (
+                <div className="mt-3 flex gap-3">
+                  <div className="flex-1">
+                    <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">Width (mm)</label>
+                    <input type="number" value={customW} onChange={function (e) { setCustomW(Number(e.target.value)) }}
+                      min={10} max={200} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="mb-1 block text-[10px] font-semibold uppercase text-gray-500">Height (mm)</label>
+                    <input type="number" value={customH} onChange={function (e) { setCustomH(Number(e.target.value)) }}
+                      min={10} max={300} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm" />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Layout */}
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-500">Labels per A4 sheet</div>
+              <div className="flex flex-wrap gap-2">
+                {LAYOUTS.map(function (n) {
+                  var active = perSheet === n
+                  return (
+                    <button key={n} onClick={function () { setPerSheet(n) }}
+                      className={'rounded-lg border px-3 py-1.5 text-sm font-semibold ' + (active ? 'border-orange-500 bg-orange-500 text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-orange-400')}>
+                      {n}{n === DEFAULT_LAYOUT ? '★' : ''}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Quantity */}
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="mb-3 text-xs font-bold uppercase tracking-widest text-gray-500">Quantity</div>
+              <input type="number" value={quantity}
+                onChange={function (e) { setQuantity(Math.max(1, Number(e.target.value))) }}
+                min={1} max={1000} className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm" />
+              <div className="mt-2 flex justify-between text-xs text-gray-500">
+                <span>{quantity} labels</span>
+                <span className="font-semibold text-gray-800">{sheets} sheet{sheets !== 1 ? 's' : ''} needed</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button onClick={handlePrint}
+                className="flex-1 rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600">
+                🖨 Print labels
+              </button>
+              <button onClick={handlePdfDownload}
+                className="flex-1 rounded-xl border border-gray-300 bg-white py-3 text-sm font-semibold text-gray-700 hover:border-gray-400">
+                ⬇ Download PDF
+              </button>
+            </div>
+          </div>
+
+          {/* Sheet preview */}
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">Sheet preview — {selectedPatient.name}</span>
+              <span className="text-xs text-gray-400">{perSheet} per sheet · {sheets} sheet{sheets !== 1 ? 's' : ''}</span>
+            </div>
+            <div ref={previewRef} className="overflow-auto rounded-xl border border-gray-200 bg-gray-100 p-4" style={{ maxHeight: '70vh' }}>
+              {Array.from({ length: sheets }).map(function (_, sheetIdx) {
+                return (
+                  <div key={sheetIdx} className="mb-4 bg-white shadow">
+                    <div style={{ aspectRatio: '210 / 297', padding: '8px', display: 'grid', gap: '4px',
+                      gridTemplateColumns: `repeat(${Math.ceil(Math.sqrt(perSheet))}, 1fr)` }}>
+                      {Array.from({ length: perSheet }).map(function (_, cellIdx) {
+                        var labelNum = sheetIdx * perSheet + cellIdx + 1
+                        var isUsed = labelNum <= quantity
+                        return (
+                          <div key={cellIdx} className={'flex items-center justify-center ' + (isUsed ? '' : 'opacity-20')}>
+                            {selectedPatient && <BarcodeLabel patient={selectedPatient} size={selectedSize} customW={customW} customH={customH} scale={0.45} />}
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <div className="border-t border-gray-100 px-3 py-1.5 text-[10px] text-gray-400">
+                      Sheet {sheetIdx + 1} of {sheets} · {selectedPatient?.uhid}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

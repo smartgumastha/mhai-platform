@@ -19,7 +19,6 @@ var navGroups = [
     items: [
       { name: "All Bills", href: "/dashboard/bills" },
       { name: "OPD Billing", href: "/dashboard/billing/opd" },
-      { name: "Print Manager", href: "/dashboard/billing/print" },
       { name: "Claims", href: "/dashboard/claims" },
       { name: "Denials", href: "/dashboard/denials" },
       { name: "Appeals", href: "/dashboard/appeals" },
