@@ -146,7 +146,7 @@ export default function NewBillPage() {
         notes: notes.trim() || null,
         due_at: dueDate ? new Date(dueDate).getTime() : null,
       };
-      var res = await fetch("/api/hospitals/" + hospitalId + "/bills", {
+      var res = await fetch("/api/hospitals/" + hospitalId + "/rcm/billing/bills", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify(body),

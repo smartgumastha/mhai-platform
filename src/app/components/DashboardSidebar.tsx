@@ -12,7 +12,17 @@ var navGroups = [
       { name: "Dashboard", href: "/dashboard" },
       { name: "Appointments", href: "/dashboard/appointments" },
       { name: "Patients", href: "/dashboard/patients" },
-      { name: "Bills", href: "/dashboard/bills" },
+    ],
+  },
+  {
+    label: "BILLING",
+    items: [
+      { name: "All Bills", href: "/dashboard/bills" },
+      { name: "OPD Billing", href: "/dashboard/billing/opd" },
+      { name: "Claims", href: "/dashboard/claims" },
+      { name: "Denials", href: "/dashboard/denials" },
+      { name: "Appeals", href: "/dashboard/appeals" },
+      { name: "Billing Prefs", href: "/dashboard/settings/billing-preferences" },
     ],
   },
   {
@@ -50,7 +60,6 @@ var navGroups = [
       { name: "Brand DNA", href: "/dashboard/brand" },
       { name: "Connections", href: "/dashboard/connections" },
       { name: "Analytics", href: "/dashboard/analytics" },
-      { name: "Billing preferences", href: "/dashboard/settings/billing-preferences" },
     ],
   },
 ];
