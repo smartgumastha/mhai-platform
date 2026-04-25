@@ -203,6 +203,8 @@ export default function PatientsPage() {
             ) : (
               patients.map(function(p) {
                 var genderInitial = p.gender === "MALE" ? "M" : p.gender === "FEMALE" ? "F" : p.gender ? "O" : "—";
+                var hasLegacyBadData = (p.emergency_contact_phone && /\D/.test(p.emergency_contact_phone.replace(/[\s\-\+]/g, ""))) ||
+                  (p.emergency_contact_name && /\d/.test(p.emergency_contact_name));
                 return (
                   <tr key={p.id} className="hover:bg-gray-50/50">
                     <td className="px-4 py-3">
@@ -211,7 +213,14 @@ export default function PatientsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-semibold text-gray-900">{p.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-900">{p.name}</span>
+                        {hasLegacyBadData && (
+                          <Link href={"/dashboard/patients/" + p.id} className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200 hover:bg-amber-100">
+                            Data incomplete
+                          </Link>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {ageFromDob(p.date_of_birth)} {genderInitial !== "—" && <span className="text-gray-400">{genderInitial}</span>}
