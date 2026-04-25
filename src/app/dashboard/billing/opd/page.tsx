@@ -480,9 +480,10 @@ export default function OPDBillingPage() {
           headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
           body: JSON.stringify({ status: 'FINAL' }),
         })
-        if (!pRes2.ok) { var pe2 = await pRes2.json(); throw new Error(typeof pe2.error === 'string' ? pe2.error : pe2.message || 'Finalize failed') }
+        var pd2 = await pRes2.json()
+        if (!pRes2.ok) { throw new Error(typeof pd2.error === 'string' ? pd2.error : pd2.message || 'Finalize failed') }
         setSavedBillStatus('FINAL')
-        notify.success('Bill finalized — ' + (saved.bill_number || billNumber))
+        notify.success('Bill finalized — ' + (pd2.bill_number || saved.bill_number || billNumber))
         router.push('/dashboard/bills/' + newBillId)
       } else if (targetStatus === 'DRAFT') {
         setSavedBillStatus('DRAFT')
