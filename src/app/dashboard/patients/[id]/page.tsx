@@ -9,7 +9,7 @@ import { useLocale } from "@/app/providers/locale-context";
 import { getPatient, updatePatient, getPatientDeposits, createPatientDeposit, getToken } from "@/lib/api";
 import type { Patient } from "@/lib/types/Patient";
 
-var Barcode = dynamic(() => import("react-barcode"), { ssr: false });
+var BarcodeComp = dynamic(() => import("react-barcode"), { ssr: false });
 
 function ageFromDob(dob?: string): string {
   if (!dob) return "—";
@@ -236,7 +236,7 @@ export default function PatientProfilePage() {
             <div className="rounded-xl border border-gray-200 bg-white p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <Barcode value={patient.uhid || "NONE"} width={1.5} height={50} fontSize={12} />
+                  <BarcodeComp value={patient.uhid || "NONE"} width={1.5} height={50} fontSize={12} />
                   <div className="mt-1 font-mono text-sm font-bold text-orange-600">{patient.uhid}</div>
                 </div>
                 <div className="flex gap-2">

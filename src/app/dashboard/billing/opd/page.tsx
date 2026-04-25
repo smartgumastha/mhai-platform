@@ -1,6 +1,6 @@
 'use client'
-import { useState, useEffect, useCallback, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/app/providers/auth-context'
 import { useLocale } from '@/app/providers/locale-context'
 import { useCurrency } from '@/app/hooks/useCurrency'
@@ -114,13 +114,12 @@ var ICD10_FALLBACK: Partial<Record<BillCategory, Array<{ code: string; desc: str
 
 type DepositRecord = { amount: number; date: string; ref: string; advance_type?: string }
 
-function OPDBillingInner() {
+export default function OPDBillingPage() {
   var { user }        = useAuth()
   var { localeV2 }    = useLocale()
   var { format: fmt } = useCurrency()
   var notify          = useNotification()
   var router          = useRouter()
-  var searchParams    = useSearchParams()
   var cc              = localeV2?.country_code || 'IN'
   var hospitalId      = user?.hospital_id
 
@@ -197,7 +196,7 @@ function OPDBillingInner() {
 
   // Auto-load patient from ?patientId= URL param
   useEffect(() => {
-    var pid = searchParams.get('patientId')
+    var pid = new URLSearchParams(window.location.search).get('patientId')
     if (!pid || !hospitalId) return
     getPatient(String(hospitalId), pid)
       .then((res: any) => {
@@ -1402,13 +1401,5 @@ function OPDBillingInner() {
         </div>
       </form>
     </div>
-  )
-}
-
-export default function OPDBillingPage() {
-  return (
-    <Suspense>
-      <OPDBillingInner />
-    </Suspense>
   )
 }
