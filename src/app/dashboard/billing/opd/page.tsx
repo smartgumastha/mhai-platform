@@ -10,6 +10,7 @@ import { useLocale } from '@/app/providers/locale-context'
 import { useCurrency } from '@/app/hooks/useCurrency'
 import { useNotification } from '@/app/providers/NotificationProvider'
 import { getToken } from '@/lib/api'
+import ApprovalWorkflow, { type BillStatus as WorkflowBillStatus } from '@/app/components/billing/ApprovalWorkflow'
 import {
   getDocType, getDocTypeLabel, getHsnSac, calcBillSummary,
   validateBillForm, getCurrency, apiBillType, apiBillCategory, getLengthOfStay
@@ -109,6 +110,8 @@ export default function OPDBillingPage() {
   var [patientSearch, setPatientSearch] = useState('')
   var [searchResults, setSearchResults] = useState<any[]>([])
   var [searching, setSearching] = useState(false)
+  var [savedBillId, setSavedBillId]     = useState('')
+  var [savedBillStatus, setSavedBillStatus] = useState<WorkflowBillStatus>('DRAFT')
 
   var docType      = getDocType(form.billCategory, cc)
   var docTypeLabel = getDocTypeLabel(docType, cc)
@@ -309,11 +312,18 @@ export default function OPDBillingPage() {
       })
       if (!res.ok) {
         var err = await res.json()
+        if (err.fields && typeof err.fields === 'object') {
+          setErrors(err.fields)
+          notify.error('Please fix the highlighted fields')
+          return
+        }
         throw new Error(err.error || err.message || 'Save failed')
       }
       var saved = await res.json()
+      var newBillId = String(saved.bill_id || saved.bill?.id || saved.id || '')
+      setSavedBillId(newBillId)
+      setSavedBillStatus('DRAFT')
       notify.success('Bill saved — ' + (billNumber || 'DRAFT'))
-      router.push('/dashboard/bills/' + (saved.bill_id || saved.bill?.id || saved.id || ''))
     } catch (err: any) {
       notify.error(err.message || 'Save failed')
     } finally {
@@ -931,6 +941,27 @@ export default function OPDBillingPage() {
                   )}
                 </div>
               </div>
+
+              {/* APPROVAL WORKFLOW — shows after bill is saved */}
+              {savedBillId && hospitalId && (
+                <ApprovalWorkflow
+                  billId={savedBillId}
+                  hospitalId={String(hospitalId)}
+                  currentStatus={savedBillStatus}
+                  discountPct={discPct}
+                  discountThreshold={10}
+                  onStatusChange={function (newStatus, billNum) {
+                    setSavedBillStatus(newStatus)
+                    if (newStatus === 'FINAL') {
+                      notify.success('Bill finalized — ' + (billNum || billNumber))
+                      router.push('/dashboard/bills/' + savedBillId)
+                    } else if (newStatus === 'VOID') {
+                      notify.error('Bill voided')
+                      router.push('/dashboard/bills/' + savedBillId)
+                    }
+                  }}
+                />
+              )}
 
               {/* PAYMENT COLLECTION */}
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
