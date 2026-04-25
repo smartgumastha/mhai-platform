@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/auth-context";
 import { getToken } from "@/lib/api";
-import PrintFormatModal from "@/app/components/PrintFormatModal";
+import PrintBillModal from "@/app/components/print/PrintBillModal";
 import RegulatoryIdsGate from "@/app/components/RegulatoryIdsGate";
 import { logPrintAudit, formatCurrency, type Bill, type PrintPrefs, type CountryCode, type PaperSize } from "@/app/components/print/lib";
 
@@ -101,7 +101,7 @@ export default function BillDetailPage() {
     var format = getEffectiveFormat();
     var size = getEffectiveSize(format);
     if (bill?.id) logPrintAudit(String(bill.id), format, size, countryCode);
-    if (typeof window !== "undefined") window.print();
+    setPrintModalOpen(true);
   }
 
   function handleChangeFormat() {
@@ -309,7 +309,7 @@ export default function BillDetailPage() {
         </div>
       </div>
 
-      <PrintFormatModal
+      <PrintBillModal
         open={printModalOpen}
         onClose={function () { setPrintModalOpen(false); }}
         bill={bill}
