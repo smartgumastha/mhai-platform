@@ -1,11 +1,11 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/app/providers/auth-context'
 import { useLocale } from '@/app/providers/locale-context'
 import { useCurrency } from '@/app/hooks/useCurrency'
 import { useNotification } from '@/app/providers/NotificationProvider'
-import { getToken } from '@/lib/api'
+import { getToken, getPatient, getPatientDeposits } from '@/lib/api'
 import ApprovalWorkflow, { type BillStatus as WorkflowBillStatus } from '@/app/components/billing/ApprovalWorkflow'
 import {
   getDocType, getDocTypeLabel, getHsnSac, calcBillSummary,
@@ -114,12 +114,13 @@ var ICD10_FALLBACK: Partial<Record<BillCategory, Array<{ code: string; desc: str
 
 type DepositRecord = { amount: number; date: string; ref: string; advance_type?: string }
 
-export default function OPDBillingPage() {
+function OPDBillingInner() {
   var { user }        = useAuth()
   var { localeV2 }    = useLocale()
   var { format: fmt } = useCurrency()
   var notify          = useNotification()
   var router          = useRouter()
+  var searchParams    = useSearchParams()
   var cc              = localeV2?.country_code || 'IN'
   var hospitalId      = user?.hospital_id
 
@@ -188,15 +189,23 @@ export default function OPDBillingPage() {
   useEffect(() => {
     if (!form.patientId || !hospitalId) { setExistingDeposits([]); return }
     setDepositsLoading(true)
-    var token = getToken()
-    fetch(`/api/hospitals/${hospitalId}/rcm/patients/${form.patientId}/deposits`, {
-      headers: token ? { Authorization: 'Bearer ' + token } : {}
-    })
-      .then(r => r.ok ? r.json() : Promise.resolve({ deposits: [] }))
-      .then(d => setExistingDeposits(d.deposits || []))
+    getPatientDeposits(String(hospitalId), form.patientId)
+      .then((d: any) => setExistingDeposits(d.deposits || []))
       .catch(() => setExistingDeposits([]))
       .finally(() => setDepositsLoading(false))
   }, [form.patientId, hospitalId])
+
+  // Auto-load patient from ?patientId= URL param
+  useEffect(() => {
+    var pid = searchParams.get('patientId')
+    if (!pid || !hospitalId) return
+    getPatient(String(hospitalId), pid)
+      .then((res: any) => {
+        if (res.patient) selectPatient(res.patient)
+      })
+      .catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hospitalId])
 
   function updateField<K extends keyof OPDBillForm>(key: K, val: OPDBillForm[K]) {
     setForm(f => ({ ...f, [key]: val }))
@@ -249,17 +258,24 @@ export default function OPDBillingPage() {
 
   // Fix 2 + 3: populate address and lock fields after patient selection
   function selectPatient(p: any) {
+    var dobAge = p.date_of_birth
+      ? String(Math.floor((Date.now() - new Date(p.date_of_birth).getTime()) / 31557600000)) + 'Y'
+      : p.age || ''
+    var addr = [p.address_line1, p.city, p.state || p.state_province]
+      .filter(Boolean).join(', ')
     setForm(f => ({
       ...f,
-      patientId:     String(p.patient_id || p.id || ''),
-      uhid:          p.uhid || p.patient_uhid || '',
-      patientName:   p.name || p.patient_name || '',
-      patientPhone:  p.phone || p.mobile || p.patient_phone || '',
-      patientAddress: p.address || p.patient_address || '',
-      patientAge:    p.age || '',
-      patientGender: (p.gender === 'M' ? 'MALE' : p.gender === 'F' ? 'FEMALE' : p.gender) || '',
-      abhaNumber:    p.abha_number || '',
-      emiratesId:    p.emirates_id || '',
+      patientId:       String(p.patient_id || p.id || ''),
+      uhid:            p.uhid || p.patient_uhid || '',
+      patientName:     p.name || p.patient_name || '',
+      patientPhone:    p.phone || p.mobile || p.patient_phone || '',
+      patientAddress:  addr || p.address || p.patient_address || '',
+      patientAge:      dobAge,
+      patientGender:   (p.gender === 'M' ? 'MALE' : p.gender === 'F' ? 'FEMALE' : p.gender) || '',
+      abhaNumber:      p.abha_id || '',
+      emiratesId:      p.emirates_id || '',
+      memberCardNumber: p.insurance_card_number || '',
+      cardExpiryDate:  p.insurance_card_expiry || '',
     }))
     setPatientSearch(p.name || p.patient_name || '')
     setSearchResults([])
@@ -270,6 +286,7 @@ export default function OPDBillingPage() {
       ...f,
       patientId: '', uhid: '', patientName: '', patientPhone: '',
       patientAddress: '', patientAge: '', patientGender: '', abhaNumber: '', emiratesId: '',
+      memberCardNumber: '', cardExpiryDate: '',
     }))
     setPatientSearch('')
     setExistingDeposits([])
@@ -282,7 +299,7 @@ export default function OPDBillingPage() {
     setIcd10Searching(true)
     try {
       var token = getToken()
-      var res = await fetch(`/api/rcm/icd10?q=${encodeURIComponent(q)}`, {
+      var res = await fetch(`/api/hospitals/${hospitalId}/rcm/icd10?q=${encodeURIComponent(q)}`, {
         headers: token ? { Authorization: 'Bearer ' + token } : {}
       })
       if (res.ok) {
@@ -658,15 +675,39 @@ export default function OPDBillingPage() {
                     placeholder={patientSelected ? 'Patient selected — clear to search again' : 'Type UHID, phone, or name to search…'} />
                   <span className="absolute right-3 top-3 text-gray-400 text-sm">{searching ? '⟳' : '🔍'}</span>
                 </div>
-                {searchResults.length > 0 && (
+                {(searchResults.length > 0 || (patientSearch.trim().length >= 2 && !searching)) && (
                   <div className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
-                    {searchResults.map((p: any) => (
-                      <button key={p.patient_id || p.id} type="button" onClick={() => selectPatient(p)}
-                        className="w-full text-left px-4 py-2.5 hover:bg-orange-50 text-sm border-b border-gray-100 last:border-0">
-                        <span className="font-semibold text-gray-900">{p.name || p.patient_name}</span>
-                        <span className="ml-2 text-gray-500 text-xs">{p.uhid || p.patient_uhid} · {p.phone || p.mobile}</span>
-                      </button>
-                    ))}
+                    {searchResults.map((p: any) => {
+                      var dobAge = p.date_of_birth
+                        ? Math.floor((Date.now() - new Date(p.date_of_birth).getTime()) / 31557600000) + 'Y'
+                        : p.age || ''
+                      var genderInit = p.gender === 'MALE' ? 'M' : p.gender === 'FEMALE' ? 'F' : p.gender ? 'O' : ''
+                      return (
+                        <button key={p.patient_id || p.id} type="button" onClick={() => selectPatient(p)}
+                          className="w-full text-left px-4 py-2.5 hover:bg-orange-50 text-sm border-b border-gray-100 last:border-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold text-orange-600">{p.uhid || p.patient_uhid}</span>
+                            <span className="font-semibold text-gray-900">{p.name || p.patient_name}</span>
+                            {dobAge && <span className="text-xs text-gray-500">{dobAge}</span>}
+                            {genderInit && <span className="text-xs text-gray-400">{genderInit}</span>}
+                            {p.blood_group && (
+                              <span className="rounded border border-red-200 bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
+                                {p.blood_group}
+                              </span>
+                            )}
+                          </div>
+                          {p.phone && <div className="text-xs text-gray-400 mt-0.5">{p.phone}</div>}
+                        </button>
+                      )
+                    })}
+                    {searchResults.length === 0 && patientSearch.trim().length >= 2 && !searching && (
+                      <div className="px-4 py-3 text-sm text-gray-500">
+                        No results —{' '}
+                        <a href="/dashboard/patients/new" className="font-semibold text-orange-600 hover:underline">
+                          Register new patient →
+                        </a>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -950,17 +991,19 @@ export default function OPDBillingPage() {
                     <input value={form.policyNumber} onChange={e => updateField('policyNumber', e.target.value)}
                       className={I} placeholder="Policy number" />
                   </div>
-                  {cc === 'AE' && (
-                    <div>
-                      <label className={L}>Card Expiry Date</label>
-                      <input type="date" value={form.cardExpiryDate} onChange={e => updateField('cardExpiryDate', e.target.value)}
-                        className={I + (errors.cardExpiryDate ? ' border-red-400' : '')} />
-                      {form.cardExpiryDate && new Date(form.cardExpiryDate) < new Date() && (
-                        <p className="text-xs text-red-600 mt-1 font-bold">⚠ Card expired — DHA will reject claim</p>
-                      )}
-                      {E('cardExpiryDate')}
-                    </div>
-                  )}
+                  <div>
+                    <label className={L}>Card Expiry Date</label>
+                    <input type="date" value={form.cardExpiryDate} onChange={e => updateField('cardExpiryDate', e.target.value)}
+                      className={I + (errors.cardExpiryDate ? ' border-red-400' : '')} />
+                    {form.cardExpiryDate && new Date(form.cardExpiryDate) < new Date() && (
+                      <p className="text-xs text-red-600 mt-1 font-bold">⚠ Insurance card expired — claim may be rejected</p>
+                    )}
+                    {form.cardExpiryDate && new Date(form.cardExpiryDate) >= new Date() &&
+                      new Date(form.cardExpiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) && (
+                      <p className="text-xs text-amber-600 mt-1 font-semibold">⚠ Card expires soon</p>
+                    )}
+                    {E('cardExpiryDate')}
+                  </div>
                   <div>
                     <label className={L}>Cashless / Reimbursement</label>
                     <select value={form.cashlessOrReimbursement} onChange={e => updateField('cashlessOrReimbursement', e.target.value)} className={I}>
@@ -1359,5 +1402,13 @@ export default function OPDBillingPage() {
         </div>
       </form>
     </div>
+  )
+}
+
+export default function OPDBillingPage() {
+  return (
+    <Suspense>
+      <OPDBillingInner />
+    </Suspense>
   )
 }

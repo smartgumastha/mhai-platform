@@ -351,9 +351,53 @@ export function updateAppointment(
 }
 
 // ── Patients ──
-export function getPatients() {
-  return api<{ success: boolean; patients?: any[]; error?: string }>(
-    "/api/mhai/patients"
+export function getPatients(hospitalId: string, params?: { q?: string; limit?: number; offset?: number }) {
+  var qs = new URLSearchParams();
+  if (params?.q) qs.set("q", params.q);
+  if (params?.limit) qs.set("limit", String(params.limit));
+  if (params?.offset) qs.set("offset", String(params.offset));
+  var url = "/api/hospitals/" + encodeURIComponent(hospitalId) + "/patients";
+  var q = qs.toString();
+  if (q) url += "?" + q;
+  return api<{ success: boolean; patients?: any[]; total?: number; error?: string }>(url);
+}
+
+export function getPatient(hospitalId: string, patientId: string) {
+  return api<{ success: boolean; patient?: any; error?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/patients/" + encodeURIComponent(patientId)
+  );
+}
+
+export function createPatient(hospitalId: string, data: Record<string, any>) {
+  return api<{ success: boolean; patient?: any; message?: string; error?: string; existing_id?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/patients",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function updatePatient(hospitalId: string, patientId: string, data: Record<string, any>) {
+  return api<{ success: boolean; patient?: any; error?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/patients/" + encodeURIComponent(patientId),
+    { method: "PATCH", body: JSON.stringify(data) }
+  );
+}
+
+export function getPatientDeposits(hospitalId: string, patientId: string) {
+  return api<{ success: boolean; deposits?: any[]; error?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/patients/" + encodeURIComponent(patientId) + "/deposits"
+  );
+}
+
+export function createPatientDeposit(hospitalId: string, patientId: string, data: Record<string, any>) {
+  return api<{ success: boolean; deposit?: any; error?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/patients/" + encodeURIComponent(patientId) + "/deposits",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function searchIcd10(hospitalId: string, q: string, limit = 10) {
+  return api<{ success: boolean; results?: Array<{ code: string; description: string }>; error?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/rcm/icd10?q=" + encodeURIComponent(q) + "&limit=" + limit
   );
 }
 
