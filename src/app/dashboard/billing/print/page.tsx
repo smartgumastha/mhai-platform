@@ -201,7 +201,19 @@ function BarcodeLabelsTab({ cc }: { cc: CountryCode }) {
   }
 
   function handlePrint() {
-    if (typeof window !== 'undefined') window.print()
+    if (!previewRef.current) return
+    var inner = previewRef.current.innerHTML
+    var styles = Array.from(document.styleSheets).map(function(ss) {
+      try { return Array.from(ss.cssRules).map(function(r) { return r.cssText; }).join('') }
+      catch { return ss.href ? '' : '' }
+    }).join('')
+    var win = window.open('', '_blank', 'width=800,height=1000')
+    if (!win) return
+    win.document.write('<!DOCTYPE html><html><head><title>Barcode Labels</title><style>' + styles + '@page{margin:10mm;}@media print{body{margin:0;}}</style></head><body>' + inner + '</body></html>')
+    win.document.close()
+    win.focus()
+    var winRef = win
+    setTimeout(function() { winRef.print(); winRef.close(); }, 800)
   }
 
   async function handlePdfDownload() {
@@ -422,6 +434,41 @@ function BillFormatsTab({ cc }: { cc: CountryCode }) {
   var [selectedFormat, setSelectedFormat] = useState('standard')
   var [paperSize, setPaperSize]           = useState('a4')
   var [copies, setCopies]                 = useState(2)
+  var billPreviewRef = useRef<HTMLDivElement>(null)
+
+  function printBill() {
+    if (!billPreviewRef.current) return
+    var inner = billPreviewRef.current.innerHTML
+    var styles = Array.from(document.styleSheets).map(function(ss) {
+      try { return Array.from(ss.cssRules).map(function(r) { return r.cssText; }).join('') }
+      catch { return '' }
+    }).join('')
+    var win = window.open('', '_blank', 'width=900,height=1200')
+    if (!win) return
+    win.document.write('<!DOCTYPE html><html><head><title>Bill</title><style>' + styles + '@page{margin:10mm;}@media print{body{margin:0;}}</style></head><body>' + inner + '</body></html>')
+    win.document.close()
+    win.focus()
+    var winRef = win
+    setTimeout(function() { winRef.print(); winRef.close(); }, 1000)
+  }
+
+  async function downloadBillPdf() {
+    if (!billPreviewRef.current) return
+    try {
+      var html2canvas = (await import('html2canvas')).default
+      var jsPDF = (await import('jspdf')).default
+      var canvas = await html2canvas(billPreviewRef.current, { scale: 2, useCORS: true })
+      var img = canvas.toDataURL('image/png')
+      var pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      var pW = pdf.internal.pageSize.getWidth()
+      var pH = pdf.internal.pageSize.getHeight()
+      ;(pdf as any).addImage(img, 'PNG', 0, 0, pW, pH)
+      pdf.save('bill.pdf')
+    } catch (e) {
+      printBill()
+      alert('Tip: In the print dialog, choose "Save as PDF" to download.')
+    }
+  }
 
   var componentMap: Record<string, any> = {
     standard:  PrintStandardInvoice,
@@ -506,12 +553,20 @@ function BillFormatsTab({ cc }: { cc: CountryCode }) {
           <div className="mt-1.5 text-[11px] text-gray-400">Default: 2 (patient copy + hospital file)</div>
         </div>
 
-        <button
-          onClick={function () { if (typeof window !== 'undefined') window.print() }}
-          className="w-full rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600"
-        >
-          🖨 Print {copies} cop{copies !== 1 ? 'ies' : 'y'}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={printBill}
+            className="flex-1 rounded-xl bg-orange-500 py-3 text-sm font-semibold text-white hover:bg-orange-600"
+          >
+            🖨 Print {copies} cop{copies !== 1 ? 'ies' : 'y'}
+          </button>
+          <button
+            onClick={downloadBillPdf}
+            className="flex-1 rounded-xl border border-gray-300 bg-white py-3 text-sm font-semibold text-gray-700 hover:border-gray-400"
+          >
+            ⬇ PDF
+          </button>
+        </div>
       </div>
 
       {/* Live preview */}
@@ -522,7 +577,7 @@ function BillFormatsTab({ cc }: { cc: CountryCode }) {
             {paperSize.toUpperCase()} · {cc}
           </span>
         </div>
-        <div className="overflow-auto rounded-xl border border-gray-200 bg-gray-200 p-5" style={{ maxHeight: '70vh' }}>
+        <div ref={billPreviewRef} id="bill-print-preview-area" className="overflow-auto rounded-xl border border-gray-200 bg-gray-200 p-5" style={{ maxHeight: '70vh' }}>
           <Suspense fallback={<div className="py-16 text-center text-sm text-gray-400">Loading preview…</div>}>
             {PrintComponent ? (
               <PrintComponent

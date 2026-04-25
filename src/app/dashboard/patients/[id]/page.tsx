@@ -165,6 +165,41 @@ export default function PatientProfilePage() {
   var I = "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500/20";
   var L = "block text-xs font-bold uppercase tracking-wide text-gray-500 mb-1";
 
+  function printPatientCard(p: Patient) {
+    var brand: any = {};
+    try { brand = JSON.parse(localStorage.getItem('mhai_brand_dna') || '{}'); } catch (e) {}
+    var clinicName = brand.clinic_name || 'MediHost Clinic';
+    var barcodeSvgEl = document.querySelector('#patient-barcode-area svg');
+    var barcodeHtml = barcodeSvgEl ? (barcodeSvgEl as Element).outerHTML : '';
+    var regDate = p.created_at ? new Date(Number(p.created_at)).toLocaleDateString('en-IN') : '—';
+    var html = '<!DOCTYPE html><html><head><title>Patient Card - ' + p.name + '</title>' +
+      '<style>body{font-family:Arial,sans-serif;padding:20px;font-size:12px;}' +
+      '.card{border:2px solid #333;border-radius:8px;padding:16px;max-width:400px;}' +
+      '.clinic{font-size:14px;font-weight:bold;margin-bottom:8px;}' +
+      '.uhid{font-family:monospace;font-size:14px;font-weight:bold;color:#e8421a;margin:8px 0;}' +
+      '.barcode{margin:10px 0;text-align:center;}' +
+      '.row{display:flex;justify-content:space-between;margin:4px 0;}' +
+      '.lbl{color:#666;}@media print{body{margin:0;}}</style>' +
+      '</head><body><div class="card">' +
+      '<div class="clinic">' + clinicName + '</div>' +
+      '<div class="barcode">' + barcodeHtml + '</div>' +
+      '<div class="uhid">' + (p.uhid || '—') + '</div>' +
+      '<div class="row"><span class="lbl">Name:</span><span>' + p.name + '</span></div>' +
+      '<div class="row"><span class="lbl">DOB:</span><span>' + (p.date_of_birth || '—') + '</span></div>' +
+      '<div class="row"><span class="lbl">Gender:</span><span>' + (p.gender || '—') + '</span></div>' +
+      '<div class="row"><span class="lbl">Blood Group:</span><span>' + (p.blood_group || '—') + '</span></div>' +
+      '<div class="row"><span class="lbl">Phone:</span><span>' + (p.phone || '—') + '</span></div>' +
+      '<div class="row"><span class="lbl">Registered:</span><span>' + regDate + '</span></div>' +
+      '</div></body></html>';
+    var win = window.open('', '_blank', 'width=500,height=700');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    var winRef = win;
+    setTimeout(function () { winRef.print(); winRef.close(); }, 500);
+  }
+
   if (loading) {
     return (
       <div className="px-8 py-10 text-center">
@@ -236,7 +271,9 @@ export default function PatientProfilePage() {
             <div className="rounded-xl border border-gray-200 bg-white p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <BarcodeComp value={patient.uhid || "NONE"} width={1.5} height={50} fontSize={12} />
+                  <div id="patient-barcode-area">
+                    <BarcodeComp value={patient.uhid || "NONE"} width={1.5} height={50} fontSize={12} />
+                  </div>
                   <div className="mt-1 font-mono text-sm font-bold text-orange-600">{patient.uhid}</div>
                 </div>
                 <div className="flex gap-2">
@@ -244,7 +281,7 @@ export default function PatientProfilePage() {
                     className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                     Print Labels
                   </Link>
-                  <button type="button" onClick={function () { window.print(); }}
+                  <button type="button" onClick={function () { if (patient) printPatientCard(patient); }}
                     className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50">
                     Print Card
                   </button>
