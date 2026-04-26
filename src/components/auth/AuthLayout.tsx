@@ -2,7 +2,7 @@
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-white flex items-start justify-center px-4 pt-8 pb-14">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-white via-[rgba(27,163,214,0.04)] to-white flex items-start justify-center px-4 pt-8 pb-14">
       {/* Background blobs — purple top-right, teal bottom-left */}
       <div
         className="pointer-events-none absolute right-[-15%] top-[-10%] h-[50%] w-[50%]"
@@ -61,7 +61,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         <div
           className="rounded-[18px] border border-[#e2e8f0] bg-white px-[26px] py-[30px]"
           style={{
-            boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 24px 48px -12px rgba(15,23,42,0.08)",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 24px 48px -12px rgba(15,23,42,0.14), 0 0 0 1px rgba(27,163,214,0.06)",
           }}
         >
           {children}

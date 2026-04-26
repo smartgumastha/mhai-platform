@@ -292,12 +292,6 @@ export default function OnboardingPage() {
         ← Back
       </button>
 
-      <p className="mt-3.5 text-center text-[13px] text-[#475569]">
-        Already set up?{" "}
-        <a href="/dashboard" className="font-bold text-[#0e7ba8] hover:underline">
-          Skip to dashboard →
-        </a>
-      </p>
     </AuthLayout>
   );
 }

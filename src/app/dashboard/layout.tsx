@@ -17,10 +17,15 @@ export default function DashboardLayout({
   var { user, isLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (isLoading) return;
+    if (!isAuthenticated) {
       router.push("/login");
+      return;
     }
-  }, [isLoading, isAuthenticated, router]);
+    if (!user?.hospital_id) {
+      router.push("/onboarding");
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   if (isLoading) {
     return (
@@ -30,7 +35,7 @@ export default function DashboardLayout({
     );
   }
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || !user?.hospital_id) return null;
 
   console.log("[DashboardLayout] user object:", user);
 
