@@ -45,6 +45,22 @@
   --color-amber-accent: #f59e0b;
   --color-rose-accent: #f43f5e;
 
+  /* v4 Auth redesign — teal accent system (mhai_auth_pages_v4_FINAL.html) */
+  --color-mhai-teal: #1ba3d6;
+  --color-mhai-teal-deep: #0e7ba8;
+  --color-mhai-teal-darkest: #075985;
+  --color-mhai-teal-pale: #e0f2fe;
+  --color-mhai-ink: #0f172a;
+  --color-mhai-ink-strong: #020617;
+  --color-mhai-ink-muted: #475569;
+  --color-mhai-ink-pale: #94a3b8;
+  --color-mhai-line: #e2e8f0;
+  --color-mhai-line-soft: #f1f5f9;
+  --color-mhai-success: #10b981;
+  --color-mhai-success-bg: #d1fae5;
+  --color-mhai-purple: #7c3aed;
+  --color-mhai-pink: #ec4899;
+
   /* v4.1 font stack */
   --font-display: var(--font-fraunces), Georgia, serif;
   --font-v41-sans: var(--font-inter), var(--font-geist-sans), system-ui, sans-serif;

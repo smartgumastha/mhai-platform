@@ -66,6 +66,7 @@ async function api<T = any>(
 // ── Auth endpoints ──
 export function signup(data: {
   email: string;
+  owner_name: string;
   business_name: string;
   phone: string;
   password: string;
@@ -73,7 +74,7 @@ export function signup(data: {
   return api<{
     success: boolean;
     token?: string;
-    partner?: { id: string; email: string; business_name: string };
+    partner?: { id: string; email: string; owner_name: string; business_name: string };
     error?: string;
     message?: string;
   }>("/api/presence/partner-auth/signup", {

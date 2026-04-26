@@ -40,10 +40,12 @@ type AuthCtx = {
   ) => Promise<{ success: boolean; error?: string }>;
   signupUser: (
     email: string,
+    owner_name: string,
     business_name: string,
     phone: string,
     password: string
   ) => Promise<{ success: boolean; error?: string }>;
+  patchUser: (data: Partial<Partner>) => void;
   logout: () => void;
 };
 
@@ -54,6 +56,7 @@ var AuthContext = createContext<AuthCtx>({
   isAuthenticated: false,
   loginUser: async () => ({ success: false }),
   signupUser: async () => ({ success: false }),
+  patchUser: () => {},
   logout: () => {},
 });
 
@@ -102,11 +105,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   var signupUser = useCallback(
     async (
       email: string,
+      owner_name: string,
       business_name: string,
       phone: string,
       password: string
     ) => {
-      var res = await apiSignup({ email, business_name, phone, password });
+      var res = await apiSignup({ email, owner_name, business_name, phone, password });
       if (res.success && res.token) {
         setToken(res.token);
         setTokenState(res.token);
@@ -120,6 +124,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     []
   );
+
+  var patchUser = useCallback((data: Partial<Partner>) => {
+    setUser((prev) => (prev ? { ...prev, ...data } : prev));
+  }, []);
 
   var logout = useCallback(() => {
     clearToken();
@@ -137,6 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         loginUser,
         signupUser,
+        patchUser,
         logout,
       }}
     >
