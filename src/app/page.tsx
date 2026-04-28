@@ -499,7 +499,7 @@ export default function LandingPage() {
               <div>
                 <p className="mb-3 text-[10px] font-extrabold uppercase tracking-[0.1em] text-[#475569]">Company</p>
                 <div className="space-y-2.5">
-                  {[["#about","About"],["mailto:support@medihostai.com","Contact"],["mailto:saicharankumarpakala@gmail.com","Founder"]].map(([href,label])=>(
+                  {[["/about","About"],["/contact","Contact"],["/founder","Founder"]].map(([href,label])=>(
                     <Link key={href} href={href} className="block text-[13px] text-[#64748b] hover:text-white">{label}</Link>
                   ))}
                   <p className="text-[12px] text-[#64748b]">Hyderabad, India</p>
