@@ -1,6 +1,5 @@
 'use client'
-// /dashboard/denials — Denial Inbox with Rajitha RCM Framework
-// Sources: MHAI Definitive Billing Field Master v1.0, Rajitha Inukonda RCM Framework
+// /dashboard/denials — Denial Inbox · MHAI RCM Framework
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -92,10 +91,10 @@ export default function DenialInboxPage() {
         <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
           <div>
             <h1 className="font-fraunces text-3xl font-light">Denial <em className="italic text-coral-deep">Inbox</em></h1>
-            <p className="text-sm text-text-dim mt-1">AI-classified by appeal probability · Rajitha RCM Framework · CO-50/55/97 priority</p>
+            <p className="text-sm text-text-dim mt-1">AI-classified by appeal probability · CO-50/55/97 priority</p>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-full">
-            <span className="text-xs font-mono text-purple-700 font-bold">Rajitha Inukonda · US RCM Framework · UB-04 / 837I</span>
+            <span className="text-xs font-mono text-purple-700 font-bold">US RCM Framework · UB-04 / 837I</span>
           </div>
         </div>
 

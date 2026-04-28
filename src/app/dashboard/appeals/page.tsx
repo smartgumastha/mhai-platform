@@ -1,6 +1,5 @@
 'use client'
-// /dashboard/appeals — Appeal Builder with L1/L2/L3 state machine
-// Sources: MHAI Definitive Billing Field Master v1.0, Rajitha Inukonda RCM Framework
+// /dashboard/appeals — Appeal Builder · L1/L2/L3 state machine
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
