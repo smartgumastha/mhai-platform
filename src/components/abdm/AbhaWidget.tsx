@@ -203,7 +203,7 @@ export default function AbhaWidget({ countryCode, onLinked, onSkip, existingAbha
   }
 
   // ── shared styles ────────────────────────────────────────
-  var inputCls = 'w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500/20 font-mono tracking-widest'
+  var inputCls = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500/20 font-mono tracking-widest'
   var btnPrimary = 'w-full rounded-lg bg-[#7c3aed] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#6d28d9] disabled:opacity-50 transition-colors'
   var btnSecondary = 'w-full rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors'
 
