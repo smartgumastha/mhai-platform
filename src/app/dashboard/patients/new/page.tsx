@@ -7,6 +7,7 @@ import { useAuth } from "@/app/providers/auth-context";
 import { useLocale } from "@/app/providers/locale-context";
 import { useNotification } from "@/app/providers/NotificationProvider";
 import { createPatient, getPatients } from "@/lib/api";
+import AbhaWidget, { type AbhaProfile } from "@/components/abdm/AbhaWidget";
 
 var TODAY = new Date().toISOString().split("T")[0];
 var I = "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500/20";
@@ -62,6 +63,8 @@ export default function NewPatientPage() {
   var [abhaId, setAbhaId] = useState("");
   var [abhaError, setAbhaError] = useState("");
   var [abhaAddress, setAbhaAddress] = useState("");
+  var [abhaVerified, setAbhaVerified] = useState(false);
+  var [abhaWidgetMode, setAbhaWidgetMode] = useState<'widget' | 'manual'>('widget');
   var [emiratesId, setEmiratesId] = useState("");
   var [emiratesError, setEmiratesError] = useState("");
   var [nationalityCode, setNationalityCode] = useState("");
@@ -130,6 +133,26 @@ export default function NewPatientPage() {
   function validateNhs(v: string) {
     if (!v) { setNhsError(""); return; }
     setNhsError(/^\d{10}$/.test(v) ? "" : "NHS number must be 10 digits");
+  }
+
+  function handleAbhaLinked(profile: AbhaProfile) {
+    setAbhaId(profile.abhaNumber);
+    setAbhaAddress(profile.abhaAddress);
+    setAbhaVerified(true);
+    setConsentAbha(true);
+    // Auto-fill demographics if not already entered
+    if (!name && profile.name) setName(profile.name);
+    if (!dob && profile.dateOfBirth) setDob(profile.dateOfBirth);
+    if (!gender && profile.gender) {
+      setGender(profile.gender === 'M' ? 'MALE' : profile.gender === 'F' ? 'FEMALE' : 'OTHER');
+    }
+    if (!phone && profile.mobile) setPhone(profile.mobile);
+    if (!email && profile.email) setEmail(profile.email);
+    if (!address1 && profile.address) setAddress1(profile.address);
+    if (!state && profile.state) setState(profile.state);
+    if (!pincode && profile.pincode) setPincode(profile.pincode);
+    notify.success("ABHA linked — patient details auto-filled from ABDM profile");
+    setAbhaWidgetMode('manual');
   }
 
   function validatePhone(ph: string): string {
@@ -229,7 +252,7 @@ export default function NewPatientPage() {
     { label: "Emergency Contact", done: Boolean(ecName && ecPhone && ecRelation) },
     { label: "Payment Type",     done: Boolean(paymentType) },
     { label: "Consents",         done: consentTreatment && consentData },
-    { label: cc === "AE" ? "Emirates ID" : cc === "GB" ? "NHS Number" : "Govt ID",
+    { label: cc === "AE" ? "Emirates ID" : cc === "GB" ? "NHS Number" : cc === "IN" ? "ABHA" + (abhaVerified ? " ✓" : "") : "Govt ID",
       done: cc === "AE" ? Boolean(emiratesId) : cc === "GB" ? Boolean(nhsNumber) : Boolean(abhaId) },
   ];
 
@@ -266,6 +289,7 @@ export default function NewPatientPage() {
         emergency_contact_phone: ecPhone || undefined,
         emergency_contact_relation: ecRelation || undefined,
         abha_id: abhaId || undefined, abha_address: abhaAddress || undefined,
+        abha_verified: abhaVerified || undefined,
         emirates_id: emiratesId || undefined,
         nationality_code: nationalityCode || undefined,
         passport_number: passportNumber || undefined,
@@ -513,25 +537,48 @@ export default function NewPatientPage() {
             <div className={CARD}>
               <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-gray-700">Identity Documents</h2>
               {cc === "IN" && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={L}>ABHA Number</label>
-                    <input className={I + (abhaError ? " border-red-400" : "")}
-                      placeholder="14-digit ABDM number"
-                      value={abhaId}
-                      onKeyPress={function(e) { if (!/\d/.test(e.key)) e.preventDefault(); }}
-                      onChange={function(e) { setAbhaId(e.target.value); validateAbha(e.target.value); }} />
-                    {abhaError && <p className="mt-1 text-xs text-red-600">{abhaError}</p>}
-                    <p className="mt-1 text-xs text-gray-400">14-digit Ayushman Bharat Health Account number</p>
-                    <a href="https://abha.abdm.gov.in" target="_blank" rel="noreferrer" className="mt-0.5 inline-block text-xs text-orange-600 hover:underline">
-                      Don&apos;t have one? Create at abha.abdm.gov.in →
-                    </a>
-                  </div>
-                  <div>
-                    <label className={L}>ABHA Address</label>
-                    <input className={I + (fieldErrors.abha_address ? " border-red-400" : "")} placeholder="yourname@abdm" value={abhaAddress} onChange={function(e) { setAbhaAddress(e.target.value); }} />
-                    {fieldErrors.abha_address && <p className="mt-1 text-xs text-red-600">{fieldErrors.abha_address}</p>}
-                  </div>
+                <div className="space-y-4">
+                  {/* ABHA Widget — OTP-based creation + verification (ABDM M1/M2) */}
+                  {abhaWidgetMode === 'widget' && !abhaVerified ? (
+                    <AbhaWidget
+                      countryCode={cc}
+                      existingAbhaId={abhaId}
+                      onLinked={handleAbhaLinked}
+                      onSkip={function() { setAbhaWidgetMode('manual'); }}
+                    />
+                  ) : (
+                    <div className={abhaVerified ? "rounded-xl border border-emerald-200 bg-emerald-50 p-4 space-y-2" : "space-y-3"}>
+                      {abhaVerified && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">✅</span>
+                          <p className="text-sm font-bold text-emerald-800">ABHA Verified via ABDM OTP</p>
+                          <span className="ml-auto text-xs font-mono text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">VERIFIED</span>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className={L}>ABHA Number {abhaVerified && <span className="text-emerald-600 normal-case font-normal">✓ verified</span>}</label>
+                          <input className={I + (abhaError ? " border-red-400" : abhaVerified ? " border-emerald-400 bg-emerald-50" : "")}
+                            placeholder="14-digit ABDM number"
+                            value={abhaId}
+                            onKeyPress={function(e) { if (!/\d/.test(e.key)) e.preventDefault(); }}
+                            onChange={function(e) { setAbhaId(e.target.value); setAbhaVerified(false); validateAbha(e.target.value); }} />
+                          {abhaError && <p className="mt-1 text-xs text-red-600">{abhaError}</p>}
+                        </div>
+                        <div>
+                          <label className={L}>ABHA Address</label>
+                          <input className={I + (fieldErrors.abha_address ? " border-red-400" : "")} placeholder="yourname@abdm" value={abhaAddress} onChange={function(e) { setAbhaAddress(e.target.value); }} />
+                          {fieldErrors.abha_address && <p className="mt-1 text-xs text-red-600">{fieldErrors.abha_address}</p>}
+                        </div>
+                      </div>
+                      {!abhaVerified && (
+                        <button onClick={function() { setAbhaWidgetMode('widget'); }}
+                          className="text-xs text-[#7c3aed] hover:underline font-semibold">
+                          ← Verify ABHA via OTP (recommended)
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
               {cc === "AE" && (
