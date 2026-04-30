@@ -48,7 +48,7 @@ export default function DashboardLayout({
             <DashboardSidebar
               businessName={user?.business_name || user?.owner_name || "My Clinic"}
             />
-            <main className="overflow-y-auto bg-paper">{children}</main>
+            <main className="min-h-0 overflow-y-auto bg-paper text-ink">{children}</main>
           </div>
         </div>
       </NotificationProvider>
