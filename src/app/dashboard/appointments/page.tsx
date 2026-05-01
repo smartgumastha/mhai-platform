@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { getAppointments, createAppointment, updateAppointment } from "@/lib/api";
 import type { MhaiAppointment, AppointmentStatus } from "@/lib/types/MhaiAppointment";
 import { useNotification } from "@/app/providers/NotificationProvider";
@@ -22,7 +23,17 @@ var FILTER_TABS = [
 // ARetrofit-1 Step 5c-frontend: use canonical MhaiAppointment type
 type Appointment = MhaiAppointment;
 
+// appointment_type → bill_type mapping (workflow.md step 6)
+var APPT_TO_BILL_TYPE: Record<string, string> = {
+  ROUTINE: "consultation", CHECKUP: "consultation", FOLLOWUP: "consultation",
+  WALKIN: "consultation", TELECONSULT: "consultation", SECOND_OPINION: "consultation",
+  HOME_VISIT: "consultation", ANC_VISIT: "consultation", IMMUNIZATION: "consultation",
+  EMERGENCY: "consultation", DIAGNOSTIC: "diagnostic",
+  DAY_CARE: "procedure", PRE_SURGERY: "procedure", POST_SURGERY: "procedure",
+};
+
 export default function AppointmentsPage() {
+  var router = useRouter();
   var notify = useNotification();
   var [appointments, setAppointments] = useState<Appointment[]>([]);
   var [loading, setLoading] = useState(true);
@@ -205,7 +216,7 @@ export default function AppointmentsPage() {
                       <span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${badge.cls}`}>{badge.label}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-1.5">
+                      <div className="flex gap-1.5 flex-wrap">
                         {appt.status !== "completed" && (
                           <button
                             onClick={() => handleStatusChange(appt.id, "completed")}
@@ -231,6 +242,19 @@ export default function AppointmentsPage() {
                             className="cursor-pointer rounded-lg bg-red-50 px-2.5 py-1.5 text-[10px] font-medium text-red-600 transition-all duration-200 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Cancel
+                          </button>
+                        )}
+                        {(appt.status === "completed" || appt.status === "confirmed") && (
+                          <button
+                            onClick={() => {
+                              var params = new URLSearchParams({ appointmentId: appt.id });
+                              var t = APPT_TO_BILL_TYPE[(appt as any).appointment_type] || "consultation";
+                              params.set("billType", t);
+                              router.push("/dashboard/bills/new?" + params.toString());
+                            }}
+                            className="cursor-pointer rounded-lg bg-teal-600 px-2.5 py-1.5 text-[10px] font-medium text-white transition-all duration-200 hover:bg-teal-700"
+                          >
+                            Bill
                           </button>
                         )}
                       </div>

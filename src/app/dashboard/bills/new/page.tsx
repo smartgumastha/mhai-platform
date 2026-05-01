@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/auth-context";
 import { useCurrency } from "@/app/hooks/useCurrency";
 import { useLocale } from "@/app/providers/locale-context";
 import { useNotification } from "@/app/providers/NotificationProvider";
-import { getToken } from "@/lib/api";
+import { getToken, getAppointment } from "@/lib/api";
+import type { MhaiAppointment } from "@/lib/types/MhaiAppointment";
 import RegulatoryIdsGate from "@/app/components/RegulatoryIdsGate";
 
 type LineItem = {
@@ -28,8 +29,18 @@ type ProfileStatus = {
   regulatory_ids?: Record<string, string>;
 };
 
+// appointment_type → bill_type select value
+var APPT_TO_BILL_TYPE: Record<string, string> = {
+  ROUTINE: "consultation", CHECKUP: "consultation", FOLLOWUP: "consultation",
+  WALKIN: "consultation", TELECONSULT: "consultation", SECOND_OPINION: "consultation",
+  HOME_VISIT: "consultation", ANC_VISIT: "consultation", IMMUNIZATION: "consultation",
+  EMERGENCY: "consultation", DIAGNOSTIC: "diagnostic",
+  DAY_CARE: "procedure", PRE_SURGERY: "procedure", POST_SURGERY: "procedure",
+};
+
 export default function NewBillPage() {
   var router = useRouter();
+  var searchParams = useSearchParams();
   var { user } = useAuth();
   var currency = useCurrency();
   var { localeV2 } = useLocale();
@@ -39,6 +50,10 @@ export default function NewBillPage() {
   var [profileStatus, setProfileStatus] = useState<ProfileStatus | null>(null);
   var [profileIncomplete, setProfileIncomplete] = useState(false);
   var [gateOpen, setGateOpen] = useState(false);
+
+  // Appointment context (pre-fill from ?appointmentId=)
+  var [apptCtx, setApptCtx] = useState<MhaiAppointment | null>(null);
+  var [apptCtxCleared, setApptCtxCleared] = useState(false);
 
   var [patientName, setPatientName] = useState("");
   var [patientPhone, setPatientPhone] = useState("");
@@ -58,6 +73,26 @@ export default function NewBillPage() {
     if (!user?.hospital_id) return;
     checkProfileStatus();
   }, [user?.hospital_id]);
+
+  // Pre-fill from appointment when ?appointmentId= is in the URL
+  useEffect(function () {
+    var appointmentId = searchParams?.get("appointmentId");
+    if (!appointmentId) return;
+    getAppointment(appointmentId).then(function (res) {
+      if (res.success && res.appointment) {
+        var appt = res.appointment;
+        setApptCtx(appt);
+        if (appt.patient_name) setPatientName(appt.patient_name);
+        if (appt.patient_phone) setPatientPhone(appt.patient_phone);
+        var mapped = APPT_TO_BILL_TYPE[(appt as any).appointment_type] || "consultation";
+        setBillType(mapped);
+        // Override with billType URL param if passed (e.g. from appointments page)
+        var urlBillType = searchParams?.get("billType");
+        if (urlBillType) setBillType(urlBillType);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function checkProfileStatus() {
     setLoading(true);
@@ -139,6 +174,7 @@ export default function NewBillPage() {
       // 4. Map supply_type to bill_category (B2C → self_pay, B2B → insurance)
       var billCategory = supplyType === "B2B" ? "insurance" : "self_pay";
 
+      var appointmentId = searchParams?.get("appointmentId") || null;
       var body = {
         patient_name: patientName.trim(),
         patient_phone: patientPhone.trim() || null,
@@ -148,6 +184,7 @@ export default function NewBillPage() {
         bill_type: billType,
         bill_category: billCategory,
         currency: currencyCode,
+        appointment_id: appointmentId || undefined,
         buyer_gstin: supplyType === "B2B" ? buyerGstin.trim() || null : null,
         buyer_name: supplyType === "B2B" ? buyerName.trim() || null : null,
         items: items
@@ -232,6 +269,25 @@ export default function NewBillPage() {
 
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-6 px-8 py-6 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
+          {/* Appointment context banner */}
+          {apptCtx && !apptCtxCleared && (
+            <div className="flex items-start justify-between gap-3 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3">
+              <div>
+                <p className="text-xs font-semibold text-teal-700">
+                  Pre-filled from appointment · {apptCtx.slot_date}
+                </p>
+                <p className="mt-0.5 text-xs text-teal-600">
+                  {(apptCtx as any).appointment_type || "Consultation"} · {apptCtx.patient_name} · {apptCtx.patient_phone || "—"} · Status: {apptCtx.status}
+                </p>
+              </div>
+              <button
+                onClick={function () { setApptCtxCleared(true); }}
+                className="shrink-0 text-[11px] text-teal-500 underline hover:text-teal-700"
+              >
+                Clear
+              </button>
+            </div>
+          )}
           {/* Patient details */}
           <div className="rounded-2xl border border-line bg-white p-6">
             <h3 className="mb-4 font-fraunces text-lg font-medium text-ink">

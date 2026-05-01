@@ -334,6 +334,12 @@ export function getAppointments(filter?: string) {
   return api<{ success: boolean; appointments?: MhaiAppointment[]; error?: string }>(url);
 }
 
+export function getAppointment(appointmentId: string) {
+  return api<{ success: boolean; appointment?: MhaiAppointment; error?: string }>(
+    "/api/mhai/appointments/" + encodeURIComponent(appointmentId)
+  );
+}
+
 export function createAppointment(data: CreateAppointmentInput) {
   return api<CreateAppointmentResponse>(
     "/api/mhai/appointments",
