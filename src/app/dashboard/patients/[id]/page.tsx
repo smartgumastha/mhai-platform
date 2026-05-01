@@ -51,7 +51,7 @@ function PaymentChip({ v }: { v?: string }) {
   );
 }
 
-var TABS = ["Overview", "Medical History", "Billing History", "Deposits", "Consents"];
+var TABS = ["Overview", "Medical History", "Billing History", "Appointments", "Deposits", "Consents"];
 
 var FIELD_LABELS: Record<string, string> = {
   allergies: "Allergies",
@@ -88,6 +88,9 @@ export default function PatientProfilePage() {
   var [bills, setBills] = useState<any[]>([]);
   var [billsLoading, setBillsLoading] = useState(false);
 
+  var [appts, setAppts] = useState<any[]>([]);
+  var [apptsLoading, setApptsLoading] = useState(false);
+
   var [deposits, setDeposits] = useState<any[]>([]);
   var [depositsLoading, setDepositsLoading] = useState(false);
   var [showAddDeposit, setShowAddDeposit] = useState(false);
@@ -120,7 +123,20 @@ export default function PatientProfilePage() {
   }, [tab, patient?.uhid, hospitalId]);
 
   useEffect(function () {
-    if (tab !== 3 || !hospitalId || !id) return;
+    if (tab !== 3 || !patient?.phone || !hospitalId) return;
+    setApptsLoading(true);
+    var token = getToken();
+    fetch("/api/mhai/appointments?patient_phone=" + encodeURIComponent(patient.phone), {
+      headers: token ? { Authorization: "Bearer " + token } : {},
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { setAppts(d.appointments || []); })
+      .catch(function () { setAppts([]); })
+      .finally(function () { setApptsLoading(false); });
+  }, [tab, patient?.phone, hospitalId]);
+
+  useEffect(function () {
+    if (tab !== 4 || !hospitalId || !id) return;
     setDepositsLoading(true);
     getPatientDeposits(hospitalId, id)
       .then(function (res: any) { setDeposits(res.deposits || []); })
@@ -640,8 +656,90 @@ export default function PatientProfilePage() {
         </div>
       )}
 
-      {/* ── TAB 4: Deposits ── */}
+      {/* ── TAB 3: Appointments ── */}
       {tab === 3 && (
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-900">Appointment history</h3>
+            <button
+              type="button"
+              onClick={function () { router.push("/dashboard/appointments?name=" + encodeURIComponent(patient?.name || "")); }}
+              className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-semibold text-white hover:bg-teal-700"
+            >
+              + Book appointment
+            </button>
+          </div>
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  {["Date", "Time", "Type", "Mode", "Reason / Notes", "Status"].map(function (h) {
+                    return (
+                      <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                        {h}
+                      </th>
+                    );
+                  })}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {apptsLoading ? (
+                  [1, 2, 3].map(function (i) {
+                    return (
+                      <tr key={i}>
+                        {[1, 2, 3, 4, 5, 6].map(function (j) {
+                          return (
+                            <td key={j} className="px-4 py-3">
+                              <div className="h-4 animate-pulse rounded bg-gray-100" />
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })
+                ) : appts.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center">
+                      <div className="mx-auto mb-2 text-2xl">📅</div>
+                      <p className="text-sm font-medium text-gray-700">No appointments yet</p>
+                    </td>
+                  </tr>
+                ) : (
+                  appts.map(function (a: any) {
+                    var statusColors: Record<string, string> = {
+                      completed: "bg-green-100 text-green-700",
+                      confirmed: "bg-blue-100 text-blue-700",
+                      pending: "bg-amber-100 text-amber-700",
+                      cancelled: "bg-red-100 text-red-700",
+                      no_show: "bg-gray-100 text-gray-600",
+                    };
+                    var sc = statusColors[a.status] || "bg-gray-100 text-gray-600";
+                    return (
+                      <tr key={a.id} className="hover:bg-gray-50/50">
+                        <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                          {a.slot_date ? new Date(a.slot_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs text-gray-500">{a.slot_time || "—"}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{a.appointment_type || "Consultation"}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{a.consultation_mode || "In-person"}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500">{a.reason || a.notes || "—"}</td>
+                        <td className="px-4 py-3">
+                          <span className={"rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize " + sc}>
+                            {a.status || "—"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 4: Deposits ── */}
+      {tab === 4 && (
         <div>
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-900">Deposits</h3>
@@ -764,7 +862,7 @@ export default function PatientProfilePage() {
       )}
 
       {/* ── TAB 5: Consents ── */}
-      {tab === 4 && (
+      {tab === 5 && (
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
           <table className="w-full">
             <thead>

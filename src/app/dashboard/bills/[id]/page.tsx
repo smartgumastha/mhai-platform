@@ -34,7 +34,7 @@ export default function BillDetailPage() {
   var [sendingLink, setSendingLink] = useState(false);
 
   useEffect(function () {
-    if (!billId) return;
+    if (!billId || !user) return; // wait for auth context before fetching
     async function load() {
       try {
         var token = getToken();
@@ -83,7 +83,7 @@ export default function BillDetailPage() {
       }
     }
     load();
-  }, [billId, user?.hospital_id]);
+  }, [billId, user]);
 
   function getEffectiveFormat(): string {
     if (prefs?.user_preferences?.default_print_format) return prefs.user_preferences.default_print_format;
