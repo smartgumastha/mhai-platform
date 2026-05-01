@@ -5,7 +5,7 @@ import { useAuth } from '@/app/providers/auth-context'
 import { useLocale } from '@/app/providers/locale-context'
 import { useCurrency } from '@/app/hooks/useCurrency'
 import { useNotification } from '@/app/providers/NotificationProvider'
-import { getToken, getPatient, getPatientDeposits } from '@/lib/api'
+import { getToken, getPatient, getPatientDeposits, createPaymentLink } from '@/lib/api'
 import ApprovalWorkflow, { type BillStatus as WorkflowBillStatus } from '@/app/components/billing/ApprovalWorkflow'
 import {
   getDocType, getDocTypeLabel, getHsnSac, calcBillSummary,
@@ -332,25 +332,40 @@ export default function OPDBillingPage() {
 
   async function handleUpiPayment() {
     if (summary.netAmount <= 0) { notify.error('Enter bill amount first'); return }
+    if (!form.patientName.trim()) { notify.error('Enter patient name first'); return }
     try {
-      var res = await fetch('/api/create-payment-order', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: Math.round(summary.netAmount * 100), currency: getCurrency(cc), notes: { patient: form.patientName, type: 'OPD' } })
+      var res = await createPaymentLink({
+        patient_name: form.patientName.trim(),
+        patient_phone: form.patientPhone.trim() || '0000000000',
+        amount: summary.netAmount,
+        purpose: 'OPD Consultation'
       })
-      var data = await res.json()
-      if (data.id) { updateField('paymentMode', 'UPI'); updateField('amountPaid', summary.netAmount); notify.success('UPI QR generated') }
+      if (res.success && res.payment?.short_url) {
+        updateField('paymentMode', 'ONLINE_LINK')
+        updateField('amountPaid', summary.netAmount)
+        notify.success('Payment link created — ' + res.payment.short_url)
+      } else {
+        notify.error('Payment link error', res.error || res.message || 'Could not create link')
+      }
     } catch { notify.error('Payment gateway error') }
   }
 
   async function handleWhatsAppLink() {
     if (summary.netAmount <= 0) { notify.error('Enter bill amount first'); return }
     if (!form.patientPhone) { notify.error('Enter patient phone first'); return }
+    if (!form.patientName.trim()) { notify.error('Enter patient name first'); return }
     try {
-      await fetch('/api/create-payment-order', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: Math.round(summary.netAmount * 100), currency: getCurrency(cc), notes: { patient: form.patientName }, send_whatsapp: true, phone: form.patientPhone })
+      var res = await createPaymentLink({
+        patient_name: form.patientName.trim(),
+        patient_phone: form.patientPhone.trim(),
+        amount: summary.netAmount,
+        purpose: 'OPD Consultation'
       })
-      notify.success(`Payment link sent to ${form.patientPhone}`)
+      if (res.success && res.payment?.short_url) {
+        notify.success('Payment link created — share with patient: ' + res.payment.short_url)
+      } else {
+        notify.error('WhatsApp link error', res.error || res.message || 'Could not create link')
+      }
     } catch { notify.error('WhatsApp link error') }
   }
 

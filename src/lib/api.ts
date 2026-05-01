@@ -325,12 +325,12 @@ export type {
   UpdateAppointmentResponse,
 };
 
-// ARetrofit-1 Step 5c-frontend: filter kept as string for impl backward-compat.
-// Structured AppointmentFilter type is exported for future use when the backend
-// endpoint contract supports multi-field filtering.
+// Translates UI filter tabs to backend query params.
+// Backend accepts: ?date=YYYY-MM-DD  ?status=X  ?doctor_id=X
+// "upcoming" has no backend range filter — fetch all, client-side getFiltered() handles >=today
 export function getAppointments(filter?: string) {
   var url = "/api/mhai/appointments";
-  if (filter) url += "?filter=" + encodeURIComponent(filter);
+  if (filter === "today") url += "?date=" + new Date().toISOString().slice(0, 10);
   return api<{ success: boolean; appointments?: MhaiAppointment[]; error?: string }>(url);
 }
 

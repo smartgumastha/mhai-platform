@@ -42,25 +42,36 @@ export default function BillDetailPage() {
         }
         var hospitalId = user?.hospital_id;
 
-        var billPromise = fetch("/api/bills/" + billId, {
-          headers: { Authorization: "Bearer " + token },
-        });
-        var prefsPromise = hospitalId
-          ? fetch("/api/presence/partners/" + hospitalId + "/billing-preferences", {
-              headers: { Authorization: "Bearer " + token },
-            })
-          : Promise.resolve(null as any);
-        var statusPromise = fetch("/api/presence/partners/me/profile-status", {
-          headers: { Authorization: "Bearer " + token },
-        });
+        var authHeaders: Record<string, string> = { Authorization: "Bearer " + token };
+        // Try RCM billing first (new schema), fall back to legacy bills table
+        var billData: any = null;
+        if (hospitalId) {
+          var rcmResp = await fetch("/api/hospitals/" + hospitalId + "/rcm/billing/bills/" + billId, { headers: authHeaders });
+          if (rcmResp.ok) {
+            var rcmJson = await rcmResp.json();
+            if (rcmJson && rcmJson.id) billData = rcmJson;
+          }
+          if (!billData) {
+            var legacyResp = await fetch("/api/hospitals/" + hospitalId + "/bills/" + billId, { headers: authHeaders });
+            if (legacyResp.ok) {
+              var legacyJson = await legacyResp.json();
+              // Legacy returns { success: true, data: bill }
+              if (legacyJson && legacyJson.success && legacyJson.data) billData = legacyJson.data;
+            }
+          }
+        }
 
-        var [billResp, prefsResp, statusResp] = await Promise.all([billPromise, prefsPromise, statusPromise]);
+        var [prefsResp, statusResp] = await Promise.all([
+          hospitalId
+            ? fetch("/api/presence/partners/" + hospitalId + "/billing-preferences", { headers: authHeaders })
+            : Promise.resolve(null as any),
+          fetch("/api/presence/partners/me/profile-status", { headers: authHeaders }),
+        ]);
 
-        var billData = billResp ? await billResp.json() : null;
         var prefsData = prefsResp ? await prefsResp.json() : null;
         var statusData = statusResp ? await statusResp.json() : null;
 
-        if (billData && billData.success) setBill(billData.bill);
+        if (billData) setBill(billData as Bill);
         if (prefsData && prefsData.success) setPrefs(prefsData);
         if (statusData && statusData.success) setProfileStatus(statusData);
       } catch (e) {
@@ -214,13 +225,19 @@ export default function BillDetailPage() {
                 Submit to {(bill as any)?.country_code === "AE" ? "eClaimLink" : "NHCX"}
               </button>
             )}
-            {/* Stage 5: WhatsApp receipt */}
+            {/* Stage 5: WhatsApp receipt (token required) */}
             {(bill as any)?.patient_phone && (
               <button
-                onClick={function () {
-                  fetch("/api/hospitals/" + user?.hospital_id + "/rcm/billing/bills/" + billId + "/whatsapp-receipt", { method: "POST" })
-                    .then(function () { alert("Receipt sent via WhatsApp"); })
-                    .catch(function () { alert("Could not send receipt"); });
+                onClick={async function () {
+                  try {
+                    var tok = getToken();
+                    var r = await fetch("/api/hospitals/" + user?.hospital_id + "/rcm/billing/bills/" + billId + "/whatsapp-receipt", {
+                      method: "POST",
+                      headers: tok ? { Authorization: "Bearer " + tok } : {},
+                    });
+                    var d = await r.json();
+                    if (d.success) { alert("Receipt sent via WhatsApp"); } else { alert(d.error || "Could not send receipt"); }
+                  } catch { alert("Could not send receipt"); }
                 }}
                 className="rounded-lg border border-line bg-white px-4 py-2.5 text-sm hover:bg-paper-soft"
               >

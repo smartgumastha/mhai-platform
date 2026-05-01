@@ -79,7 +79,7 @@ export default function PrintBillModal({ open, onClose, bill, prefs, countryCode
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="grid max-h-[92vh] w-full max-w-[1160px] grid-cols-1 overflow-hidden rounded-2xl bg-white shadow-2xl md:grid-cols-[300px_1fr]">
+      <div className="grid h-[92vh] w-full max-w-[1160px] grid-cols-1 overflow-hidden rounded-2xl bg-white shadow-2xl md:grid-cols-[300px_1fr]">
 
         {/* Left rail */}
         <div className="overflow-y-auto border-r border-gray-200 bg-gray-50 px-5 py-6">
