@@ -443,6 +443,33 @@ export function getPayments(status?: string) {
   return api<{ success: boolean; payments?: any[]; error?: string }>(url);
 }
 
+// ── Staff / Team (HMS token required) ──
+export function getStaff(hospitalId: string) {
+  return aiApi<{ success: boolean; data?: any[]; error?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/staff"
+  );
+}
+
+export function createStaffMember(hospitalId: string, data: {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number?: string;
+  role_master_id: number;
+}) {
+  return aiApi<{ success: boolean; data?: any; error?: string; message?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/staff",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function deleteStaffMember(hospitalId: string, userId: string) {
+  return aiApi<{ success: boolean; error?: string; message?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/staff/" + encodeURIComponent(userId),
+    { method: "DELETE" }
+  );
+}
+
 // ── Website ──
 export function getWebsite() {
   return api<{ success: boolean; website?: any; error?: string }>(
