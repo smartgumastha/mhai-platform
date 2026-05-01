@@ -414,6 +414,7 @@ export function createPaymentLink(data: {
   patient_phone: string;
   amount: number;
   purpose: string;
+  bill_id?: string;
 }) {
   return api<{
     success: boolean;

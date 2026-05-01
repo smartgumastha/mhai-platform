@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/auth-context";
-import { getToken } from "@/lib/api";
+import { getToken, createPaymentLink } from "@/lib/api";
 import PrintBillModal from "@/app/components/print/PrintBillModal";
 import RegulatoryIdsGate from "@/app/components/RegulatoryIdsGate";
 import { logPrintAudit, formatCurrency, type Bill, type PrintPrefs, type CountryCode, type PaperSize } from "@/app/components/print/lib";
@@ -30,6 +30,8 @@ export default function BillDetailPage() {
   var [loading, setLoading] = useState(true);
   var [printModalOpen, setPrintModalOpen] = useState(false);
   var [gateOpen, setGateOpen] = useState(false);
+  var [paymentLink, setPaymentLink] = useState<string | null>(null);
+  var [sendingLink, setSendingLink] = useState(false);
 
   useEffect(function () {
     if (!billId) return;
@@ -102,6 +104,40 @@ export default function BillDetailPage() {
     if (!profileStatus) return false;
     if (profileStatus.onboarding_profile_completed) return false;
     return (profileStatus.missing_fields || []).length > 0;
+  }
+
+  async function handleSendPaymentLink() {
+    if (!bill) return;
+    var patientName = (bill as any).patient_name || (bill as any).patient_display_name || "Patient";
+    var patientPhone = (bill as any).patient_phone || "";
+    if (!patientPhone) {
+      alert("No patient phone on this bill — add a phone number first.");
+      return;
+    }
+    var amount = Number((bill as any).total_amount || (bill as any).total || 0);
+    if (amount <= 0) {
+      alert("Bill amount is 0 — cannot create payment link.");
+      return;
+    }
+    setSendingLink(true);
+    try {
+      var res = await createPaymentLink({
+        patient_name: patientName,
+        patient_phone: patientPhone,
+        amount: amount,
+        purpose: "Bill " + ((bill as any).bill_number || billId),
+        bill_id: billId,
+      });
+      if (res.success && res.payment?.short_url) {
+        setPaymentLink(res.payment.short_url);
+      } else {
+        alert(res.error || res.message || "Could not create payment link.");
+      }
+    } catch {
+      alert("Network error creating payment link.");
+    } finally {
+      setSendingLink(false);
+    }
   }
 
   function handleQuickPrint() {
@@ -225,6 +261,20 @@ export default function BillDetailPage() {
                 Submit to {(bill as any)?.country_code === "AE" ? "eClaimLink" : "NHCX"}
               </button>
             )}
+            {/* Send Payment Link — cash unpaid bills only */}
+            {(bill as any)?.supply_type !== "TPA" && (bill as any)?.supply_type !== "B2B" && (bill as any)?.payment_status !== "paid" && (
+              <button
+                onClick={paymentLink ? undefined : handleSendPaymentLink}
+                disabled={sendingLink || !!paymentLink}
+                className={
+                  paymentLink
+                    ? "cursor-default rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white opacity-60"
+                    : "rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+                }
+              >
+                {sendingLink ? "Sending…" : paymentLink ? "Link sent ✓" : "Send Payment Link"}
+              </button>
+            )}
             {/* Stage 5: WhatsApp receipt (token required) */}
             {(bill as any)?.patient_phone && (
               <button
@@ -265,6 +315,30 @@ export default function BillDetailPage() {
             <Pill color="coral">{"\u2605 DEFAULT FORMAT IS SET"}</Pill>
           )}
         </div>
+
+        {/* Payment link URL */}
+        {paymentLink && (
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3">
+            <span className="text-sm font-medium text-emerald-700">Payment link:</span>
+            <a
+              href={paymentLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 truncate font-mono text-xs text-emerald-700 underline"
+            >
+              {paymentLink}
+            </a>
+            <button
+              onClick={function () { navigator.clipboard.writeText(paymentLink!); }}
+              className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+            >
+              Copy
+            </button>
+            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+              ⏳ Awaiting payment
+            </span>
+          </div>
+        )}
 
         {/* Line items */}
         <div className="mb-5 rounded-2xl border border-line bg-white">
