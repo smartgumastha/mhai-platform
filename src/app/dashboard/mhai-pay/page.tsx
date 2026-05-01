@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { normalizePhone } from "@/app/lib/phone-normalize";
 import { useLocale } from "@/app/providers/locale-context";
 import { createPaymentLink, getPayments } from "@/lib/api";
@@ -34,67 +35,12 @@ type Payment = {
   created_at: number;
 };
 
-/* ── Minimal QR code renderer (canvas) ── */
-function drawQR(canvas: HTMLCanvasElement, url: string) {
-  var ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  var size = 200;
-  canvas.width = size;
-  canvas.height = size;
-
-  // Generate a deterministic bit matrix from the URL
-  var modules = 25;
-  var cellSize = size / modules;
-  var grid: boolean[][] = [];
-
-  // Simple hash-based QR pattern (visual placeholder — not scannable)
-  // We use the URL bytes to create a pattern that looks like a QR code
-  var hash = 0;
-  for (var i = 0; i < url.length; i++) {
-    hash = ((hash << 5) - hash + url.charCodeAt(i)) | 0;
-  }
-
-  for (var row = 0; row < modules; row++) {
-    grid[row] = [];
-    for (var col = 0; col < modules; col++) {
-      // Finder patterns (three corners)
-      var inFinderTL = row < 7 && col < 7;
-      var inFinderTR = row < 7 && col >= modules - 7;
-      var inFinderBL = row >= modules - 7 && col < 7;
-
-      if (inFinderTL || inFinderTR || inFinderBL) {
-        var lr = inFinderTL ? row : inFinderTR ? row : row - (modules - 7);
-        var lc = inFinderTL ? col : inFinderTR ? col - (modules - 7) : col;
-        // Outer ring, inner block
-        grid[row][col] =
-          lr === 0 || lr === 6 || lc === 0 || lc === 6 || (lr >= 2 && lr <= 4 && lc >= 2 && lc <= 4);
-      } else {
-        // Data area — use hash + position
-        var seed = (hash ^ (row * 31 + col * 17)) >>> 0;
-        grid[row][col] = seed % 3 !== 0;
-      }
-    }
-  }
-
-  // Draw
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, size, size);
-  ctx.fillStyle = "#000000";
-  for (var r = 0; r < modules; r++) {
-    for (var c = 0; c < modules; c++) {
-      if (grid[r][c]) {
-        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
-      }
-    }
-  }
-}
-
 function QRCode({ url }: { url: string }) {
-  var canvasRef = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    if (canvasRef.current && url) drawQR(canvasRef.current, url);
-  }, [url]);
-  return <canvas ref={canvasRef} className="mx-auto rounded-lg" style={{ width: 160, height: 160 }} />;
+  return (
+    <div className="mx-auto flex items-center justify-center rounded-lg bg-white p-2" style={{ width: 164, height: 164 }}>
+      <QRCodeSVG value={url} size={148} level="M" />
+    </div>
+  );
 }
 
 function formatDate(ts: number) {
