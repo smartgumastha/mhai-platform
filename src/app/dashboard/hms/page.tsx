@@ -11,9 +11,9 @@ var hmsModules = [
   {
     name: "OPD Workflow",
     description: "Queue management, doctor assignment, consultation notes, prescription generation.",
-    href: "#",
-    status: "building",
-    statusLabel: "June 2026",
+    href: "/dashboard/hms/opd",
+    status: "live",
+    statusLabel: "Live now",
   },
   {
     name: "IPD Management",

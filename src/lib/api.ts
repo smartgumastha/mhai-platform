@@ -402,9 +402,9 @@ export function createPatientDeposit(hospitalId: string, patientId: string, data
   );
 }
 
-export function searchIcd10(hospitalId: string, q: string, limit = 10) {
-  return api<{ success: boolean; results?: Array<{ code: string; description: string }>; error?: string }>(
-    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/rcm/icd10?q=" + encodeURIComponent(q) + "&limit=" + limit
+export function searchIcd10(q: string, limit = 10) {
+  return api<{ success: boolean; data?: { codes: Array<{ code: string; description: string; category?: string; chapter?: string }> }; error?: string }>(
+    "/api/icd10/search?q=" + encodeURIComponent(q) + "&limit=" + limit
   );
 }
 
@@ -467,6 +467,93 @@ export function deleteStaffMember(hospitalId: string, userId: string) {
   return aiApi<{ success: boolean; error?: string; message?: string }>(
     "/api/hospitals/" + encodeURIComponent(hospitalId) + "/staff/" + encodeURIComponent(userId),
     { method: "DELETE" }
+  );
+}
+
+// ── OPD Tokens (HMS JWT required) ──
+export function getTokens(hospitalId: string, params?: { date?: string; doctor_id?: string; status?: string }) {
+  var qs = new URLSearchParams();
+  if (params?.date) qs.set("date", params.date);
+  if (params?.doctor_id) qs.set("doctor_id", params.doctor_id);
+  if (params?.status) qs.set("status", params.status);
+  var q = qs.toString();
+  return aiApi<{ success: boolean; data?: { tokens: any[]; date: string }; error?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/tokens" + (q ? "?" + q : "")
+  );
+}
+
+export function createToken(hospitalId: string, data: {
+  patient_id: string;
+  doctor_id: string;
+  token_type?: string;
+  visit_type?: string;
+  chief_complaint?: string;
+  priority?: number;
+  slot_id?: string;
+}) {
+  return aiApi<{ success: boolean; data?: { token: any }; error?: string; message?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/tokens",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function updateTokenStatus(hospitalId: string, tokenId: string, status: string) {
+  return aiApi<{ success: boolean; data?: { token_id: string; status: string; updated_at: number }; error?: string; message?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/tokens/" + encodeURIComponent(tokenId) + "/status",
+    { method: "PUT", body: JSON.stringify({ status }) }
+  );
+}
+
+export function saveVitals(hospitalId: string, data: {
+  token_id: string;
+  patient_id: string;
+  bp_systolic?: number;
+  bp_diastolic?: number;
+  pulse_rate?: number;
+  temperature?: number;
+  temp_unit?: string;
+  spo2?: number;
+  weight_kg?: number;
+  height_cm?: number;
+  respiratory_rate?: number;
+  blood_glucose?: number;
+  chief_complaint?: string;
+  allergies_note?: string;
+  nurse_notes?: string;
+}) {
+  return aiApi<{ success: boolean; data?: { vitals_id: string; token_id: string; bmi: number | null }; error?: string; message?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/vitals",
+    { method: "POST", body: JSON.stringify(data) }
+  );
+}
+
+export function getVitals(hospitalId: string, tokenId: string) {
+  return aiApi<{ success: boolean; data?: { vitals: any }; error?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/vitals/" + encodeURIComponent(tokenId)
+  );
+}
+
+export function saveVisitRecord(hospitalId: string, tokenId: string, data: {
+  patient_id: string;
+  doctor_id?: string;
+  diagnosis?: string;
+  diagnosis_code?: string;
+  diagnosis_system?: string;
+  subjective?: string;
+  objective?: string;
+  assessment?: string;
+  plan?: string;
+  notes?: string;
+  prescription?: any[];
+  cpt_code?: string;
+  follow_up?: string;
+  allergies?: any[];
+  sick_note?: any;
+  referral?: any;
+}) {
+  return aiApi<{ success: boolean; data?: { visit_record_id: string; token_id: string; patient_id: string }; error?: string; message?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/tokens/" + encodeURIComponent(tokenId) + "/visit-record",
+    { method: "POST", body: JSON.stringify(data) }
   );
 }
 

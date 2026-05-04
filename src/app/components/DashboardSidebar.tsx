@@ -64,6 +64,7 @@ var navGroups = [
 ];
 
 var hmsSubItems = [
+  { name: "OPD Queue", href: "/dashboard/hms/opd" },
   { name: "NABH Compliance", href: "/dashboard/hms/nabh" },
 ];
 
@@ -85,7 +86,7 @@ export default function DashboardSidebar({
   var isTelecallerActive = pathname.startsWith("/dashboard/telecaller");
   var [telecallerOpen, setTelecallerOpen] = useState(isTelecallerActive);
   var isHmsActive = pathname.startsWith("/dashboard/hms");
-  var [hmsOpen, setHmsOpen] = useState(isHmsActive);
+  var [hmsOpen, setHmsOpen] = useState(true);
 
   return (
     <aside className="flex h-screen w-[220px] min-w-[220px] flex-col overflow-y-auto bg-ink">
@@ -130,22 +131,21 @@ export default function DashboardSidebar({
             {/* HMS collapsible section — after OPERATIONS */}
             {group.label === "OPERATIONS" && (
               <div>
-                <button
-                  onClick={function () { setHmsOpen(!hmsOpen); }}
-                  className={`mx-2 flex w-[calc(100%-16px)] items-center justify-between rounded-md px-3 py-2 text-[13px] transition-all duration-150 ${
+                <div className={`mx-2 flex w-[calc(100%-16px)] items-center justify-between rounded-md px-3 py-2 text-[13px] transition-all duration-150 ${
                     isHmsActive
                       ? "border-l-[3px] border-coral bg-coral/20 pl-2.5 font-medium text-white"
                       : "text-text-muted hover:bg-white/5 hover:text-paper"
-                  }`}
-                >
-                  <span>HMS</span>
-                  <svg
-                    width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"
-                    className={"transition-transform " + (hmsOpen ? "rotate-180" : "")}
-                  >
-                    <path d="M3 4.5l3 3 3-3" />
-                  </svg>
-                </button>
+                  }`}>
+                  <Link href="/dashboard/hms" className="flex-1">HMS</Link>
+                  <button onClick={function () { setHmsOpen(!hmsOpen); }}>
+                    <svg
+                      width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2"
+                      className={"transition-transform " + (hmsOpen ? "rotate-180" : "")}
+                    >
+                      <path d="M3 4.5l3 3 3-3" />
+                    </svg>
+                  </button>
+                </div>
                 {hmsOpen && (
                   <div className="ml-4">
                     {hmsSubItems.map(function (sub) {
