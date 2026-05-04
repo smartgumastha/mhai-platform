@@ -347,25 +347,31 @@ export default function ConsultPage() {
     return "<div class='section-title'>Vitals</div><div class='vitals-row'>" + chips.join("") + "</div>";
   }
 
-  function buildClinicFooter(clinic: any, docName: string, docIdHtml: string, badge: string, note: string) {
+  function buildClinicFooter(clinic: any, docName: string, docIdHtml: string, footerNote: string, _unused: string) {
     var sigHtml = clinic.default_signature_url
       ? "<img src='" + clinic.default_signature_url + "' style='height:44px;display:block;margin-bottom:2px'>"
       : "<div style='height:44px;border-bottom:1px solid #999;width:140px;margin-bottom:2px'></div>";
     return (
       "<div class='footer-bar'>" +
-      "<div class='compliance'>" + badge + " &middot; " + note + "</div>" +
+      "<div class='compliance'>" + footerNote + "</div>" +
       "<div class='sig-area'>" + sigHtml + "<strong style='font-size:11px'>" + docName + "</strong>" +
       (docIdHtml ? "<br><span style='font-size:9px;color:#555'>" + docIdHtml + "</span>" : "") +
       "</div></div>"
     );
   }
 
+  function readHmsPrintPrefs() {
+    try { return JSON.parse(localStorage.getItem("mhai_hms_print_prefs") || "{}"); } catch { return {}; }
+  }
+
   function handlePrintRx() {
     if (!token) return;
+    var ps      = readHmsPrintPrefs();
     var clinic  = printPrefs?.clinic_preferences || {};
     var pName   = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
     var pAge    = token.dob ? Math.floor((Date.now() - new Date(token.dob).getTime()) / (365.25 * 24 * 3600000)) : null;
-    var docName = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
+    var qual    = ps.doctor_qualification ? " · " + ps.doctor_qualification : "";
+    var docName = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim() + qual;
     var dateStr = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
     var idLabels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA Lic", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
     var docIdHtml = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
@@ -373,19 +379,23 @@ export default function ConsultPage() {
     var patExtraIds = emr.patient_id_fields.filter(function (f: any) { return token[f.key]; })
       .map(function (f: any) { return f.label + ": " + token[f.key]; }).join(" &middot; ");
 
-    // Vitals
-    var vitalsHtml = buildVitals(vitals);
+    // Paper size from settings (default A4)
+    var pageSize = ps.rx_paper_size === "A5" ? "A5 portrait" : "A4 portrait";
+    var maxW     = ps.rx_paper_size === "A5" ? "560px" : "800px";
 
-    // SOAP / Clinical notes
+    // Vitals
+    var vitalsHtml = (ps.show_vitals !== false) ? buildVitals(vitals) : "";
+
+    // SOAP / Clinical notes — each section gated by settings toggle
     var notesHtml = "";
-    if (soap.subjective) notesHtml += "<div class='section-title'>Chief Complaint / Subjective</div><div class='note-box'>" + soap.subjective.replace(/\n/g, "<br>") + "</div>";
-    if (diagSelected)    notesHtml += "<div class='section-title'>Diagnosis (" + emr.diagnosis_system + ")</div><div style='font-size:11px;font-weight:700;margin:2px 0'>" + diagSelected.code + " &mdash; " + diagSelected.description + "</div>";
-    if (soap.objective)  notesHtml += "<div class='section-title'>Examination / Objective</div><div class='note-box'>" + soap.objective.replace(/\n/g, "<br>") + "</div>";
-    if (soap.plan)       notesHtml += "<div class='section-title'>Advice / Plan</div><div class='note-box'>" + soap.plan.replace(/\n/g, "<br>") + "</div>";
+    if (ps.show_subjective !== false && soap.subjective) notesHtml += "<div class='section-title'>Chief Complaint / Subjective</div><div class='note-box'>" + soap.subjective.replace(/\n/g, "<br>") + "</div>";
+    if (ps.show_diagnosis  !== false && diagSelected)    notesHtml += "<div class='section-title'>Diagnosis (" + emr.diagnosis_system + ")</div><div style='font-size:11px;font-weight:700;margin:2px 0'>" + diagSelected.code + " &mdash; " + diagSelected.description + "</div>";
+    if (ps.show_objective  !== false && soap.objective)  notesHtml += "<div class='section-title'>Examination / Objective</div><div class='note-box'>" + soap.objective.replace(/\n/g, "<br>") + "</div>";
+    if (ps.show_plan       !== false && soap.plan)       notesHtml += "<div class='section-title'>Advice / Plan</div><div class='note-box'>" + soap.plan.replace(/\n/g, "<br>") + "</div>";
 
     // Allergies
     var activeAllergies = allergies.filter(function (a) { return a.allergen; });
-    var allergyHtml = activeAllergies.length > 0
+    var allergyHtml = (ps.show_allergies !== false) && activeAllergies.length > 0
       ? "<div class='allergy'><strong>&#9888; Allergies:</strong> " + activeAllergies.map(function (a) {
           return a.allergen + (a.reaction ? " (" + a.reaction + ")" : "");
         }).join("; ") + "</div>"
@@ -417,17 +427,31 @@ export default function ConsultPage() {
     }
 
     // Follow-up
-    var followHtml = soap.follow_up_date
+    var followHtml = (ps.show_followup !== false) && soap.follow_up_date
       ? "<div style='margin-top:10px;font-size:11px'><strong>Follow-up:</strong> " + soap.follow_up_date + (soap.follow_up_notes ? " &mdash; " + soap.follow_up_notes : "") + "</div>"
       : "";
+
+    // Custom footer text from settings
+    var customFooterNote = ps.custom_footer || "";
+    var footerNote = customFooterNote
+      ? emr.compliance_badge + " &middot; " + emr.compliance_note + "<br>" + customFooterNote
+      : emr.compliance_badge + " &middot; " + emr.compliance_note;
 
     var html =
       buildClinicHeader(clinic, docName, docIdHtml, dateStr, token.token_number) +
       buildPatientRow(pName, pAge, token.gender || "", token.phone || "", token.uhid || "", patExtraIds) +
       vitalsHtml + allergyHtml + notesHtml + rxHtml + followHtml +
-      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge, emr.compliance_note);
+      buildClinicFooter(clinic, docName, docIdHtml, footerNote, "");
 
-    openPrintWindow("Prescription — " + pName, html);
+    // Override page size in CSS for A5
+    var sizedCss = RX_CSS.replace("size:A4 portrait", "size:" + pageSize).replace("max-width:800px", "max-width:" + maxW);
+    var win = window.open("", "_blank", "width=860,height=1000");
+    if (!win) { alert("Allow pop-ups to print."); return; }
+    win.document.write("<!DOCTYPE html><html><head><meta charset='utf-8'><title>Prescription &mdash; " + pName + "</title><style>" + sizedCss + "</style></head><body><div class='wrap'>" + html + "</div></body></html>");
+    win.document.close();
+    win.focus();
+    var ref = win;
+    setTimeout(function () { ref.print(); }, 700);
   }
 
   function handlePrintSickNote() {
@@ -450,7 +474,7 @@ export default function ConsultPage() {
       (reason ? "<div style='margin-top:8px;font-size:11px'><strong>Reason:</strong> " + reason + "</div>" : "") +
       (cc === "GB" && sickNote.fit_for_work === "may_be_fit" ? "<div style='margin-top:6px;font-size:11px'><strong>Note:</strong> May be fit for work with adjustments: " + (sickNote.restrictions || "") + "</div>" : "") +
       (cc === "AE" ? "<div style='margin-top:8px;font-size:10px;color:#666'>Upload to DHA SHERYAN portal after printing.</div>" : "") +
-      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge, emr.compliance_note);
+      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge + " &middot; " + emr.compliance_note, "");
     openPrintWindow(emr.sick_note_label + " — " + pName, html);
   }
 
@@ -478,7 +502,7 @@ export default function ConsultPage() {
       "</table>" +
       (referral.summary ? "<div class='section-title' style='margin-top:10px'>Clinical Summary</div><div class='note-box'>" + referral.summary.replace(/\n/g, "<br>") + "</div>" : "") +
       (vitals ? buildVitals(vitals) : "") +
-      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge, emr.compliance_note);
+      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge + " &middot; " + emr.compliance_note, "");
     openPrintWindow("Referral — " + pName, html);
   }
 

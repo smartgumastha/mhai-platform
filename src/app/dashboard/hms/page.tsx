@@ -1,5 +1,13 @@
 import Link from "next/link";
 
+var hmsSettings = {
+  name: "HMS Settings",
+  description: "Print layout, Rx paper size, sections to include, doctor qualification, and custom footer text.",
+  href: "/dashboard/hms/settings",
+  status: "live",
+  statusLabel: "Settings",
+};
+
 var hmsModules = [
   {
     name: "NABH Compliance",
@@ -102,7 +110,24 @@ export default function HmsPage() {
         ))}
       </div>
 
-      <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/50 px-5 py-4">
+      {/* Settings card */}
+      <Link
+        href={hmsSettings.href}
+        className="group mt-4 flex items-center justify-between rounded-2xl border border-line bg-white px-5 py-4 shadow-sm transition-all hover:border-coral/40 hover:shadow-md"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-paper-soft text-lg">⚙</div>
+          <div>
+            <div className="text-[14px] font-medium text-ink group-hover:text-coral-deep">{hmsSettings.name}</div>
+            <div className="text-[12px] text-text-muted">{hmsSettings.description}</div>
+          </div>
+        </div>
+        <svg className="h-4 w-4 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-coral-deep" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </Link>
+
+      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/50 px-5 py-4">
         <div className="text-sm font-medium text-ink">Building with 50+ pilot clinics</div>
         <div className="mt-0.5 text-xs text-text-muted">
           OPD, IPD, pharmacy and lab modules are being built with direct input from live clinics. NABH Compliance is the first module available — start there to prepare your accreditation.
