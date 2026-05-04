@@ -249,10 +249,11 @@ export default function OpdQueuePage() {
   }
 
   var activeStatuses = ["registered", "triaged", "called", "consulting"];
+  var closedStatuses = ["completed", "exited", "no_show", "cancelled"];
   var displayed = filterStatus === "active"
     ? tokens.filter(function (t) { return activeStatuses.includes(t.status); })
     : filterStatus === "completed"
-    ? tokens.filter(function (t) { return t.status === "completed" || t.status === "exited"; })
+    ? tokens.filter(function (t) { return closedStatuses.includes(t.status); })
     : tokens;
 
   function waitMins(token: Token) {
@@ -299,7 +300,8 @@ export default function OpdQueuePage() {
         {[
           { label: "Total", count: tokens.length, cls: "text-ink" },
           { label: "Waiting", count: tokens.filter(function (t) { return t.status === "registered" || t.status === "triaged"; }).length, cls: "text-blue-600" },
-          { label: "Consulting", count: tokens.filter(function (t) { return t.status === "consulting" || t.status === "called"; }).length, cls: "text-amber-600" },
+          { label: "Called", count: tokens.filter(function (t) { return t.status === "called"; }).length, cls: "text-amber-600" },
+          { label: "Consulting", count: tokens.filter(function (t) { return t.status === "consulting"; }).length, cls: "text-orange-600" },
           { label: "Done", count: tokens.filter(function (t) { return t.status === "completed"; }).length, cls: "text-emerald-600" },
         ].map(function (s) {
           return (
@@ -320,7 +322,7 @@ export default function OpdQueuePage() {
               onClick={function () { setFilterStatus(f); }}
               className={"rounded-lg px-4 py-1.5 text-sm font-medium capitalize transition-all " + (filterStatus === f ? "bg-coral text-white" : "text-text-dim hover:bg-paper-soft")}
             >
-              {f === "active" ? "Active" : f === "completed" ? "Completed" : "All"}
+              {f === "active" ? "Active" : f === "completed" ? "Closed" : "All"}
             </button>
           );
         })}
@@ -412,43 +414,57 @@ export default function OpdQueuePage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-text-dim">{waitMins(token)}</td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          {token.status === "registered" && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+
+                          {/* registered / triaged → Call */}
+                          {(token.status === "registered" || token.status === "triaged") && (
                             <button
                               onClick={function () { handleStatusChange(token, "called"); }}
                               disabled={isUpdating}
-                              className="rounded-md bg-amber-500 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-amber-600 disabled:opacity-40"
+                              title={token.status === "registered" && !hasVitals ? "Vitals not taken yet" : undefined}
+                              className={"rounded-md px-2.5 py-1.5 text-[11px] font-semibold text-white disabled:opacity-40 " + (token.status === "registered" && !hasVitals ? "bg-amber-400 hover:bg-amber-500" : "bg-amber-500 hover:bg-amber-600")}
                             >
-                              Call
+                              {token.status === "registered" && !hasVitals ? "Call ⚠" : "Call"}
                             </button>
                           )}
-                          {token.status === "triaged" && (
-                            <button
-                              onClick={function () { handleStatusChange(token, "called"); }}
-                              disabled={isUpdating}
-                              className="rounded-md bg-amber-500 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-amber-600 disabled:opacity-40"
-                            >
-                              Call
-                            </button>
-                          )}
+
+                          {/* called → Consult (auto-advances to consulting + opens console) */}
                           {token.status === "called" && (
                             <button
-                              onClick={function () { handleStatusChange(token, "consulting"); }}
+                              onClick={async function () {
+                                await handleStatusChange(token, "consulting");
+                                router.push("/dashboard/hms/opd/" + token.token_id);
+                              }}
                               disabled={isUpdating}
-                              className="rounded-md bg-orange-500 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-orange-600 disabled:opacity-40"
+                              className="rounded-md bg-coral px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-coral-deep disabled:opacity-40"
                             >
-                              Consulting
+                              Consult →
                             </button>
                           )}
-                          {(token.status === "consulting" || token.status === "called" || token.status === "triaged" || token.status === "registered") && (
+
+                          {/* consulting → open console */}
+                          {token.status === "consulting" && (
                             <button
                               onClick={function () { router.push("/dashboard/hms/opd/" + token.token_id); }}
-                              className="rounded-md border border-coral/40 bg-coral/10 px-2.5 py-1.5 text-[11px] font-semibold text-coral-deep hover:bg-coral/20"
+                              className="rounded-md bg-coral px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-coral-deep"
                             >
-                              Consult
+                              Consult →
                             </button>
                           )}
-                          {token.status === "completed" && (
+
+                          {/* consulting → Complete shortcut (without opening console) */}
+                          {token.status === "consulting" && (
+                            <button
+                              onClick={function () { handleStatusChange(token, "completed"); }}
+                              disabled={isUpdating}
+                              className="rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-40"
+                            >
+                              Done
+                            </button>
+                          )}
+
+                          {/* completed / exited → View */}
+                          {(token.status === "completed" || token.status === "exited") && (
                             <button
                               onClick={function () { router.push("/dashboard/hms/opd/" + token.token_id); }}
                               className="rounded-md border border-line px-2.5 py-1.5 text-[11px] text-text-dim hover:bg-paper-soft"
@@ -456,6 +472,8 @@ export default function OpdQueuePage() {
                               View
                             </button>
                           )}
+
+                          {/* No-show — only for pre-consulting statuses */}
                           {(token.status === "registered" || token.status === "triaged" || token.status === "called") && (
                             <button
                               onClick={function () { handleStatusChange(token, "no_show"); }}
@@ -465,6 +483,22 @@ export default function OpdQueuePage() {
                               No-show
                             </button>
                           )}
+
+                          {/* Cancel — for any active non-consulting token */}
+                          {(token.status === "registered" || token.status === "triaged" || token.status === "called") && (
+                            <button
+                              onClick={function () {
+                                if (window.confirm("Cancel token " + token.token_number + "?")) {
+                                  handleStatusChange(token, "cancelled");
+                                }
+                              }}
+                              disabled={isUpdating}
+                              className="rounded-md border border-gray-200 px-2 py-1.5 text-[11px] text-gray-400 hover:bg-gray-50 disabled:opacity-40"
+                            >
+                              Cancel
+                            </button>
+                          )}
+
                         </div>
                       </td>
                     </tr>
