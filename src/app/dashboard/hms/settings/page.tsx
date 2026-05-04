@@ -9,7 +9,6 @@ var STORAGE_KEY = "mhai_hms_print_prefs";
 
 type HmsPrintPrefs = {
   rx_paper_size: "A4" | "A5";
-  doctor_qualification: string;
   custom_footer: string;
   show_vitals: boolean;
   show_subjective: boolean;
@@ -22,7 +21,6 @@ type HmsPrintPrefs = {
 
 var DEFAULTS: HmsPrintPrefs = {
   rx_paper_size: "A4",
-  doctor_qualification: "",
   custom_footer: "",
   show_vitals: true,
   show_subjective: true,
@@ -137,7 +135,7 @@ export default function HmsSettingsPage() {
             HMS <em className="italic text-coral-deep">settings.</em>
           </h1>
           <p className="mt-1 max-w-xl text-sm text-text-muted">
-            Configure prescription layout, sections to print, and doctor details. Settings are saved to this browser.
+            Configure prescription paper size, which clinical sections to print, and custom footer text. Doctor qualifications and signatures are set per doctor in <Link href="/dashboard/team" className="font-medium text-coral-deep hover:underline">Team &amp; Staff</Link>.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -250,19 +248,19 @@ export default function HmsSettingsPage() {
               </div>
             </div>
 
-            {/* Doctor qualification */}
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
-                Doctor qualification / degree
-              </label>
-              <input
-                type="text"
-                value={prefs.doctor_qualification}
-                onChange={function (e) { update("doctor_qualification", e.target.value); }}
-                placeholder="e.g. MBBS, MD (General Medicine)"
-                className="w-full max-w-md rounded-lg border border-line px-3.5 py-2.5 text-sm text-ink focus:border-coral focus:outline-none"
-              />
-              <div className="mt-1 text-xs text-text-muted">Printed below the doctor name on the prescription header.</div>
+            {/* Info: doctor qualifications are per-doctor in Team page */}
+            <div className="rounded-xl border border-blue-100 bg-blue-50/50 px-4 py-3">
+              <div className="flex items-start gap-2">
+                <div className="mt-0.5 text-blue-500">ℹ</div>
+                <div>
+                  <div className="text-xs font-semibold text-ink">Doctor name, qualification &amp; signature</div>
+                  <div className="mt-0.5 text-xs text-text-muted">
+                    Each doctor&apos;s qualification (e.g. MBBS MD), registration number, and personal signature are set in{" "}
+                    <Link href="/dashboard/team" className="font-medium text-coral-deep hover:underline">Team &amp; Staff → Edit doctor profile</Link>.
+                    These are pulled automatically when that doctor consults a patient.
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Custom footer */}

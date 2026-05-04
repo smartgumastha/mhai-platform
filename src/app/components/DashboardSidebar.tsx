@@ -22,7 +22,7 @@ var navGroups = [
       { name: "Claims", href: "/dashboard/claims" },
       { name: "Denials", href: "/dashboard/denials" },
       { name: "Appeals", href: "/dashboard/appeals" },
-      { name: "Billing Prefs", href: "/dashboard/settings/billing-preferences" },
+      { name: "Clinic & Billing", href: "/dashboard/settings/billing-preferences" },
     ],
   },
   {

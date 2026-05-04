@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/auth-context";
 import { getToken } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 type ClinicPrefs = {
   logo_url?: string | null;
@@ -16,6 +17,7 @@ type ClinicPrefs = {
   default_label_size?: string;
   default_labels_per_sheet?: number;
   default_label_paper_size?: string;
+  doctor_profiles?: Record<string, any>;
 };
 
 type UserPrefs = {
@@ -39,6 +41,7 @@ var PAPER_SIZES = [
 
 export default function BillingPreferencesPage() {
   var { user } = useAuth();
+  var router = useRouter();
   var [loading, setLoading] = useState(true);
   var [saving, setSaving] = useState(false);
   var [clinicPrefs, setClinicPrefs] = useState<ClinicPrefs>({});
@@ -155,7 +158,7 @@ export default function BillingPreferencesPage() {
         setSaving(false);
         return;
       }
-      var body = {
+      var body: Record<string, any> = {
         logo_url: clinicPrefs.logo_url || null,
         letterhead_url: clinicPrefs.letterhead_url || null,
         default_signature_url: clinicPrefs.default_signature_url || null,
@@ -171,6 +174,8 @@ export default function BillingPreferencesPage() {
         default_print_format: userPrefs.default_print_format || null,
         default_paper_size: userPrefs.default_paper_size || null,
       };
+      // Pass through doctor_profiles so Team page edits aren't overwritten
+      if (clinicPrefs.doctor_profiles) body.doctor_profiles = clinicPrefs.doctor_profiles;
       var resp = await fetch("/api/presence/partners/" + hospitalId + "/billing-preferences", {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
@@ -198,14 +203,14 @@ export default function BillingPreferencesPage() {
               <span className="mx-1.5 text-line">/</span>
               Settings
               <span className="mx-1.5 text-line">/</span>
-              Billing preferences
+              Clinic &amp; Billing
             </div>
             <h1 className="font-fraunces text-3xl font-light tracking-tight text-ink">
-              Billing <em className="italic font-normal text-coral-deep">preferences.</em>
+              Clinic &amp; <em className="italic font-normal text-coral-deep">billing settings.</em>
             </h1>
             <p className="mt-2 max-w-xl text-sm text-text-dim">
-              Set your default print format, upload branding, and configure doctor signatures.
-              Clinic-wide settings unless a user overrides.
+              Clinic logo, letterhead, and default signature. Invoice print formats, numbering, and barcode label defaults.
+              Per-doctor signatures and profiles are in <Link href="/dashboard/team" className="font-medium text-coral-deep hover:underline">Team &amp; Staff</Link>.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -229,6 +234,52 @@ export default function BillingPreferencesPage() {
       </div>
 
       <div className="px-9 py-7">
+        {/* Section 0: Clinic branding — FIRST */}
+        <div className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <UploadCard
+            title="Clinic"
+            italic="logo"
+            description="On every invoice and prescription top-left. Square PNG, 200×200 min."
+            currentUrl={clinicPrefs.logo_url || null}
+            onUpload={function (e) { handleFileUpload("logo", e); }}
+            onRemove={function () { updateClinicField("logo_url", null); }}
+          />
+          <UploadCard
+            title="Clinic"
+            italic="letterhead"
+            description="Full-width header on A4/A5 (not thermal). 1600×400 px recommended."
+            currentUrl={clinicPrefs.letterhead_url || null}
+            onUpload={function (e) { handleFileUpload("letterhead", e); }}
+            onRemove={function () { updateClinicField("letterhead_url", null); }}
+          />
+          <UploadCard
+            title="Clinic default"
+            italic="signature"
+            description="Printed when a doctor has no personal signature set. Acts as the fallback for all prescriptions."
+            currentUrl={clinicPrefs.default_signature_url || null}
+            onUpload={function (e) { handleFileUpload("signature", e); }}
+            onRemove={function () { updateClinicField("default_signature_url", null); }}
+          />
+          {/* Per-doctor signatures → Team page */}
+          <div className="flex flex-col rounded-2xl border border-line bg-white p-6">
+            <h3 className="mb-1 font-fraunces text-base text-ink">
+              Per-doctor <em className="italic text-coral-deep">signatures</em>
+            </h3>
+            <p className="mb-4 text-xs text-text-dim">
+              Each doctor can have their own signature that overrides this clinic default on prescriptions they sign.
+              Set specialty, qualification, registration number, and signature per doctor in Team &amp; Staff.
+            </p>
+            <div className="mt-auto">
+              <button
+                onClick={function () { router.push("/dashboard/team"); }}
+                className="rounded-lg bg-coral px-4 py-2.5 text-sm font-medium text-white hover:bg-coral-deep"
+              >
+                Manage doctor profiles →
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Section 1 + 2: Print defaults + paper size per format */}
         <div className="mb-5 rounded-2xl border border-line bg-white">
           <div className="flex items-center justify-between border-b border-line-soft px-6 py-5">
@@ -320,47 +371,6 @@ export default function BillingPreferencesPage() {
                   </div>
                 );
               })}
-            </div>
-          </div>
-        </div>
-
-        {/* Section 3: Branding uploads — 4 cards in 2x2 grid */}
-        <div className="mb-5 grid grid-cols-1 gap-5 md:grid-cols-2">
-          <UploadCard
-            title="Clinic"
-            italic="logo"
-            description="On every invoice top-left. Square PNG, 200x200 min."
-            currentUrl={clinicPrefs.logo_url || null}
-            onUpload={function (e) { handleFileUpload("logo", e); }}
-            onRemove={function () { updateClinicField("logo_url", null); }}
-          />
-          <UploadCard
-            title="Clinic"
-            italic="letterhead"
-            description="Optional. Full-width header on A4/A5 (not thermal). 1600x400 recommended."
-            currentUrl={clinicPrefs.letterhead_url || null}
-            onUpload={function (e) { handleFileUpload("letterhead", e); }}
-            onRemove={function () { updateClinicField("letterhead_url", null); }}
-          />
-          <UploadCard
-            title="Default"
-            italic="signature"
-            description="Used when attending doctor has no personal signature uploaded."
-            currentUrl={clinicPrefs.default_signature_url || null}
-            onUpload={function (e) { handleFileUpload("signature", e); }}
-            onRemove={function () { updateClinicField("default_signature_url", null); }}
-          />
-          <div className="rounded-2xl border border-line bg-white p-6">
-            <h3 className="mb-1 font-fraunces text-base text-ink">
-              Per-doctor <em className="italic text-coral-deep">signatures</em>
-            </h3>
-            <p className="mb-4 text-xs text-text-dim">
-              Each doctor&apos;s individual signature overrides the clinic default on bills they attend.
-            </p>
-            <div className="rounded-lg border border-dashed border-line bg-paper-soft py-6 text-center text-xs text-text-muted">
-              Per-doctor signature management coming in V2.
-              <br />
-              Clinic default signature applies to all doctors for now.
             </div>
           </div>
         </div>

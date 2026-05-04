@@ -347,9 +347,10 @@ export default function ConsultPage() {
     return "<div class='section-title'>Vitals</div><div class='vitals-row'>" + chips.join("") + "</div>";
   }
 
-  function buildClinicFooter(clinic: any, docName: string, docIdHtml: string, footerNote: string, _unused: string) {
-    var sigHtml = clinic.default_signature_url
-      ? "<img src='" + clinic.default_signature_url + "' style='height:44px;display:block;margin-bottom:2px'>"
+  function buildClinicFooter(clinic: any, docName: string, docIdHtml: string, footerNote: string, sigUrl?: string | null) {
+    var resolvedSig = sigUrl || clinic.default_signature_url || null;
+    var sigHtml = resolvedSig
+      ? "<img src='" + resolvedSig + "' style='height:44px;display:block;margin-bottom:2px'>"
       : "<div style='height:44px;border-bottom:1px solid #999;width:140px;margin-bottom:2px'></div>";
     return (
       "<div class='footer-bar'>" +
@@ -360,6 +361,12 @@ export default function ConsultPage() {
     );
   }
 
+  function getDoctorProfile() {
+    var clinic = printPrefs?.clinic_preferences || {};
+    var doctorId = token?.doctor_id || user?.user_id || "";
+    return (clinic.doctor_profiles && doctorId) ? (clinic.doctor_profiles[doctorId] || {}) : {};
+  }
+
   function readHmsPrintPrefs() {
     try { return JSON.parse(localStorage.getItem("mhai_hms_print_prefs") || "{}"); } catch { return {}; }
   }
@@ -368,14 +375,19 @@ export default function ConsultPage() {
     if (!token) return;
     var ps      = readHmsPrintPrefs();
     var clinic  = printPrefs?.clinic_preferences || {};
+    var docProf = getDoctorProfile();
     var pName   = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
     var pAge    = token.dob ? Math.floor((Date.now() - new Date(token.dob).getTime()) / (365.25 * 24 * 3600000)) : null;
-    var qual    = ps.doctor_qualification ? " · " + ps.doctor_qualification : "";
-    var docName = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim() + qual;
+    var docBase = ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
+    var docName = "Dr. " + docBase;
     var dateStr = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
     var idLabels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA Lic", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
-    var docIdHtml = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
-      .map(function (f) { return idLabels[f] + ": " + providerIds[f]; }).join(" &middot; ");
+    // Build doctor ID line: provider IDs from auth + reg_number + qualification from doctor profile
+    var provIdParts = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
+      .map(function (f) { return idLabels[f] + ": " + providerIds[f]; });
+    if (docProf.reg_number) provIdParts.push("Reg: " + docProf.reg_number);
+    if (docProf.qualification) provIdParts.unshift(docProf.qualification);
+    var docIdHtml = provIdParts.join(" &middot; ");
     var patExtraIds = emr.patient_id_fields.filter(function (f: any) { return token[f.key]; })
       .map(function (f: any) { return f.label + ": " + token[f.key]; }).join(" &middot; ");
 
@@ -441,7 +453,7 @@ export default function ConsultPage() {
       buildClinicHeader(clinic, docName, docIdHtml, dateStr, token.token_number) +
       buildPatientRow(pName, pAge, token.gender || "", token.phone || "", token.uhid || "", patExtraIds) +
       vitalsHtml + allergyHtml + notesHtml + rxHtml + followHtml +
-      buildClinicFooter(clinic, docName, docIdHtml, footerNote, "");
+      buildClinicFooter(clinic, docName, docIdHtml, footerNote, docProf.signature_url);
 
     // Override page size in CSS for A5
     var sizedCss = RX_CSS.replace("size:A4 portrait", "size:" + pageSize).replace("max-width:800px", "max-width:" + maxW);
@@ -457,13 +469,17 @@ export default function ConsultPage() {
   function handlePrintSickNote() {
     if (!token) return;
     var clinic  = printPrefs?.clinic_preferences || {};
+    var docProf = getDoctorProfile();
     var pName   = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
     var pAge    = token.dob ? Math.floor((Date.now() - new Date(token.dob).getTime()) / (365.25 * 24 * 3600000)) : null;
     var docName = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
     var dateStr = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
     var idLabels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA Lic", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
-    var docIdHtml = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
-      .map(function (f) { return idLabels[f] + ": " + providerIds[f]; }).join(" &middot; ");
+    var docIdParts = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
+      .map(function (f) { return idLabels[f] + ": " + providerIds[f]; });
+    if (docProf.reg_number) docIdParts.push("Reg: " + docProf.reg_number);
+    if (docProf.qualification) docIdParts.unshift(docProf.qualification);
+    var docIdHtml = docIdParts.join(" &middot; ");
     var reason = cc === "AE" ? (sickNote.diagnosis_for_ae || "") : sickNote.general_reason;
     var html =
       buildClinicHeader(clinic, docName, docIdHtml, dateStr, token.token_number) +
@@ -474,20 +490,24 @@ export default function ConsultPage() {
       (reason ? "<div style='margin-top:8px;font-size:11px'><strong>Reason:</strong> " + reason + "</div>" : "") +
       (cc === "GB" && sickNote.fit_for_work === "may_be_fit" ? "<div style='margin-top:6px;font-size:11px'><strong>Note:</strong> May be fit for work with adjustments: " + (sickNote.restrictions || "") + "</div>" : "") +
       (cc === "AE" ? "<div style='margin-top:8px;font-size:10px;color:#666'>Upload to DHA SHERYAN portal after printing.</div>" : "") +
-      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge + " &middot; " + emr.compliance_note, "");
+      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge + " &middot; " + emr.compliance_note, docProf.signature_url);
     openPrintWindow(emr.sick_note_label + " — " + pName, html);
   }
 
   function handlePrintReferral() {
     if (!token) return;
     var clinic  = printPrefs?.clinic_preferences || {};
+    var docProf2 = getDoctorProfile();
     var pName   = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
     var pAge    = token.dob ? Math.floor((Date.now() - new Date(token.dob).getTime()) / (365.25 * 24 * 3600000)) : null;
     var docName = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
     var dateStr = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
     var idLabels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA Lic", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
-    var docIdHtml = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
-      .map(function (f) { return idLabels[f] + ": " + providerIds[f]; }).join(" &middot; ");
+    var refDocIdParts = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
+      .map(function (f) { return idLabels[f] + ": " + providerIds[f]; });
+    if (docProf2.reg_number) refDocIdParts.push("Reg: " + docProf2.reg_number);
+    if (docProf2.qualification) refDocIdParts.unshift(docProf2.qualification);
+    var docIdHtml = refDocIdParts.join(" &middot; ");
     var diagStr = diagSelected ? diagSelected.code + " &mdash; " + diagSelected.description : (soap.assessment || "");
     var html =
       buildClinicHeader(clinic, docName, docIdHtml, dateStr, token.token_number) +
@@ -502,7 +522,7 @@ export default function ConsultPage() {
       "</table>" +
       (referral.summary ? "<div class='section-title' style='margin-top:10px'>Clinical Summary</div><div class='note-box'>" + referral.summary.replace(/\n/g, "<br>") + "</div>" : "") +
       (vitals ? buildVitals(vitals) : "") +
-      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge + " &middot; " + emr.compliance_note, "");
+      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge + " &middot; " + emr.compliance_note, docProf2.signature_url);
     openPrintWindow("Referral — " + pName, html);
   }
 
