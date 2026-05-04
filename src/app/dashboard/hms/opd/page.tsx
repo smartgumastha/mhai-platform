@@ -166,14 +166,14 @@ export default function OpdQueuePage() {
     setRegistering(true);
     try {
       var r = await createToken(hospitalId, {
-        patient_id: selectedPatient.patient_id,
+        patient_id: selectedPatient.id,
         doctor_id: walkin.doctor_id,
         token_type: "walkin",
         visit_type: "new",
         chief_complaint: walkin.chief_complaint || undefined,
       });
       if (r.success) {
-        notify.success("Token created", (r.data?.token?.token_number || "") + " — " + (selectedPatient.first_name || "Patient") + " registered.");
+        notify.success("Token created", (r.data?.token?.token_number || "") + " — " + (selectedPatient.name || "Patient") + " registered.");
         setShowWalkin(false);
         setWalkin({ ...emptyWalkin });
         setSelectedPatient(null);
@@ -500,15 +500,15 @@ export default function OpdQueuePage() {
                     {patientResults.map(function (p) {
                       return (
                         <button
-                          key={p.patient_id}
+                          key={p.id}
                           onClick={function () { setSelectedPatient(p); setPatientResults([]); setWalkin(function (w) { return { ...w, phone: p.phone || w.phone }; }); }}
                           className="flex w-full items-center gap-3 border-b border-line-soft px-4 py-2.5 text-left text-sm last:border-0 hover:bg-paper-soft"
                         >
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-coral/10 text-xs font-bold text-coral-deep">
-                            {((p.first_name?.[0] || "") + (p.last_name?.[0] || "")).toUpperCase() || "?"}
+                            {(p.name?.[0] || "?").toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-medium text-ink">{p.first_name} {p.last_name}</div>
+                            <div className="font-medium text-ink">{p.name}</div>
                             <div className="text-xs text-text-dim">{p.phone} {p.uhid ? "· UHID: " + p.uhid : ""}</div>
                           </div>
                         </button>
@@ -518,7 +518,7 @@ export default function OpdQueuePage() {
                 )}
                 {selectedPatient && (
                   <div className="mt-1 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-                    <span className="text-sm font-medium text-emerald-700">✓ {selectedPatient.first_name} {selectedPatient.last_name}</span>
+                    <span className="text-sm font-medium text-emerald-700">✓ {selectedPatient.name}</span>
                     <span className="text-xs text-emerald-600">{selectedPatient.phone}</span>
                     <button onClick={function () { setSelectedPatient(null); }} className="ml-auto text-xs text-emerald-600 hover:underline">Change</button>
                   </div>
