@@ -86,7 +86,7 @@ export default function TeamPage() {
 
   // Load doctor profiles from billing-preferences (stored in clinic_preferences.doctor_profiles)
   useEffect(function () {
-    if (!hospitalId) return;
+    if (!hospitalId) { setProfilesLoading(false); return; }
     var tok = getToken();
     if (!tok) { setProfilesLoading(false); return; }
     fetch("/api/presence/partners/" + hospitalId + "/billing-preferences", {
@@ -217,8 +217,8 @@ export default function TeamPage() {
     }
   }
 
-  var doctors = staff.filter(function (s) { return s.role_master_id === 3; });
-  var otherStaff = staff.filter(function (s) { return s.role_master_id !== 3; });
+  var doctors = staff.filter(function (s) { return Number(s.role_master_id) === 3 || (s.role_name || "").toLowerCase() === "doctor"; });
+  var otherStaff = staff.filter(function (s) { return Number(s.role_master_id) !== 3 && (s.role_name || "").toLowerCase() !== "doctor"; });
 
   return (
     <div className="px-9 py-8">
@@ -509,7 +509,7 @@ export default function TeamPage() {
             <div className="divide-y divide-line-soft">
               {otherStaff.map(function (member) {
                 var initials = (member.first_name?.[0] || "") + (member.last_name?.[0] || "");
-                var roleColor = ROLE_COLORS[member.role_master_id] || "bg-gray-100 text-gray-600";
+                var roleColor = ROLE_COLORS[Number(member.role_master_id)] || "bg-gray-100 text-gray-600";
                 return (
                   <div key={member.user_id} className="flex items-center gap-4 px-6 py-4">
                     <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-coral/10 text-sm font-bold text-coral-deep">
