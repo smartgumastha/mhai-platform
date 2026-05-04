@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/app/providers/auth-context";
 import { useLocale } from "@/app/providers/locale-context";
 import { useNotification } from "@/app/providers/NotificationProvider";
-import { getTokens, getVitals, saveVisitRecord, updateTokenStatus, searchIcd10 } from "@/lib/api";
+import { getTokens, getVitals, saveVisitRecord, updateTokenStatus, searchIcd10, getToken } from "@/lib/api";
 import { getEmrConfig } from "@/lib/emr/emr-config";
 import type { RxRow, AllergyRow, SoapNote, SickNoteData, ReferralData, DrugSchedule } from "@/lib/emr/emr-types";
 
@@ -117,6 +117,9 @@ export default function ConsultPage() {
   var [showReferral,  setShowReferral]  = useState(false);
   var [referral, setReferral] = useState<ReferralData>({ referred_to_specialty: "", referred_to_facility: "", reason: "", urgency: "routine", summary: "" });
 
+  // ── Print prefs (logo / letterhead / signature from billing settings) ─────
+  var [printPrefs, setPrintPrefs] = useState<any>(null);
+
   // ── Save state ────────────────────────────────────────────────────────────
   var [saving,  setSaving]  = useState(false);
   var [saved,   setSaved]   = useState(false);
@@ -147,6 +150,17 @@ export default function ConsultPage() {
   }, [hospitalId, tokenId]);
 
   useEffect(function () { loadData(); }, [loadData]);
+
+  useEffect(function () {
+    if (!hospitalId) return;
+    var tok = getToken();
+    if (!tok) return;
+    fetch("/api/presence/partners/" + hospitalId + "/billing-preferences", {
+      headers: { Authorization: "Bearer " + tok },
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.success) setPrintPrefs(d);
+    }).catch(function () {});
+  }, [hospitalId]);
 
   // ── Diagnosis search ──────────────────────────────────────────────────────
   function handleDiagSearch(q: string) {
@@ -240,115 +254,231 @@ export default function ConsultPage() {
   }
 
   // ── Print helpers ─────────────────────────────────────────────────────────
+
+  var RX_CSS =
+    "body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#111;margin:0;padding:0;}" +
+    "table{border-collapse:collapse;width:100%;}" +
+    "th,td{font-size:11px;vertical-align:top;padding:3px 5px;}" +
+    "th{background:#1a1a1a;color:#fff;text-align:left;font-size:10px;padding:4px 6px;}" +
+    "tr:nth-child(even) td{background:#f8f8f8;}" +
+    ".wrap{max-width:800px;margin:0 auto;padding:16px;}" +
+    ".rule2{border:none;border-top:2px solid #1a1a1a;margin:10px 0;}" +
+    ".rule1{border:none;border-top:1px solid #ccc;margin:8px 0;}" +
+    ".label{font-size:10px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.04em;}" +
+    ".val{font-size:12px;color:#111;}" +
+    ".allergy{background:#fee2e2;border:1px solid #fca5a5;border-radius:4px;padding:6px 10px;margin:8px 0;font-size:11px;}" +
+    ".vitals-row{display:flex;gap:12px;flex-wrap:wrap;background:#f3f4f6;border-radius:4px;padding:8px 10px;margin:8px 0;}" +
+    ".vchip{text-align:center;min-width:60px;}" +
+    ".vchip .vv{font-size:14px;font-weight:700;}" +
+    ".vchip .vl{font-size:9px;color:#666;text-transform:uppercase;}" +
+    ".section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#555;margin:10px 0 4px;}" +
+    ".note-box{font-size:11px;line-height:1.5;border-left:3px solid #ddd;padding-left:8px;margin:4px 0;color:#333;}" +
+    ".footer-bar{margin-top:20px;padding-top:8px;border-top:1px solid #ddd;display:flex;justify-content:space-between;align-items:flex-end;}" +
+    ".sig-area{text-align:right;}" +
+    ".compliance{font-size:9px;color:#999;}" +
+    "@page{margin:12mm;size:A4 portrait;}" +
+    "@media print{body{padding:0;}}" ;
+
   function openPrintWindow(title: string, bodyHtml: string) {
-    var css =
-      "body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:0;padding:20px;}" +
-      "h1{font-size:16px;margin:0 0 3px;}h2{font-size:13px;margin:10px 0 4px;}" +
-      "hr{border:none;border-top:1.5px solid #333;margin:8px 0;}" +
-      ".rx-item{margin:3px 0;}" +
-      ".allergy-box{background:#fee2e2;border:1px solid #fca5a5;border-radius:4px;padding:5px 10px;margin:6px 0;font-size:11px;}" +
-      ".meta{font-size:11px;color:#555;}" +
-      ".footer{margin-top:24px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:6px;}" +
-      "@page{margin:15mm;}" +
-      "@media print{body{margin:0;padding:8mm;}}";
-    var win = window.open("", "_blank", "width=820,height=950");
+    var win = window.open("", "_blank", "width=860,height=1000");
     if (!win) { alert("Allow pop-ups to print."); return; }
-    win.document.write("<!DOCTYPE html><html><head><title>" + title + "</title><style>" + css + "</style></head><body>" + bodyHtml + "</body></html>");
+    win.document.write("<!DOCTYPE html><html><head><meta charset='utf-8'><title>" + title + "</title><style>" + RX_CSS + "</style></head><body><div class='wrap'>" + bodyHtml + "</div></body></html>");
     win.document.close();
     win.focus();
     var ref = win;
-    setTimeout(function () { ref.print(); }, 600);
+    setTimeout(function () { ref.print(); }, 700);
+  }
+
+  function buildClinicHeader(clinic: any, docName: string, docIdHtml: string, dateStr: string, tokenNum: string) {
+    var logoHtml   = clinic.logo_url ? "<img src='" + clinic.logo_url + "' style='height:48px;max-width:160px;object-fit:contain;display:block;margin-bottom:4px'>" : "";
+    var lhHtml     = clinic.letterhead_url ? "<img src='" + clinic.letterhead_url + "' style='width:100%;display:block;margin-bottom:8px'>" : "";
+    var clinicName = clinic.clinic_name || "";
+    var address    = clinic.address    || "";
+    var taxId      = clinic.gstin || clinic.trn || clinic.vat_number || clinic.npi || "";
+    var taxLabel   = clinic.gstin ? "GSTIN" : clinic.trn ? "TRN" : clinic.vat_number ? "VAT" : clinic.npi ? "NPI" : "";
+    return (
+      lhHtml +
+      "<table><tr>" +
+      "<td style='width:60%;vertical-align:top'>" +
+        logoHtml +
+        (clinicName ? "<div style='font-size:17px;font-weight:700;margin-bottom:2px'>" + clinicName + "</div>" : "") +
+        (address ? "<div style='font-size:10px;color:#555'>" + address + "</div>" : "") +
+        (taxId ? "<div style='font-size:10px;color:#555'>" + taxLabel + ": " + taxId + "</div>" : "") +
+      "</td>" +
+      "<td style='text-align:right;vertical-align:top'>" +
+        "<div style='font-size:10px;color:#555'>Date: " + dateStr + "</div>" +
+        "<div style='font-size:10px;color:#555'>Token: " + tokenNum + "</div>" +
+      "</td>" +
+      "</tr></table>" +
+      "<hr class='rule2'>" +
+      "<div style='margin:4px 0'><strong style='font-size:13px'>" + docName + "</strong></div>" +
+      (docIdHtml ? "<div style='font-size:10px;color:#555'>" + docIdHtml + "</div>" : "") +
+      "<hr class='rule1'>"
+    );
+  }
+
+  function buildPatientRow(pName: string, pAge: number|null, gender: string, phone: string, uhid: string, extraIds: string) {
+    return (
+      "<table style='font-size:11px;margin:4px 0'>" +
+      "<tr>" +
+      "<td style='width:50%'><span class='label'>Patient</span><br><span class='val'><strong>" + pName + "</strong></span></td>" +
+      "<td><span class='label'>UHID</span><br><span class='val'>" + (uhid || "—") + "</span></td>" +
+      "</tr>" +
+      "<tr>" +
+      "<td><span class='label'>Age / Sex</span><br><span class='val'>" + (pAge != null ? pAge + "Y" : "—") + (gender ? " / " + gender : "") + "</span></td>" +
+      "<td><span class='label'>Phone</span><br><span class='val'>" + (phone || "—") + "</span></td>" +
+      "</tr>" +
+      (extraIds ? "<tr><td colspan='2' style='padding-top:2px;font-size:10px;color:#555'>" + extraIds + "</td></tr>" : "") +
+      "</table>" +
+      "<hr class='rule1'>"
+    );
+  }
+
+  function buildVitals(v: any) {
+    if (!v) return "";
+    var chips: string[] = [];
+    if (v.bp_systolic && v.bp_diastolic) chips.push("<div class='vchip'><div class='vv'>" + v.bp_systolic + "/" + v.bp_diastolic + "</div><div class='vl'>BP mmHg</div></div>");
+    if (v.pulse_rate)  chips.push("<div class='vchip'><div class='vv'>" + v.pulse_rate + "</div><div class='vl'>Pulse /min</div></div>");
+    if (v.temperature) chips.push("<div class='vchip'><div class='vv'>" + v.temperature + "</div><div class='vl'>Temp &deg;F</div></div>");
+    if (v.spo2)        chips.push("<div class='vchip'><div class='vv'>" + v.spo2 + "%</div><div class='vl'>SpO2</div></div>");
+    if (v.weight_kg)   chips.push("<div class='vchip'><div class='vv'>" + v.weight_kg + "</div><div class='vl'>Wt kg</div></div>");
+    if (v.height_cm)   chips.push("<div class='vchip'><div class='vv'>" + v.height_cm + "</div><div class='vl'>Ht cm</div></div>");
+    if (!chips.length) return "";
+    return "<div class='section-title'>Vitals</div><div class='vitals-row'>" + chips.join("") + "</div>";
+  }
+
+  function buildClinicFooter(clinic: any, docName: string, docIdHtml: string, badge: string, note: string) {
+    var sigHtml = clinic.default_signature_url
+      ? "<img src='" + clinic.default_signature_url + "' style='height:44px;display:block;margin-bottom:2px'>"
+      : "<div style='height:44px;border-bottom:1px solid #999;width:140px;margin-bottom:2px'></div>";
+    return (
+      "<div class='footer-bar'>" +
+      "<div class='compliance'>" + badge + " &middot; " + note + "</div>" +
+      "<div class='sig-area'>" + sigHtml + "<strong style='font-size:11px'>" + docName + "</strong>" +
+      (docIdHtml ? "<br><span style='font-size:9px;color:#555'>" + docIdHtml + "</span>" : "") +
+      "</div></div>"
+    );
   }
 
   function handlePrintRx() {
     if (!token) return;
-    var pName = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
-    var pAge  = token.dob ? Math.floor((Date.now() - new Date(token.dob).getTime()) / (365.25 * 24 * 3600000)) : null;
-    var docName   = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
-    var clinicN   = (user as any)?.clinic_name || "";
-    var dateStr   = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
-    var idLabels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA License", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
-    var headerIds = emr.rx_header_fields.map(function (f) {
-      return providerIds[f] ? "<div class='meta'>" + idLabels[f] + ": " + providerIds[f] + "</div>" : "";
-    }).join("");
-    var allergyHtml = allergies.filter(function (a) { return a.allergen; }).length > 0
-      ? "<div class='allergy-box'><strong>⚠ Allergies:</strong> " +
-        allergies.filter(function (a) { return a.allergen; }).map(function (a) {
+    var clinic  = printPrefs?.clinic_preferences || {};
+    var pName   = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
+    var pAge    = token.dob ? Math.floor((Date.now() - new Date(token.dob).getTime()) / (365.25 * 24 * 3600000)) : null;
+    var docName = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
+    var dateStr = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
+    var idLabels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA Lic", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
+    var docIdHtml = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
+      .map(function (f) { return idLabels[f] + ": " + providerIds[f]; }).join(" &middot; ");
+    var patExtraIds = emr.patient_id_fields.filter(function (f: any) { return token[f.key]; })
+      .map(function (f: any) { return f.label + ": " + token[f.key]; }).join(" &middot; ");
+
+    // Vitals
+    var vitalsHtml = buildVitals(vitals);
+
+    // SOAP / Clinical notes
+    var notesHtml = "";
+    if (soap.subjective) notesHtml += "<div class='section-title'>Chief Complaint / Subjective</div><div class='note-box'>" + soap.subjective.replace(/\n/g, "<br>") + "</div>";
+    if (diagSelected)    notesHtml += "<div class='section-title'>Diagnosis (" + emr.diagnosis_system + ")</div><div style='font-size:11px;font-weight:700;margin:2px 0'>" + diagSelected.code + " &mdash; " + diagSelected.description + "</div>";
+    if (soap.objective)  notesHtml += "<div class='section-title'>Examination / Objective</div><div class='note-box'>" + soap.objective.replace(/\n/g, "<br>") + "</div>";
+    if (soap.plan)       notesHtml += "<div class='section-title'>Advice / Plan</div><div class='note-box'>" + soap.plan.replace(/\n/g, "<br>") + "</div>";
+
+    // Allergies
+    var activeAllergies = allergies.filter(function (a) { return a.allergen; });
+    var allergyHtml = activeAllergies.length > 0
+      ? "<div class='allergy'><strong>&#9888; Allergies:</strong> " + activeAllergies.map(function (a) {
           return a.allergen + (a.reaction ? " (" + a.reaction + ")" : "");
         }).join("; ") + "</div>"
       : "";
-    var diagHtml = diagSelected
-      ? "<div style='margin:6px 0'><strong>Dx:</strong> " + diagSelected.code + " — " + diagSelected.description + "</div>"
-      : "";
+
+    // Rx table
     var validRx = rxRows.filter(function (r) { return r.drug_generic || r.drug_brand; });
-    var rxHtml = validRx.length > 0
-      ? "<h2>&#8478; Prescription</h2>" + validRx.map(function (r, i) {
-          var name = r.drug_generic ? r.drug_generic + (r.drug_brand ? " [" + r.drug_brand + "]" : "") : r.drug_brand;
-          var line = (i + 1) + ". <strong>" + name + "</strong>";
-          if (r.strength) line += " " + r.strength;
-          if (r.form)     line += " " + r.form;
-          line += " — " + r.route + " " + r.frequency;
-          if (r.duration)     line += " &times; " + r.duration;
-          if (r.quantity)     line += " (Qty: " + r.quantity + ")";
-          if (r.instructions) line += " &middot; <em>" + r.instructions + "</em>";
-          if (r.is_controlled) line += " <strong style='color:#dc2626'>[" + r.schedule + "]</strong>";
-          return "<div class='rx-item'>" + line + "</div>";
-        }).join("")
-      : "<div class='meta'>(No medications prescribed)</div>";
+    var rxHtml = "";
+    if (validRx.length > 0) {
+      rxHtml =
+        "<div class='section-title' style='margin-top:10px'>&#8478; Prescription</div>" +
+        "<table><thead><tr>" +
+        "<th style='width:5%'>#</th><th style='width:28%'>Medicine</th><th style='width:8%'>Route</th>" +
+        "<th style='width:10%'>Freq</th><th style='width:10%'>Duration</th><th style='width:7%'>Qty</th><th>Instructions</th>" +
+        "</tr></thead><tbody>" +
+        validRx.map(function (r, i) {
+          var name = r.drug_generic
+            ? r.drug_generic + (r.drug_brand ? " <em>[" + r.drug_brand + "]</em>" : "")
+            : r.drug_brand || "";
+          if (r.strength) name += " <strong>" + r.strength + "</strong>";
+          if (r.form)     name += " " + r.form;
+          if (r.is_controlled) name += " <strong style='color:#dc2626'>[" + r.schedule + "]</strong>";
+          return "<tr><td>" + (i + 1) + "</td><td>" + name + "</td><td>" + r.route + "</td><td>" + r.frequency + "</td>" +
+            "<td>" + (r.duration || "—") + "</td><td>" + (r.quantity || "—") + "</td><td><em>" + (r.instructions || "") + "</em></td></tr>";
+        }).join("") +
+        "</tbody></table>";
+    } else {
+      rxHtml = "<div class='section-title'>&#8478; Prescription</div><div style='font-size:11px;color:#888'>(No medications prescribed)</div>";
+    }
+
+    // Follow-up
     var followHtml = soap.follow_up_date
-      ? "<div style='margin-top:8px'><strong>Follow-up:</strong> " + soap.follow_up_date + (soap.follow_up_notes ? " — " + soap.follow_up_notes : "") + "</div>"
+      ? "<div style='margin-top:10px;font-size:11px'><strong>Follow-up:</strong> " + soap.follow_up_date + (soap.follow_up_notes ? " &mdash; " + soap.follow_up_notes : "") + "</div>"
       : "";
-    var patIdHtml = emr.patient_id_fields.filter(function (f: any) { return token[f.key]; })
-      .map(function (f: any) { return "<div class='meta'>" + f.label + ": " + token[f.key] + "</div>"; }).join("");
+
     var html =
-      "<h1>" + docName + "</h1>" + headerIds +
-      (clinicN ? "<div class='meta'>" + clinicN + "</div>" : "") +
-      "<div class='meta'>" + dateStr + "</div>" +
-      "<hr>" +
-      "<div><strong>" + pName + "</strong></div>" +
-      "<div class='meta'>" + (pAge != null ? pAge + "y" : "") + (token.gender ? " &middot; " + token.gender : "") + " &middot; Token: " + token.token_number + "</div>" +
-      patIdHtml +
-      "<hr>" +
-      allergyHtml + diagHtml + rxHtml + followHtml +
-      "<div class='footer'>" + emr.compliance_badge + " &middot; " + emr.compliance_note + "</div>";
+      buildClinicHeader(clinic, docName, docIdHtml, dateStr, token.token_number) +
+      buildPatientRow(pName, pAge, token.gender || "", token.phone || "", token.uhid || "", patExtraIds) +
+      vitalsHtml + allergyHtml + notesHtml + rxHtml + followHtml +
+      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge, emr.compliance_note);
+
     openPrintWindow("Prescription — " + pName, html);
   }
 
   function handlePrintSickNote() {
     if (!token) return;
+    var clinic  = printPrefs?.clinic_preferences || {};
     var pName   = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
+    var pAge    = token.dob ? Math.floor((Date.now() - new Date(token.dob).getTime()) / (365.25 * 24 * 3600000)) : null;
     var docName = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
     var dateStr = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
-    var fromDate = dateStr;
-    var reason   = cc === "AE" ? (sickNote.diagnosis_for_ae || "") : sickNote.general_reason;
+    var idLabels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA Lic", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
+    var docIdHtml = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
+      .map(function (f) { return idLabels[f] + ": " + providerIds[f]; }).join(" &middot; ");
+    var reason = cc === "AE" ? (sickNote.diagnosis_for_ae || "") : sickNote.general_reason;
     var html =
-      "<h1>" + emr.sick_note_label + "</h1>" +
-      "<div class='meta'>Issued by " + docName + " &middot; " + dateStr + "</div><hr>" +
-      "<div><strong>Patient:</strong> " + pName + "</div>" +
-      "<div><strong>Token:</strong> " + token.token_number + "</div><hr>" +
-      "<div>This is to certify that the above-named patient is medically advised to rest for <strong>" + sickNote.duration_days + " day(s)</strong> from " + fromDate + ".</div>" +
-      (reason ? "<div style='margin-top:6px'><strong>Reason:</strong> " + reason + "</div>" : "") +
-      (cc === "GB" && sickNote.fit_for_work === "may_be_fit" ? "<div style='margin-top:6px'><strong>Note:</strong> May be fit for work with adjustments: " + (sickNote.restrictions || "") + "</div>" : "") +
-      "<div style='margin-top:24px'>Signature: _______________________</div>" +
-      "<div class='footer'>" + emr.compliance_badge + " &middot; " + emr.compliance_note + "</div>";
+      buildClinicHeader(clinic, docName, docIdHtml, dateStr, token.token_number) +
+      "<div style='font-size:15px;font-weight:700;margin:8px 0'>" + emr.sick_note_label + "</div>" +
+      buildPatientRow(pName, pAge, token.gender || "", token.phone || "", token.uhid || "", "") +
+      "<div style='font-size:12px;line-height:1.7'>This is to certify that <strong>" + pName + "</strong> is medically advised to rest for " +
+      "<strong>" + sickNote.duration_days + " day(s)</strong> with effect from " + dateStr + ".</div>" +
+      (reason ? "<div style='margin-top:8px;font-size:11px'><strong>Reason:</strong> " + reason + "</div>" : "") +
+      (cc === "GB" && sickNote.fit_for_work === "may_be_fit" ? "<div style='margin-top:6px;font-size:11px'><strong>Note:</strong> May be fit for work with adjustments: " + (sickNote.restrictions || "") + "</div>" : "") +
+      (cc === "AE" ? "<div style='margin-top:8px;font-size:10px;color:#666'>Upload to DHA SHERYAN portal after printing.</div>" : "") +
+      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge, emr.compliance_note);
     openPrintWindow(emr.sick_note_label + " — " + pName, html);
   }
 
   function handlePrintReferral() {
     if (!token) return;
+    var clinic  = printPrefs?.clinic_preferences || {};
     var pName   = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
+    var pAge    = token.dob ? Math.floor((Date.now() - new Date(token.dob).getTime()) / (365.25 * 24 * 3600000)) : null;
     var docName = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
     var dateStr = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
+    var idLabels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA Lic", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
+    var docIdHtml = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
+      .map(function (f) { return idLabels[f] + ": " + providerIds[f]; }).join(" &middot; ");
+    var diagStr = diagSelected ? diagSelected.code + " &mdash; " + diagSelected.description : (soap.assessment || "");
     var html =
-      "<h1>Referral Letter</h1>" +
-      "<div class='meta'>" + docName + (((user as any)?.clinic_name) ? " &middot; " + (user as any).clinic_name : "") + " &middot; " + dateStr + "</div><hr>" +
-      "<div><strong>Patient:</strong> " + pName + (token.token_number ? " (Token: " + token.token_number + ")" : "") + "</div>" +
-      "<div><strong>Referred to:</strong> " + (referral.referred_to_specialty || "—") + (referral.referred_to_facility ? " at " + referral.referred_to_facility : "") + "</div>" +
-      "<div><strong>Urgency:</strong> " + referral.urgency + "</div>" +
-      (referral.reason ? "<div><strong>Reason:</strong> " + referral.reason + "</div>" : "") +
-      (referral.summary ? "<div style='margin-top:8px'><strong>Clinical Summary:</strong><br>" + referral.summary.replace(/\n/g, "<br>") + "</div>" : "") +
-      "<div style='margin-top:24px'>Referring clinician: _______________________</div>" +
-      "<div class='footer'>" + emr.compliance_badge + " &middot; " + emr.compliance_note + "</div>";
+      buildClinicHeader(clinic, docName, docIdHtml, dateStr, token.token_number) +
+      "<div style='font-size:15px;font-weight:700;margin:8px 0'>Referral Letter</div>" +
+      buildPatientRow(pName, pAge, token.gender || "", token.phone || "", token.uhid || "", "") +
+      "<table style='font-size:11px;margin:4px 0'>" +
+      "<tr><td class='label' style='width:30%'>Referred to (Specialty)</td><td class='val'><strong>" + (referral.referred_to_specialty || "—") + "</strong></td></tr>" +
+      (referral.referred_to_facility ? "<tr><td class='label'>Facility</td><td class='val'>" + referral.referred_to_facility + "</td></tr>" : "") +
+      "<tr><td class='label'>Urgency</td><td class='val'>" + referral.urgency + "</td></tr>" +
+      (referral.reason ? "<tr><td class='label'>Reason</td><td class='val'>" + referral.reason + "</td></tr>" : "") +
+      (diagStr ? "<tr><td class='label'>Diagnosis</td><td class='val'>" + diagStr + "</td></tr>" : "") +
+      "</table>" +
+      (referral.summary ? "<div class='section-title' style='margin-top:10px'>Clinical Summary</div><div class='note-box'>" + referral.summary.replace(/\n/g, "<br>") + "</div>" : "") +
+      (vitals ? buildVitals(vitals) : "") +
+      buildClinicFooter(clinic, docName, docIdHtml, emr.compliance_badge, emr.compliance_note);
     openPrintWindow("Referral — " + pName, html);
   }
 
