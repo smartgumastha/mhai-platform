@@ -202,14 +202,17 @@ function BarcodeLabelsTab({ cc }: { cc: CountryCode }) {
 
   function handlePrint() {
     if (!previewRef.current) return
+    if (!selectedPatient) { alert('Select a patient first.'); return }
     var inner = previewRef.current.innerHTML
-    var styles = Array.from(document.styleSheets).map(function(ss) {
-      try { return Array.from(ss.cssRules).map(function(r) { return r.cssText; }).join('') }
-      catch { return ss.href ? '' : '' }
-    }).join('')
-    var win = window.open('', '_blank', 'width=800,height=1000')
-    if (!win) return
-    win.document.write('<!DOCTYPE html><html><head><title>Barcode Labels</title><style>' + styles + '@page{margin:10mm;}@media print{body{margin:0;}}</style></head><body>' + inner + '</body></html>')
+    // Use a safe standalone CSS — do NOT extract from document.styleSheets because
+    // print.css globally sets `body * { visibility: hidden }` which would blank the print.
+    var css =
+      'body{margin:0;padding:4px;background:#f3f4f6;font-family:Arial,sans-serif;}' +
+      '@page{margin:5mm;}' +
+      '@media print{body{background:white;margin:0;padding:0;}}'
+    var win = window.open('', '_blank', 'width=820,height=1060')
+    if (!win) { alert('Allow pop-ups to print.'); return }
+    win.document.write('<!DOCTYPE html><html><head><title>Barcode Labels — ' + (selectedPatient.uhid || '') + '</title><style>' + css + '</style></head><body>' + inner + '</body></html>')
     win.document.close()
     win.focus()
     var winRef = win
@@ -439,13 +442,20 @@ function BillFormatsTab({ cc }: { cc: CountryCode }) {
   function printBill() {
     if (!billPreviewRef.current) return
     var inner = billPreviewRef.current.innerHTML
-    var styles = Array.from(document.styleSheets).map(function(ss) {
-      try { return Array.from(ss.cssRules).map(function(r) { return r.cssText; }).join('') }
-      catch { return '' }
-    }).join('')
-    var win = window.open('', '_blank', 'width=900,height=1200')
-    if (!win) return
-    win.document.write('<!DOCTYPE html><html><head><title>Bill</title><style>' + styles + '@page{margin:10mm;}@media print{body{margin:0;}}</style></head><body>' + inner + '</body></html>')
+    // Inline print.css rules for .print-paper so the bill renders correctly in the new window.
+    // We do NOT extract document.styleSheets — it would pull in the global
+    // `body * { visibility: hidden }` rule from print.css and blank the print.
+    var css =
+      'body{margin:0;padding:20px;background:#f3f4f6;font-family:Arial,sans-serif;}' +
+      '.print-paper{background:white;color:#1a1a1a;font-family:Inter,system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.12);margin:0 auto;}' +
+      '.print-paper.size-a4{width:210mm;min-height:297mm;padding:24mm 20mm;font-size:11px;line-height:1.45;}' +
+      '.print-paper.size-a5{width:148mm;min-height:210mm;padding:15mm 14mm;font-size:10px;line-height:1.4;}' +
+      '.print-paper.size-thermal{width:80mm;min-height:auto;padding:5mm 4mm;font-size:10.5px;line-height:1.4;text-align:center;}' +
+      '@page{margin:0;}' +
+      '@media print{body{background:white;margin:0;padding:0;}.print-paper{box-shadow:none;margin:0;}}'
+    var win = window.open('', '_blank', 'width=960,height=1200')
+    if (!win) { alert('Allow pop-ups to print.'); return }
+    win.document.write('<!DOCTYPE html><html><head><title>Bill</title><style>' + css + '</style></head><body>' + inner + '</body></html>')
     win.document.close()
     win.focus()
     var winRef = win

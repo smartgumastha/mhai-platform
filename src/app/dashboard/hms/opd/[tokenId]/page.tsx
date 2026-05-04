@@ -239,6 +239,119 @@ export default function ConsultPage() {
     finally { setSaving(false); }
   }
 
+  // ── Print helpers ─────────────────────────────────────────────────────────
+  function openPrintWindow(title: string, bodyHtml: string) {
+    var css =
+      "body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:0;padding:20px;}" +
+      "h1{font-size:16px;margin:0 0 3px;}h2{font-size:13px;margin:10px 0 4px;}" +
+      "hr{border:none;border-top:1.5px solid #333;margin:8px 0;}" +
+      ".rx-item{margin:3px 0;}" +
+      ".allergy-box{background:#fee2e2;border:1px solid #fca5a5;border-radius:4px;padding:5px 10px;margin:6px 0;font-size:11px;}" +
+      ".meta{font-size:11px;color:#555;}" +
+      ".footer{margin-top:24px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:6px;}" +
+      "@page{margin:15mm;}" +
+      "@media print{body{margin:0;padding:8mm;}}";
+    var win = window.open("", "_blank", "width=820,height=950");
+    if (!win) { alert("Allow pop-ups to print."); return; }
+    win.document.write("<!DOCTYPE html><html><head><title>" + title + "</title><style>" + css + "</style></head><body>" + bodyHtml + "</body></html>");
+    win.document.close();
+    win.focus();
+    var ref = win;
+    setTimeout(function () { ref.print(); }, 600);
+  }
+
+  function handlePrintRx() {
+    if (!token) return;
+    var pName = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
+    var pAge  = token.dob ? Math.floor((Date.now() - new Date(token.dob).getTime()) / (365.25 * 24 * 3600000)) : null;
+    var docName   = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
+    var clinicN   = (user as any)?.clinic_name || "";
+    var dateStr   = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
+    var idLabels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA License", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
+    var headerIds = emr.rx_header_fields.map(function (f) {
+      return providerIds[f] ? "<div class='meta'>" + idLabels[f] + ": " + providerIds[f] + "</div>" : "";
+    }).join("");
+    var allergyHtml = allergies.filter(function (a) { return a.allergen; }).length > 0
+      ? "<div class='allergy-box'><strong>⚠ Allergies:</strong> " +
+        allergies.filter(function (a) { return a.allergen; }).map(function (a) {
+          return a.allergen + (a.reaction ? " (" + a.reaction + ")" : "");
+        }).join("; ") + "</div>"
+      : "";
+    var diagHtml = diagSelected
+      ? "<div style='margin:6px 0'><strong>Dx:</strong> " + diagSelected.code + " — " + diagSelected.description + "</div>"
+      : "";
+    var validRx = rxRows.filter(function (r) { return r.drug_generic || r.drug_brand; });
+    var rxHtml = validRx.length > 0
+      ? "<h2>&#8478; Prescription</h2>" + validRx.map(function (r, i) {
+          var name = r.drug_generic ? r.drug_generic + (r.drug_brand ? " [" + r.drug_brand + "]" : "") : r.drug_brand;
+          var line = (i + 1) + ". <strong>" + name + "</strong>";
+          if (r.strength) line += " " + r.strength;
+          if (r.form)     line += " " + r.form;
+          line += " — " + r.route + " " + r.frequency;
+          if (r.duration)     line += " &times; " + r.duration;
+          if (r.quantity)     line += " (Qty: " + r.quantity + ")";
+          if (r.instructions) line += " &middot; <em>" + r.instructions + "</em>";
+          if (r.is_controlled) line += " <strong style='color:#dc2626'>[" + r.schedule + "]</strong>";
+          return "<div class='rx-item'>" + line + "</div>";
+        }).join("")
+      : "<div class='meta'>(No medications prescribed)</div>";
+    var followHtml = soap.follow_up_date
+      ? "<div style='margin-top:8px'><strong>Follow-up:</strong> " + soap.follow_up_date + (soap.follow_up_notes ? " — " + soap.follow_up_notes : "") + "</div>"
+      : "";
+    var patIdHtml = emr.patient_id_fields.filter(function (f: any) { return token[f.key]; })
+      .map(function (f: any) { return "<div class='meta'>" + f.label + ": " + token[f.key] + "</div>"; }).join("");
+    var html =
+      "<h1>" + docName + "</h1>" + headerIds +
+      (clinicN ? "<div class='meta'>" + clinicN + "</div>" : "") +
+      "<div class='meta'>" + dateStr + "</div>" +
+      "<hr>" +
+      "<div><strong>" + pName + "</strong></div>" +
+      "<div class='meta'>" + (pAge != null ? pAge + "y" : "") + (token.gender ? " &middot; " + token.gender : "") + " &middot; Token: " + token.token_number + "</div>" +
+      patIdHtml +
+      "<hr>" +
+      allergyHtml + diagHtml + rxHtml + followHtml +
+      "<div class='footer'>" + emr.compliance_badge + " &middot; " + emr.compliance_note + "</div>";
+    openPrintWindow("Prescription — " + pName, html);
+  }
+
+  function handlePrintSickNote() {
+    if (!token) return;
+    var pName   = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
+    var docName = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
+    var dateStr = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
+    var fromDate = dateStr;
+    var reason   = cc === "AE" ? (sickNote.diagnosis_for_ae || "") : sickNote.general_reason;
+    var html =
+      "<h1>" + emr.sick_note_label + "</h1>" +
+      "<div class='meta'>Issued by " + docName + " &middot; " + dateStr + "</div><hr>" +
+      "<div><strong>Patient:</strong> " + pName + "</div>" +
+      "<div><strong>Token:</strong> " + token.token_number + "</div><hr>" +
+      "<div>This is to certify that the above-named patient is medically advised to rest for <strong>" + sickNote.duration_days + " day(s)</strong> from " + fromDate + ".</div>" +
+      (reason ? "<div style='margin-top:6px'><strong>Reason:</strong> " + reason + "</div>" : "") +
+      (cc === "GB" && sickNote.fit_for_work === "may_be_fit" ? "<div style='margin-top:6px'><strong>Note:</strong> May be fit for work with adjustments: " + (sickNote.restrictions || "") + "</div>" : "") +
+      "<div style='margin-top:24px'>Signature: _______________________</div>" +
+      "<div class='footer'>" + emr.compliance_badge + " &middot; " + emr.compliance_note + "</div>";
+    openPrintWindow(emr.sick_note_label + " — " + pName, html);
+  }
+
+  function handlePrintReferral() {
+    if (!token) return;
+    var pName   = ((token.first_name || "") + " " + (token.last_name || "")).trim() || "Unknown";
+    var docName = "Dr. " + ((user?.first_name || "") + " " + (user?.last_name || "")).trim();
+    var dateStr = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
+    var html =
+      "<h1>Referral Letter</h1>" +
+      "<div class='meta'>" + docName + (((user as any)?.clinic_name) ? " &middot; " + (user as any).clinic_name : "") + " &middot; " + dateStr + "</div><hr>" +
+      "<div><strong>Patient:</strong> " + pName + (token.token_number ? " (Token: " + token.token_number + ")" : "") + "</div>" +
+      "<div><strong>Referred to:</strong> " + (referral.referred_to_specialty || "—") + (referral.referred_to_facility ? " at " + referral.referred_to_facility : "") + "</div>" +
+      "<div><strong>Urgency:</strong> " + referral.urgency + "</div>" +
+      (referral.reason ? "<div><strong>Reason:</strong> " + referral.reason + "</div>" : "") +
+      (referral.summary ? "<div style='margin-top:8px'><strong>Clinical Summary:</strong><br>" + referral.summary.replace(/\n/g, "<br>") + "</div>" : "") +
+      "<div style='margin-top:24px'>Referring clinician: _______________________</div>" +
+      "<div class='footer'>" + emr.compliance_badge + " &middot; " + emr.compliance_note + "</div>";
+    openPrintWindow("Referral — " + pName, html);
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -291,7 +404,7 @@ export default function ConsultPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={function () { window.print(); }} className="rounded-lg border border-line px-3 py-2 text-sm text-text-dim hover:bg-paper-soft">Print Rx</button>
+          <button onClick={handlePrintRx} className="rounded-lg border border-line px-3 py-2 text-sm text-text-dim hover:bg-paper-soft">Print Rx</button>
           <Link href="/dashboard/hms/opd" className="rounded-lg border border-line px-3 py-2 text-sm text-text-dim hover:bg-paper-soft">← Queue</Link>
         </div>
       </div>
@@ -797,7 +910,7 @@ export default function ConsultPage() {
                         </div>
                       )}
                       <div className="flex gap-2">
-                        <button onClick={function () { window.print(); }} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                        <button onClick={handlePrintSickNote} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
                           Print {emr.sick_note_label}
                         </button>
                         {cc === "AE" && (
@@ -871,7 +984,7 @@ export default function ConsultPage() {
                           className="w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-coral focus:outline-none"
                         />
                       </div>
-                      <button onClick={function () { window.print(); }} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                      <button onClick={handlePrintReferral} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
                         Print Referral Letter
                       </button>
                     </div>
@@ -914,53 +1027,6 @@ export default function ConsultPage() {
         </div>
       </div>
 
-      {/* ── Print-only prescription ── */}
-      <div className="hidden print:block mt-4">
-        <div className="border-b-2 pb-3 mb-4">
-          <div className="text-lg font-bold">Dr. {(user?.first_name || "") + " " + (user?.last_name || "")}</div>
-          {emr.rx_header_fields.map(function (f) {
-            var labels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA License", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
-            return providerIds[f] ? <div key={f} className="text-xs text-gray-600">{labels[f]}: {providerIds[f]}</div> : null;
-          })}
-          <div className="text-sm text-gray-500 mt-1">{user?.clinic_name || ""}</div>
-          <div className="text-xs text-gray-400">{new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN")}</div>
-        </div>
-        <div className="mb-3">
-          <div className="font-semibold">{patientName}</div>
-          <div className="text-sm text-gray-600">{age != null ? age + "y" : ""} {token.gender ? "· " + token.gender : ""} · Token: {token.token_number}</div>
-          {emr.patient_id_fields.filter(function (f) { return token[f.key]; }).map(function (f) {
-            return <div key={f.key} className="text-xs text-gray-500">{f.label}: {token[f.key]}</div>;
-          })}
-        </div>
-        {allergies.filter(function (a) { return a.allergen; }).length > 0 && (
-          <div className="mb-3 border border-red-300 bg-red-50 px-3 py-2 rounded text-sm">
-            <strong>⚠ Allergies:</strong> {allergies.filter(function (a) { return a.allergen; }).map(function (a) { return a.allergen + (a.reaction ? " (" + a.reaction + ")" : ""); }).join("; ")}
-          </div>
-        )}
-        {diagSelected && <div className="mb-2 text-sm"><strong>Dx:</strong> {diagSelected.code} — {diagSelected.description}</div>}
-        {rxRows.filter(function (r) { return r.drug_generic || r.drug_brand; }).length > 0 && (
-          <div>
-            <div className="font-bold mb-1 mt-2">℞</div>
-            {rxRows.filter(function (r) { return r.drug_generic || r.drug_brand; }).map(function (r, i) {
-              var name = r.drug_generic ? r.drug_generic + (r.drug_brand ? " [" + r.drug_brand + "]" : "") : r.drug_brand;
-              return (
-                <div key={r.id} className="mb-1.5 text-sm">
-                  <span className="font-semibold">{i + 1}. {name}</span>
-                  {r.strength && " " + r.strength}
-                  {r.form && " " + r.form}
-                  {" — " + r.route + " " + r.frequency}
-                  {r.duration && " × " + r.duration}
-                  {r.quantity && " (Qty: " + r.quantity + ")"}
-                  {r.instructions && <span className="italic text-gray-600"> · {r.instructions}</span>}
-                  {r.is_controlled && <span className="font-bold text-red-700"> [{r.schedule}]</span>}
-                </div>
-              );
-            })}
-          </div>
-        )}
-        {soap.follow_up_date && <div className="mt-3 text-sm"><strong>Follow-up:</strong> {soap.follow_up_date}{soap.follow_up_notes ? " — " + soap.follow_up_notes : ""}</div>}
-        <div className="mt-6 text-xs text-gray-400">{emr.compliance_badge} · {emr.compliance_note}</div>
-      </div>
     </div>
   );
 }
