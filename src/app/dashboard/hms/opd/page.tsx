@@ -124,12 +124,16 @@ export default function OpdQueuePage() {
     return function () { clearInterval(iv); };
   }, [loadQueue]);
 
-  // Load doctors — called on mount and each time the walk-in modal opens
+  // Load doctors — called on mount and each time the walk-in modal opens.
+  // Backend already excludes role_master_id 1 (superadmin) and 2 (hospital admin),
+  // so everything returned is valid assignable clinical staff.
   var loadDoctors = useCallback(function () {
     if (!hospitalId) return;
     getStaff(hospitalId).then(function (r) {
-      if (r.success && r.data) {
-        setDoctors(r.data.filter(function (s: any) { return Number(s.role_master_id) === 3; }));
+      if (r.success && Array.isArray(r.data) && r.data.length > 0) {
+        setDoctors(r.data);
+      } else if (r.success && r.data) {
+        setDoctors(r.data);
       }
     }).catch(function () {});
   }, [hospitalId]);
@@ -522,19 +526,21 @@ export default function OpdQueuePage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-text-muted">Assign Doctor *</label>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-text-muted">Assign Staff *</label>
                 <select
                   value={walkin.doctor_id}
                   onChange={function (e) { setWalkin(function (w) { return { ...w, doctor_id: e.target.value }; }); }}
                   className="w-full rounded-lg border border-line px-3 py-2.5 text-sm focus:border-coral focus:outline-none"
                 >
-                  <option value="">Select doctor…</option>
+                  <option value="">Select…</option>
                   {doctors.map(function (d) {
-                    return <option key={d.user_id} value={d.user_id}>Dr. {d.first_name} {d.last_name}</option>;
+                    var name = ((d.first_name || "") + " " + (d.last_name || "")).trim();
+                    var role = d.role_name ? " (" + d.role_name + ")" : "";
+                    return <option key={d.user_id || d.email} value={d.user_id}>{name}{role}</option>;
                   })}
                 </select>
                 {doctors.length === 0 && (
-                  <div className="mt-1 text-xs text-text-muted">No doctors found. <Link href="/dashboard/team" className="text-coral-deep hover:underline">Add staff</Link> first.</div>
+                  <div className="mt-1 text-xs text-text-muted">No staff found. <Link href="/dashboard/team" className="text-coral-deep hover:underline">Add staff</Link> first.</div>
                 )}
               </div>
 
