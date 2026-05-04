@@ -124,15 +124,17 @@ export default function OpdQueuePage() {
     return function () { clearInterval(iv); };
   }, [loadQueue]);
 
-  // Load doctors from staff
-  useEffect(function () {
+  // Load doctors — called on mount and each time the walk-in modal opens
+  var loadDoctors = useCallback(function () {
     if (!hospitalId) return;
     getStaff(hospitalId).then(function (r) {
       if (r.success && r.data) {
-        setDoctors(r.data.filter(function (s: any) { return s.role_master_id === 3; }));
+        setDoctors(r.data.filter(function (s: any) { return Number(s.role_master_id) === 3; }));
       }
     }).catch(function () {});
   }, [hospitalId]);
+
+  useEffect(function () { loadDoctors(); }, [loadDoctors]);
 
   function handlePhoneSearch(val: string) {
     setWalkin(function (p) { return { ...p, phone: val }; });
@@ -280,7 +282,7 @@ export default function OpdQueuePage() {
             className="rounded-lg border border-line px-3 py-2 text-sm focus:border-coral focus:outline-none"
           />
           <button
-            onClick={function () { setShowWalkin(true); }}
+            onClick={function () { loadDoctors(); setShowWalkin(true); }}
             className="rounded-lg bg-coral px-4 py-2 text-sm font-medium text-white hover:bg-coral-deep"
           >
             + Walk-in
