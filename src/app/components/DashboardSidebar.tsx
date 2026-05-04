@@ -50,7 +50,7 @@ var navGroups = [
     items: [
       { name: "Patient CRM", href: "/dashboard/crm" },
       { name: "Referral network", href: "/dashboard/referrals" },
-      { name: "Marketing team", href: "/dashboard/team" },
+      { name: "Team & Staff", href: "/dashboard/team" },
     ],
   },
   {
@@ -66,6 +66,8 @@ var navGroups = [
 var hmsSubItems = [
   { name: "OPD Queue", href: "/dashboard/hms/opd" },
   { name: "NABH Compliance", href: "/dashboard/hms/nabh" },
+  { name: "Staff", href: "/dashboard/team" },
+  { name: "Settings", href: "/dashboard/hms/settings" },
 ];
 
 var telecallerSubItems = [
@@ -85,7 +87,7 @@ export default function DashboardSidebar({
   var { logout } = useAuth();
   var isTelecallerActive = pathname.startsWith("/dashboard/telecaller");
   var [telecallerOpen, setTelecallerOpen] = useState(isTelecallerActive);
-  var isHmsActive = pathname.startsWith("/dashboard/hms");
+  var isHmsActive = pathname.startsWith("/dashboard/hms") || pathname === "/dashboard/team";
   var [hmsOpen, setHmsOpen] = useState(true);
 
   return (

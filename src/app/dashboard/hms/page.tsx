@@ -2,10 +2,14 @@ import Link from "next/link";
 
 var hmsSettings = {
   name: "HMS Settings",
-  description: "Print layout, Rx paper size, sections to include, doctor qualification, and custom footer text.",
+  description: "Prescription layout, paper size, sections to print, doctor qualification, custom footer. Clinic branding (logo/letterhead/signature) is in Billing → Billing Prefs.",
   href: "/dashboard/hms/settings",
-  status: "live",
-  statusLabel: "Settings",
+};
+
+var hmsStaff = {
+  name: "Team & Staff",
+  description: "Add doctors, nurses, receptionists and other clinical staff. Staff appear in the OPD doctor dropdown.",
+  href: "/dashboard/team",
 };
 
 var hmsModules = [
@@ -110,22 +114,31 @@ export default function HmsPage() {
         ))}
       </div>
 
-      {/* Settings card */}
-      <Link
-        href={hmsSettings.href}
-        className="group mt-4 flex items-center justify-between rounded-2xl border border-line bg-white px-5 py-4 shadow-sm transition-all hover:border-coral/40 hover:shadow-md"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-paper-soft text-lg">⚙</div>
-          <div>
-            <div className="text-[14px] font-medium text-ink group-hover:text-coral-deep">{hmsSettings.name}</div>
-            <div className="text-[12px] text-text-muted">{hmsSettings.description}</div>
-          </div>
-        </div>
-        <svg className="h-4 w-4 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-coral-deep" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </Link>
+      {/* Staff + Settings quick links */}
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {[hmsStaff, hmsSettings].map(function (card) {
+          return (
+            <Link
+              key={card.href}
+              href={card.href}
+              className="group flex items-center justify-between rounded-2xl border border-line bg-white px-5 py-4 shadow-sm transition-all hover:border-coral/40 hover:shadow-md"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-paper-soft text-lg">
+                  {card === hmsStaff ? "👥" : "⚙"}
+                </div>
+                <div>
+                  <div className="text-[14px] font-medium text-ink group-hover:text-coral-deep">{card.name}</div>
+                  <div className="mt-0.5 text-[11px] leading-snug text-text-muted">{card.description}</div>
+                </div>
+              </div>
+              <svg className="ml-2 h-4 w-4 shrink-0 text-text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-coral-deep" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Link>
+          );
+        })}
+      </div>
 
       <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/50 px-5 py-4">
         <div className="text-sm font-medium text-ink">Building with 50+ pilot clinics</div>
