@@ -13,6 +13,7 @@ var NAV = [
   { name: "EHR Records",   href: "/patient/ehr",         icon: "≡" },
   { name: "Bills",         href: "/patient/bills",       icon: "₿" },
   { name: "Appointments",  href: "/patient/appointments", icon: "⊙" },
+  { name: "Find Providers", href: "/patient/providers",  icon: "🔍" },
   { name: "AI Analysis",   href: "/patient/ai",          icon: "✦" },
 ];
 

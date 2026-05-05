@@ -19,8 +19,9 @@ var QUICK = [
   { label: "Prescriptions",  href: "/patient/prescriptions",  icon: "℞",  color: "border-green-200 bg-green-50",   text: "text-green-700",  desc: "Medications prescribed" },
   { label: "EHR Records",    href: "/patient/ehr",            icon: "≡",  color: "border-blue-200 bg-blue-50",     text: "text-blue-700",   desc: "Consultation notes" },
   { label: "Bills",          href: "/patient/bills",          icon: "₿",  color: "border-amber-200 bg-amber-50",   text: "text-amber-700",  desc: "Billing & payments" },
-  { label: "Appointments",   href: "/patient/appointments",   icon: "⊙",  color: "border-purple-200 bg-purple-50", text: "text-purple-700", desc: "Book & track visits" },
-  { label: "AI Analysis",    href: "/patient/ai",             icon: "✦",  color: "border-rose-200 bg-rose-50",     text: "text-rose-700",   desc: "AI health insights" },
+  { label: "Appointments",   href: "/patient/appointments",   icon: "⊙",  color: "border-purple-200 bg-purple-50",  text: "text-purple-700",  desc: "Book & track visits" },
+  { label: "Find Providers", href: "/patient/providers",      icon: "🔍", color: "border-indigo-200 bg-indigo-50", text: "text-indigo-700",  desc: "Labs, physios, gyms & more" },
+  { label: "AI Analysis",    href: "/patient/ai",             icon: "✦",  color: "border-rose-200 bg-rose-50",     text: "text-rose-700",    desc: "AI health insights" },
 ];
 
 export default function PatientDashboardPage() {
