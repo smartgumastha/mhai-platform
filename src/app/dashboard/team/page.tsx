@@ -210,7 +210,7 @@ export default function TeamPage() {
     if (!editingDoctorId) return;
     setSavingProfile(true);
     try {
-      var updated = { ...doctorProfiles, [editingDoctorId]: { ...editForm } };
+      var updated = { ...doctorProfiles, [String(editingDoctorId)]: { ...editForm } };
       // Always save to localStorage first — works offline, survives API failures
       saveProfilesToStorage(hospitalId, updated);
       setDoctorProfiles(updated);

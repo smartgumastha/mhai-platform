@@ -363,7 +363,8 @@ export default function ConsultPage() {
 
   function getDoctorProfile() {
     var clinic = printPrefs?.clinic_preferences || {};
-    var doctorId = token?.doctor_id || user?.user_id || "";
+    // Stringify both sides — backend may return numeric IDs, localStorage keys are always strings
+    var doctorId = String(token?.doctor_id || user?.user_id || "");
     if (!doctorId) return {};
     // Try server-side profiles first, fallback to localStorage
     if (clinic.doctor_profiles && clinic.doctor_profiles[doctorId]) {
@@ -390,11 +391,12 @@ export default function ConsultPage() {
     var docName = "Dr. " + docBase;
     var dateStr = new Date().toLocaleDateString(cc === "US" ? "en-US" : "en-IN");
     var idLabels: Record<string, string> = { nmc_reg_no: "NMC Reg", dha_license_no: "DHA Lic", gmc_number: "GMC", npi: "NPI", dea_number: "DEA" };
-    // Build doctor ID line: provider IDs from auth + reg_number + qualification from doctor profile
+    // Build doctor ID line: specialty · qualification · provider IDs · reg_number
     var provIdParts = emr.rx_header_fields.filter(function (f) { return providerIds[f]; })
       .map(function (f) { return idLabels[f] + ": " + providerIds[f]; });
     if (docProf.reg_number) provIdParts.push("Reg: " + docProf.reg_number);
     if (docProf.qualification) provIdParts.unshift(docProf.qualification);
+    if (docProf.specialty) provIdParts.unshift(docProf.specialty);
     var docIdHtml = provIdParts.join(" &middot; ");
     var patExtraIds = emr.patient_id_fields.filter(function (f: any) { return token[f.key]; })
       .map(function (f: any) { return f.label + ": " + token[f.key]; }).join(" &middot; ");
@@ -487,6 +489,7 @@ export default function ConsultPage() {
       .map(function (f) { return idLabels[f] + ": " + providerIds[f]; });
     if (docProf.reg_number) docIdParts.push("Reg: " + docProf.reg_number);
     if (docProf.qualification) docIdParts.unshift(docProf.qualification);
+    if (docProf.specialty) docIdParts.unshift(docProf.specialty);
     var docIdHtml = docIdParts.join(" &middot; ");
     var reason = cc === "AE" ? (sickNote.diagnosis_for_ae || "") : sickNote.general_reason;
     var html =
@@ -515,6 +518,7 @@ export default function ConsultPage() {
       .map(function (f) { return idLabels[f] + ": " + providerIds[f]; });
     if (docProf2.reg_number) refDocIdParts.push("Reg: " + docProf2.reg_number);
     if (docProf2.qualification) refDocIdParts.unshift(docProf2.qualification);
+    if (docProf2.specialty) refDocIdParts.unshift(docProf2.specialty);
     var docIdHtml = refDocIdParts.join(" &middot; ");
     var diagStr = diagSelected ? diagSelected.code + " &mdash; " + diagSelected.description : (soap.assessment || "");
     var html =
