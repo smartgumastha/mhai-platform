@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { patientApi } from "../providers/patient-auth-context";
 import { useLocale } from "@/app/providers/locale-context";
 
@@ -256,15 +257,12 @@ function ProviderModal({ providerId, cc, onClose }: { providerId: string; cc: CC
 
           {/* Book CTA */}
           <div className="sticky -bottom-5 bg-white pt-2 pb-4">
-            <a
-              href="/patient/appointments"
+            <Link
+              href={"/patient/book/" + providerId}
               className="block w-full rounded-xl bg-[#1ba3d6] py-3.5 text-center text-sm font-bold text-white transition-colors hover:bg-[#0e7ba8]"
             >
-              Book Appointment with {detail.name.split(" ")[0]}
-            </a>
-            <p className="mt-2 text-center text-[11px] text-gray-300">
-              Full booking with availability slots coming in next update
-            </p>
+              Book Appointment with {detail.name.split(" ")[0]} →
+            </Link>
           </div>
         </div>
       </div>
