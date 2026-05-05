@@ -50,6 +50,16 @@ var SPECIALTIES = [
 
 var emptyForm = { first_name: "", last_name: "", email: "", phone_number: "", role_master_id: 3 };
 
+function lsKey(hospitalId: string) { return "mhai_doctor_profiles_" + hospitalId; }
+
+function loadProfilesFromStorage(hospitalId: string): Record<string, DoctorProfile> {
+  try { return JSON.parse(localStorage.getItem(lsKey(hospitalId)) || "{}"); } catch { return {}; }
+}
+
+function saveProfilesToStorage(hospitalId: string, profiles: Record<string, DoctorProfile>) {
+  try { localStorage.setItem(lsKey(hospitalId), JSON.stringify(profiles)); } catch {}
+}
+
 export default function TeamPage() {
   var { user } = useAuth();
   var notify = useNotification();
@@ -84,9 +94,12 @@ export default function TeamPage() {
 
   useEffect(function () { fetchStaff(); }, [fetchStaff]);
 
-  // Load doctor profiles from billing-preferences (stored in clinic_preferences.doctor_profiles)
+  // Load doctor profiles: API first (server-persistent), merge over localStorage fallback
   useEffect(function () {
     if (!hospitalId) { setProfilesLoading(false); return; }
+    // Load localStorage immediately so UI is never blank
+    var local = loadProfilesFromStorage(hospitalId);
+    if (Object.keys(local).length) setDoctorProfiles(local);
     var tok = getToken();
     if (!tok) { setProfilesLoading(false); return; }
     fetch("/api/presence/partners/" + hospitalId + "/billing-preferences", {
@@ -95,7 +108,10 @@ export default function TeamPage() {
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d?.success && d.clinic_preferences?.doctor_profiles) {
-          setDoctorProfiles(d.clinic_preferences.doctor_profiles);
+          // API wins — merge over localStorage so server is source of truth
+          var merged = Object.assign({}, local, d.clinic_preferences.doctor_profiles);
+          setDoctorProfiles(merged);
+          saveProfilesToStorage(hospitalId, merged);
         }
       })
       .catch(function () {})
@@ -194,21 +210,20 @@ export default function TeamPage() {
     if (!editingDoctorId) return;
     setSavingProfile(true);
     try {
-      var tok = getToken();
-      if (!tok) throw new Error("not signed in");
       var updated = { ...doctorProfiles, [editingDoctorId]: { ...editForm } };
-      var resp = await fetch("/api/presence/partners/" + hospitalId + "/billing-preferences", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
-        body: JSON.stringify({ doctor_profiles: updated }),
-      });
-      var data = await resp.json();
-      if (data?.success) {
-        setDoctorProfiles(updated);
-        setEditingDoctorId(null);
-        notify.success("Profile saved", "Doctor profile updated successfully.");
-      } else {
-        notify.error("Save failed", data?.error || "Unknown error");
+      // Always save to localStorage first — works offline, survives API failures
+      saveProfilesToStorage(hospitalId, updated);
+      setDoctorProfiles(updated);
+      setEditingDoctorId(null);
+      notify.success("Profile saved", "Doctor profile updated.");
+      // Best-effort sync to server (billing-preferences JSONB)
+      var tok = getToken();
+      if (tok && hospitalId) {
+        fetch("/api/presence/partners/" + hospitalId + "/billing-preferences", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + tok },
+          body: JSON.stringify({ doctor_profiles: updated }),
+        }).catch(function () {});
       }
     } catch (err: any) {
       notify.error("Save failed", err?.message || "Unknown error");

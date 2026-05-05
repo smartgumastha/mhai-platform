@@ -364,7 +364,15 @@ export default function ConsultPage() {
   function getDoctorProfile() {
     var clinic = printPrefs?.clinic_preferences || {};
     var doctorId = token?.doctor_id || user?.user_id || "";
-    return (clinic.doctor_profiles && doctorId) ? (clinic.doctor_profiles[doctorId] || {}) : {};
+    if (!doctorId) return {};
+    // Try server-side profiles first, fallback to localStorage
+    if (clinic.doctor_profiles && clinic.doctor_profiles[doctorId]) {
+      return clinic.doctor_profiles[doctorId];
+    }
+    try {
+      var local = JSON.parse(localStorage.getItem("mhai_doctor_profiles_" + hospitalId) || "{}");
+      return local[doctorId] || {};
+    } catch { return {}; }
   }
 
   function readHmsPrintPrefs() {
