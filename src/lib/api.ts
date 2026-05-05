@@ -402,6 +402,12 @@ export function createPatientDeposit(hospitalId: string, patientId: string, data
   );
 }
 
+export function getPatientVisits(hospitalId: string, patientId: string) {
+  return api<{ success: boolean; visits?: any[]; data?: any[]; error?: string }>(
+    "/api/hospitals/" + encodeURIComponent(hospitalId) + "/patients/" + encodeURIComponent(patientId) + "/visits"
+  );
+}
+
 export function searchIcd10(q: string, limit = 10) {
   return api<{ success: boolean; data?: { codes: Array<{ code: string; description: string; category?: string; chapter?: string }> }; error?: string }>(
     "/api/icd10/search?q=" + encodeURIComponent(q) + "&limit=" + limit
