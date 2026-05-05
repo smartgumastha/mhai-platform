@@ -7,6 +7,7 @@ import { PatientAuthProvider, usePatientAuth } from "./providers/patient-auth-co
 
 var NAV = [
   { name: "Health Bank",   href: "/patient/dashboard",   icon: "◈" },
+  { name: "Metrics",       href: "/patient/metrics",     icon: "📊" },
   { name: "Documents",     href: "/patient/documents",   icon: "📂" },
   { name: "Prescriptions", href: "/patient/prescriptions", icon: "℞" },
   { name: "EHR Records",   href: "/patient/ehr",         icon: "≡" },

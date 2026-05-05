@@ -14,6 +14,7 @@ function fmtDate(d?: string, cc?: string) {
 }
 
 var QUICK = [
+  { label: "Metrics",        href: "/patient/metrics",        icon: "📊", color: "border-cyan-200 bg-cyan-50",     text: "text-cyan-700",   desc: "BP, glucose, weight & more" },
   { label: "Documents",      href: "/patient/documents",      icon: "📂", color: "border-teal-200 bg-teal-50",     text: "text-teal-700",   desc: "Health folder & reports" },
   { label: "Prescriptions",  href: "/patient/prescriptions",  icon: "℞",  color: "border-green-200 bg-green-50",   text: "text-green-700",  desc: "Medications prescribed" },
   { label: "EHR Records",    href: "/patient/ehr",            icon: "≡",  color: "border-blue-200 bg-blue-50",     text: "text-blue-700",   desc: "Consultation notes" },
