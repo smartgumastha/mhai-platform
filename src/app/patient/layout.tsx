@@ -6,13 +6,13 @@ import { useEffect } from "react";
 import { PatientAuthProvider, usePatientAuth } from "./providers/patient-auth-context";
 
 var NAV = [
-  { name: "Health Bank", href: "/patient/dashboard", icon: "◈" },
+  { name: "Health Bank",   href: "/patient/dashboard",   icon: "◈" },
+  { name: "Documents",     href: "/patient/documents",   icon: "📂" },
   { name: "Prescriptions", href: "/patient/prescriptions", icon: "℞" },
-  { name: "EHR Records", href: "/patient/ehr", icon: "≡" },
-  { name: "Bills", href: "/patient/bills", icon: "₿" },
-  { name: "Appointments", href: "/patient/appointments", icon: "⊙" },
-  { name: "Lab Reports", href: "/patient/labs", icon: "⚗" },
-  { name: "AI Analysis", href: "/patient/ai", icon: "✦" },
+  { name: "EHR Records",   href: "/patient/ehr",         icon: "≡" },
+  { name: "Bills",         href: "/patient/bills",       icon: "₿" },
+  { name: "Appointments",  href: "/patient/appointments", icon: "⊙" },
+  { name: "AI Analysis",   href: "/patient/ai",          icon: "✦" },
 ];
 
 function Sidebar() {

@@ -14,12 +14,12 @@ function fmtDate(d?: string, cc?: string) {
 }
 
 var QUICK = [
+  { label: "Documents",      href: "/patient/documents",      icon: "📂", color: "border-teal-200 bg-teal-50",     text: "text-teal-700",   desc: "Health folder & reports" },
   { label: "Prescriptions",  href: "/patient/prescriptions",  icon: "℞",  color: "border-green-200 bg-green-50",   text: "text-green-700",  desc: "Medications prescribed" },
-  { label: "EHR Records",    href: "/patient/ehr",             icon: "≡",  color: "border-blue-200 bg-blue-50",     text: "text-blue-700",   desc: "Consultation notes" },
-  { label: "Bills",          href: "/patient/bills",           icon: "₿",  color: "border-amber-200 bg-amber-50",   text: "text-amber-700",  desc: "Billing & payments" },
-  { label: "Appointments",   href: "/patient/appointments",    icon: "⊙",  color: "border-purple-200 bg-purple-50", text: "text-purple-700", desc: "Visit history" },
-  { label: "Lab Reports",    href: "/patient/labs",            icon: "⚗",  color: "border-teal-200 bg-teal-50",     text: "text-teal-700",   desc: "Diagnostic results" },
-  { label: "AI Analysis",    href: "/patient/ai",              icon: "✦",  color: "border-rose-200 bg-rose-50",     text: "text-rose-700",   desc: "AI health insights" },
+  { label: "EHR Records",    href: "/patient/ehr",            icon: "≡",  color: "border-blue-200 bg-blue-50",     text: "text-blue-700",   desc: "Consultation notes" },
+  { label: "Bills",          href: "/patient/bills",          icon: "₿",  color: "border-amber-200 bg-amber-50",   text: "text-amber-700",  desc: "Billing & payments" },
+  { label: "Appointments",   href: "/patient/appointments",   icon: "⊙",  color: "border-purple-200 bg-purple-50", text: "text-purple-700", desc: "Book & track visits" },
+  { label: "AI Analysis",    href: "/patient/ai",             icon: "✦",  color: "border-rose-200 bg-rose-50",     text: "text-rose-700",   desc: "AI health insights" },
 ];
 
 export default function PatientDashboardPage() {
