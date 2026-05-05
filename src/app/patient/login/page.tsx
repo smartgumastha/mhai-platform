@@ -49,8 +49,11 @@ export default function PatientLoginPage() {
     setError("");
     try {
       var res = await verifyOtp(countryCode + phone.trim(), trimmed);
-      if (res.success) router.push("/patient/dashboard");
-      else setError(res.message || "Invalid OTP. Please try again.");
+      if (res.success) {
+        router.push(res.isNewUser ? "/patient/setup" : "/patient/dashboard");
+      } else {
+        setError(res.message || "Invalid OTP. Please try again.");
+      }
     } catch { setError("Network error. Please check your connection."); }
     finally { setLoading(false); }
   }

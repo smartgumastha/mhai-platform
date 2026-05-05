@@ -3,12 +3,14 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 export type PatientUser = {
-  id: string;
+  id?: string;
   name: string;
   phone: string;
   email?: string;
   uhid?: string;
+  full_name?: string;
   date_of_birth?: string;
+  dob?: string;
   gender?: string;
   blood_group?: string;
   allergies?: string;
@@ -18,6 +20,7 @@ export type PatientUser = {
   hospital_name?: string;
   total_visits?: number;
   last_visit_at?: string;
+  _source?: "clinic" | "healthbank";
 };
 
 type PatientAuthCtx = {
@@ -25,8 +28,10 @@ type PatientAuthCtx = {
   isLoading: boolean;
   isAuthenticated: boolean;
   sendOtp: (phone: string) => Promise<{ success: boolean; message?: string }>;
-  verifyOtp: (phone: string, otp: string) => Promise<{ success: boolean; message?: string }>;
+  verifyOtp: (phone: string, otp: string) => Promise<{ success: boolean; message?: string; isNewUser?: boolean }>;
+  register: (data: Record<string, string>) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
+  refreshProfile: () => Promise<void>;
 };
 
 var PatientAuthContext = createContext<PatientAuthCtx>({
@@ -35,7 +40,9 @@ var PatientAuthContext = createContext<PatientAuthCtx>({
   isAuthenticated: false,
   sendOtp: async () => ({ success: false }),
   verifyOtp: async () => ({ success: false }),
+  register: async () => ({ success: false }),
   logout: () => {},
+  refreshProfile: async () => {},
 });
 
 export function getPatientToken(): string | null {
@@ -68,17 +75,18 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
   var [patient, setPatient] = useState<PatientUser | null>(null);
   var [isLoading, setIsLoading] = useState(true);
 
-  var loadMe = useCallback(async function () {
+  var refreshProfile = useCallback(async function () {
     var tok = getPatientToken();
     if (!tok) { setIsLoading(false); return; }
     try {
       var res: any = await patientApi("/api/patient/me");
       if (res.success && res.patient) setPatient(res.patient);
+      else if (res.isNewUser) setIsLoading(false); // new user — let setup page handle it
       else clearPatientToken();
     } catch {} finally { setIsLoading(false); }
   }, []);
 
-  useEffect(function () { loadMe(); }, [loadMe]);
+  useEffect(function () { refreshProfile(); }, [refreshProfile]);
 
   async function sendOtp(phone: string) {
     return patientApi<{ success: boolean; message?: string }>(
@@ -88,15 +96,24 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
   }
 
   async function verifyOtp(phone: string, otp: string) {
-    var res: any = await patientApi<{ success: boolean; token?: string; patient?: PatientUser; message?: string }>(
+    var res: any = await patientApi<{ success: boolean; token?: string; patient?: PatientUser; message?: string; isNewUser?: boolean }>(
       "/api/presence/patient-auth/verify-otp",
       { method: "POST", body: JSON.stringify({ phone, otp }) }
     );
     if (res.success && res.token) {
       setPatientToken(res.token);
       if (res.patient) setPatient(res.patient);
-      else await loadMe();
+      // isNewUser=true: caller handles redirect to /patient/setup
     }
+    return { success: res.success, message: res.message, isNewUser: res.isNewUser };
+  }
+
+  async function register(data: Record<string, string>) {
+    var res: any = await patientApi<{ success: boolean; patient?: PatientUser; message?: string }>(
+      "/api/presence/patient-auth/register",
+      { method: "POST", body: JSON.stringify(data) }
+    );
+    if (res.success && res.patient) setPatient(res.patient);
     return { success: res.success, message: res.message };
   }
 
@@ -106,7 +123,10 @@ export function PatientAuthProvider({ children }: { children: React.ReactNode })
   }
 
   return (
-    <PatientAuthContext.Provider value={{ patient, isLoading, isAuthenticated: !!patient, sendOtp, verifyOtp, logout }}>
+    <PatientAuthContext.Provider value={{
+      patient, isLoading, isAuthenticated: !!patient,
+      sendOtp, verifyOtp, register, logout, refreshProfile
+    }}>
       {children}
     </PatientAuthContext.Provider>
   );

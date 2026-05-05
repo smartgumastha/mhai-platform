@@ -94,15 +94,22 @@ function Sidebar() {
 
 function PatientPortalGuard({ children }: { children: React.ReactNode }) {
   var { isLoading, isAuthenticated } = usePatientAuth();
+  var { getPatientToken: getToken } = { getPatientToken: () => { if (typeof window === "undefined") return null; return localStorage.getItem("mhai_patient_token"); } };
   var pathname = usePathname();
   var router = useRouter();
-  var isLoginPage = pathname === "/patient/login";
+  var isLoginPage  = pathname === "/patient/login";
+  var isSetupPage  = pathname === "/patient/setup";
+  var hasToken = typeof window !== "undefined" && !!localStorage.getItem("mhai_patient_token");
 
   useEffect(function () {
     if (isLoading) return;
-    if (!isAuthenticated && !isLoginPage) router.replace("/patient/login");
+    // Unauthenticated — allow login and setup pages freely
+    if (!isAuthenticated && !isLoginPage && !isSetupPage) {
+      // Setup page is accessible with a token even before profile is created
+      if (!hasToken) router.replace("/patient/login");
+    }
     if (isAuthenticated && isLoginPage) router.replace("/patient/dashboard");
-  }, [isLoading, isAuthenticated, isLoginPage, router]);
+  }, [isLoading, isAuthenticated, isLoginPage, isSetupPage, hasToken, router]);
 
   if (isLoading) {
     return (
@@ -115,7 +122,8 @@ function PatientPortalGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (isLoginPage) return <>{children}</>;
+  // Login and setup pages render without the sidebar shell
+  if (isLoginPage || isSetupPage) return <>{children}</>;
 
   if (!isAuthenticated) return null;
 
